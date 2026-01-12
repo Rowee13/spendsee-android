@@ -57,6 +57,17 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    // Configure KSP generated sources for Android Studio
+    applicationVariants.all {
+        val variantName = name
+        sourceSets {
+            getByName(variantName) {
+                java.srcDir(File(project.buildDir, "generated/ksp/$variantName/java"))
+                kotlin.srcDir(File(project.buildDir, "generated/ksp/$variantName/kotlin"))
+            }
+        }
+    }
 }
 
 dependencies {
