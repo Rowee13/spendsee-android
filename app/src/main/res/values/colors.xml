@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Default Theme (Blue) - Free -->
+    <color name="default_primary_light">#007AFF</color>
+    <color name="default_primary_dark">#0A84FF</color>
+    <color name="default_accent_light">#5AC8FA</color>
+    <color name="default_accent_dark">#64D2FF</color>
+
+    <!-- Dark Mode Custom Colors (matching iOS) -->
+    <color name="dark_header_background">#333333</color>
+    <color name="dark_stats_card">#222222</color>
+    <color name="dark_content_background">#222222</color>
+    <color name="dark_expanded_section">#1A1A1A</color>
+
+    <!-- Transaction Type Colors -->
+    <color name="income_green">#34C759</color>
+    <color name="expense_red">#FF3B30</color>
+    <color name="transfer_blue">#007AFF</color>
+
+    <!-- Common Colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="gray_light">#F2F2F7</color>
+    <color name="gray_medium">#8E8E93</color>
+    <color name="gray_dark">#48484A</color>
+
+    <!-- System Colors -->
+    <color name="system_gray_6_light">#F2F2F7</color>
+    <color name="system_background_light">#FFFFFF</color>
+    <color name="system_background_dark">#000000</color>
+
+    <!-- Material 3 Seed Colors -->
+    <color name="seed_color">#007AFF</color>
+</resources>

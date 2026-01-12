@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SpendSee</string>
+
+    <!-- Tab Navigation -->
+    <string name="tab_records">Records</string>
+    <string name="tab_analysis">Analysis</string>
+    <string name="tab_budgets">Budgets</string>
+    <string name="tab_accounts">Accounts</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- Common Actions -->
+    <string name="action_add">Add</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_done">Done</string>
+
+    <!-- Records Screen -->
+    <string name="records_title">Records</string>
+    <string name="records_no_transactions">No Records Yet</string>
+    <string name="records_no_transactions_message">Tap the + button to add your first transaction</string>
+    <string name="records_add_transaction">Add Transaction</string>
+
+    <!-- Budgets Screen -->
+    <string name="budgets_title">Budgets</string>
+    <string name="budgets_allocated">Allocated</string>
+    <string name="budgets_spent">Spent</string>
+    <string name="budgets_remaining">Remaining</string>
+
+    <!-- Accounts Screen -->
+    <string name="accounts_title">Accounts</string>
+    <string name="accounts_total_balance">Total Balance</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_preferences">Preferences</string>
+    <string name="settings_data_management">Data Management</string>
+    <string name="settings_premium">Premium</string>
+    <string name="settings_about">About</string>
+
+    <!-- Premium Features -->
+    <string name="premium_title">Unlock Premium</string>
+    <string name="premium_price">$6.99</string>
+    <string name="premium_feature_receipt_scanning">Receipt Scanning with OCR</string>
+    <string name="premium_feature_custom_categories">Custom Categories (unlimited)</string>
+    <string name="premium_feature_quick_pay">Quick Pay Budget</string>
+    <string name="premium_feature_notifications">Budget Notifications</string>
+    <string name="premium_feature_passcode">Passcode Protection</string>
+
+    <!-- Transaction Types -->
+    <string name="transaction_type_income">Income</string>
+    <string name="transaction_type_expense">Expense</string>
+    <string name="transaction_type_transfer">Transfer</string>
+
+    <!-- Permissions -->
+    <string name="permission_camera_title">Camera Permission</string>
+    <string name="permission_camera_message">Camera access is needed to scan receipts</string>
+    <string name="permission_notification_title">Notification Permission</string>
+    <string name="permission_notification_message">Notification access is needed for budget reminders</string>
+</resources>
