@@ -5,8 +5,4 @@
 
     <!-- Include shared preferences -->
     <include domain="sharedpref" path="." />
-
-    <!-- Exclude temporary files -->
-    <exclude domain="file" path="temp/" />
-    <exclude domain="file" path="cache/" />
 </full-backup-content>
