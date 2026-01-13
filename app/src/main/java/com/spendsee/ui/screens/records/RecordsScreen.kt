@@ -25,7 +25,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.spendsee.data.local.entities.Transaction
+import com.spendsee.data.local.entities.Account
+import com.spendsee.data.local.entities.Category
 import com.spendsee.data.repository.TransactionRepository
+import com.spendsee.data.repository.AccountRepository
+import com.spendsee.data.repository.CategoryRepository
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -34,12 +38,20 @@ import java.util.*
 @Composable
 fun RecordsScreen(
     viewModel: RecordsViewModel = viewModel(
-        factory = RecordsViewModelFactory(TransactionRepository.getInstance(LocalContext.current))
+        factory = RecordsViewModelFactory(
+            TransactionRepository.getInstance(LocalContext.current),
+            AccountRepository.getInstance(LocalContext.current)
+        )
     )
 ) {
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     var showAddTransaction by remember { mutableStateOf(false) }
     var transactionToEdit by remember { mutableStateOf<Transaction?>(null) }
+
+    // Load accounts and categories
+    val accounts by AccountRepository.getInstance(context).getAllAccounts().collectAsState(initial = emptyList())
+    val categories by CategoryRepository.getInstance(context).getAllCategories().collectAsState(initial = emptyList())
 
     Scaffold(
         floatingActionButton = {
@@ -106,18 +118,34 @@ fun RecordsScreen(
         }
     }
 
-    // Add/Edit Transaction Dialog (placeholder for now)
+    // Add/Edit Transaction Dialog
     if (showAddTransaction) {
-        AddTransactionDialog(
+        AddEditTransactionDialog(
             transaction = transactionToEdit,
+            accounts = accounts,
+            categories = categories,
             onDismiss = {
                 showAddTransaction = false
                 transactionToEdit = null
             },
-            onSave = {
+            onSave = { title, amount, type, category, date, notes, accountId, toAccountId ->
+                if (transactionToEdit == null) {
+                    viewModel.addTransaction(title, amount, type, category, date, notes, accountId, toAccountId)
+                } else {
+                    viewModel.updateTransaction(
+                        transactionToEdit!!,
+                        title,
+                        amount,
+                        type,
+                        category,
+                        date,
+                        notes,
+                        accountId,
+                        toAccountId
+                    )
+                }
                 showAddTransaction = false
                 transactionToEdit = null
-                viewModel.loadTransactions()
             }
         )
     }
@@ -451,30 +479,6 @@ fun EmptyState() {
             )
         }
     }
-}
-
-@Composable
-fun AddTransactionDialog(
-    transaction: Transaction?,
-    onDismiss: () -> Unit,
-    onSave: () -> Unit
-) {
-    // Placeholder for now - will implement full dialog later
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(if (transaction == null) "Add Transaction" else "Edit Transaction") },
-        text = { Text("Transaction form will be implemented here") },
-        confirmButton = {
-            TextButton(onClick = onSave) {
-                Text("Save")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
 }
 
 // Helper Functions
