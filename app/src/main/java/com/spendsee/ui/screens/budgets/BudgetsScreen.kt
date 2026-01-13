@@ -42,6 +42,12 @@ fun BudgetsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showAddBudget by remember { mutableStateOf(false) }
+    var showEditBudget by remember { mutableStateOf(false) }
+    var budgetToEdit by remember { mutableStateOf<BudgetWithDetails?>(null) }
+    var showAddBudgetItem by remember { mutableStateOf(false) }
+    var showEditBudgetItem by remember { mutableStateOf(false) }
+    var budgetItemToEdit by remember { mutableStateOf<com.spendsee.data.local.entities.BudgetItem?>(null) }
+    var selectedBudgetId by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         floatingActionButton = {
@@ -84,7 +90,23 @@ fun BudgetsScreen(
             } else {
                 BudgetsList(
                     budgets = uiState.budgetsWithDetails,
-                    onDeleteBudget = { viewModel.deleteBudget(it.budget) }
+                    onEditBudget = {
+                        budgetToEdit = it
+                        showEditBudget = true
+                    },
+                    onDeleteBudget = { viewModel.deleteBudget(it.budget) },
+                    onAddBudgetItem = { budgetId ->
+                        selectedBudgetId = budgetId
+                        showAddBudgetItem = true
+                    },
+                    onEditBudgetItem = { item ->
+                        budgetItemToEdit = item
+                        showEditBudgetItem = true
+                    },
+                    onDeleteBudgetItem = { viewModel.deleteBudgetItem(it) },
+                    onMarkAsPaid = { budget, isPaid ->
+                        viewModel.markBudgetAsPaid(budget, isPaid)
+                    }
                 )
             }
 
@@ -104,16 +126,85 @@ fun BudgetsScreen(
         }
     }
 
-    // Add Budget Dialog (placeholder)
+    // Add Budget Dialog
     if (showAddBudget) {
-        AlertDialog(
-            onDismissRequest = { showAddBudget = false },
-            title = { Text("Add Budget") },
-            text = { Text("Budget form will be implemented here") },
-            confirmButton = {
-                TextButton(onClick = { showAddBudget = false }) {
-                    Text("OK")
+        AddEditBudgetDialog(
+            budget = null,
+            onDismiss = { showAddBudget = false },
+            onSave = { name, category, month, year, isRecurring, dueDate, notifyDaysBefore ->
+                viewModel.addBudget(name, category, month, year, isRecurring, dueDate, notifyDaysBefore)
+                showAddBudget = false
+            }
+        )
+    }
+
+    // Edit Budget Dialog
+    if (showEditBudget && budgetToEdit != null) {
+        AddEditBudgetDialog(
+            budget = budgetToEdit?.budget,
+            onDismiss = {
+                showEditBudget = false
+                budgetToEdit = null
+            },
+            onSave = { name, category, month, year, isRecurring, dueDate, notifyDaysBefore ->
+                budgetToEdit?.budget?.let { budget ->
+                    viewModel.updateBudget(
+                        budget.copy(
+                            name = name,
+                            category = category,
+                            month = month,
+                            year = year,
+                            isRecurring = isRecurring,
+                            dueDate = dueDate,
+                            notifyDaysBefore = notifyDaysBefore
+                        )
+                    )
                 }
+                showEditBudget = false
+                budgetToEdit = null
+            }
+        )
+    }
+
+    // Add Budget Item Dialog
+    if (showAddBudgetItem && selectedBudgetId != null) {
+        AddEditBudgetItemDialog(
+            budgetItem = null,
+            onDismiss = {
+                showAddBudgetItem = false
+                selectedBudgetId = null
+            },
+            onSave = { name, amount, note, type ->
+                selectedBudgetId?.let { budgetId ->
+                    viewModel.addBudgetItem(budgetId, name, amount, note, type)
+                }
+                showAddBudgetItem = false
+                selectedBudgetId = null
+            }
+        )
+    }
+
+    // Edit Budget Item Dialog
+    if (showEditBudgetItem && budgetItemToEdit != null) {
+        AddEditBudgetItemDialog(
+            budgetItem = budgetItemToEdit,
+            onDismiss = {
+                showEditBudgetItem = false
+                budgetItemToEdit = null
+            },
+            onSave = { name, amount, note, type ->
+                budgetItemToEdit?.let { item ->
+                    viewModel.updateBudgetItem(
+                        item.copy(
+                            name = name,
+                            amount = amount,
+                            note = note,
+                            type = type
+                        )
+                    )
+                }
+                showEditBudgetItem = false
+                budgetItemToEdit = null
             }
         )
     }
@@ -264,7 +355,12 @@ fun StatColumn(label: String, amount: Double, color: Color) {
 @Composable
 fun BudgetsList(
     budgets: List<BudgetWithDetails>,
-    onDeleteBudget: (BudgetWithDetails) -> Unit
+    onEditBudget: (BudgetWithDetails) -> Unit,
+    onDeleteBudget: (BudgetWithDetails) -> Unit,
+    onAddBudgetItem: (String) -> Unit,
+    onEditBudgetItem: (com.spendsee.data.local.entities.BudgetItem) -> Unit,
+    onDeleteBudgetItem: (com.spendsee.data.local.entities.BudgetItem) -> Unit,
+    onMarkAsPaid: (com.spendsee.data.local.entities.Budget, Boolean) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -273,7 +369,12 @@ fun BudgetsList(
         items(budgets) { budgetWithDetails ->
             BudgetCard(
                 budgetWithDetails = budgetWithDetails,
-                onDelete = { onDeleteBudget(budgetWithDetails) }
+                onEdit = { onEditBudget(budgetWithDetails) },
+                onDelete = { onDeleteBudget(budgetWithDetails) },
+                onAddItem = { onAddBudgetItem(budgetWithDetails.budget.id) },
+                onEditItem = onEditBudgetItem,
+                onDeleteItem = onDeleteBudgetItem,
+                onMarkAsPaid = { isPaid -> onMarkAsPaid(budgetWithDetails.budget, isPaid) }
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -284,10 +385,17 @@ fun BudgetsList(
 @Composable
 fun BudgetCard(
     budgetWithDetails: BudgetWithDetails,
-    onDelete: () -> Unit
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onAddItem: () -> Unit,
+    onEditItem: (com.spendsee.data.local.entities.BudgetItem) -> Unit,
+    onDeleteItem: (com.spendsee.data.local.entities.BudgetItem) -> Unit,
+    onMarkAsPaid: (Boolean) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
+    var showItemMenu by remember { mutableStateOf(false) }
+    var selectedItem by remember { mutableStateOf<com.spendsee.data.local.entities.BudgetItem?>(null) }
     val isOverBudget = budgetWithDetails.spent > budgetWithDetails.planned
 
     Card(
@@ -412,31 +520,107 @@ fun BudgetCard(
                     Divider()
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Text(
-                        text = "Budget Items",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Budget Items",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+
+                        IconButton(onClick = onAddItem) {
+                            Icon(
+                                FeatherIcons.Plus,
+                                contentDescription = "Add Budget Item",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    budgetWithDetails.items.forEach { item ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = item.name,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            Text(
-                                text = formatCurrency(item.amount),
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium
-                            )
+                    if (budgetWithDetails.items.isEmpty()) {
+                        Text(
+                            text = "No budget items yet",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    } else {
+                        budgetWithDetails.items.forEach { item ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        selectedItem = item
+                                        showItemMenu = true
+                                    }
+                                    .padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = item.name,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    if (item.note.isNotEmpty()) {
+                                        Text(
+                                            text = item.note,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = formatCurrency(item.amount),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    if (item.type == "Unplanned") {
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Icon(
+                                            FeatherIcons.AlertCircle,
+                                            contentDescription = "Unplanned",
+                                            tint = Color(0xFFFF9500),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
                         }
+                    }
+
+                    // Budget Item Context Menu
+                    DropdownMenu(
+                        expanded = showItemMenu,
+                        onDismissRequest = { showItemMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Edit") },
+                            onClick = {
+                                selectedItem?.let { onEditItem(it) }
+                                showItemMenu = false
+                            },
+                            leadingIcon = {
+                                Icon(FeatherIcons.Edit2, contentDescription = "Edit")
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Delete", color = Color.Red) },
+                            onClick = {
+                                selectedItem?.let { onDeleteItem(it) }
+                                showItemMenu = false
+                            },
+                            leadingIcon = {
+                                Icon(FeatherIcons.Trash2, contentDescription = "Delete", tint = Color.Red)
+                            }
+                        )
                     }
                 }
             }
@@ -450,12 +634,27 @@ fun BudgetCard(
                     text = { Text("Edit") },
                     onClick = {
                         showMenu = false
-                        // TODO: Implement edit
+                        onEdit()
                     },
                     leadingIcon = {
                         Icon(FeatherIcons.Edit, contentDescription = "Edit")
                     }
                 )
+                if (budgetWithDetails.budget.dueDate != null) {
+                    DropdownMenuItem(
+                        text = { Text(if (budgetWithDetails.budget.isPaid) "Mark as Unpaid" else "Mark as Paid") },
+                        onClick = {
+                            showMenu = false
+                            onMarkAsPaid(!budgetWithDetails.budget.isPaid)
+                        },
+                        leadingIcon = {
+                            Icon(
+                                if (budgetWithDetails.budget.isPaid) FeatherIcons.X else FeatherIcons.Check,
+                                contentDescription = if (budgetWithDetails.budget.isPaid) "Mark as Unpaid" else "Mark as Paid"
+                            )
+                        }
+                    )
+                }
                 DropdownMenuItem(
                     text = { Text("Delete", color = Color.Red) },
                     onClick = {

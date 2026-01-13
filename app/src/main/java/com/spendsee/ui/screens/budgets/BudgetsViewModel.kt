@@ -131,11 +131,174 @@ class BudgetsViewModel(
         loadBudgets()
     }
 
+    fun addBudget(
+        name: String,
+        category: String,
+        month: Int,
+        year: Int,
+        isRecurring: Boolean,
+        dueDate: Long?,
+        notifyDaysBefore: Int
+    ) {
+        viewModelScope.launch {
+            try {
+                val budget = Budget(
+                    id = java.util.UUID.randomUUID().toString(),
+                    name = name,
+                    category = category,
+                    month = month,
+                    year = year,
+                    isRecurring = isRecurring,
+                    dueDate = dueDate,
+                    isPaid = false,
+                    paidDate = null,
+                    notificationId = null,
+                    notifyDaysBefore = notifyDaysBefore,
+                    createdAt = System.currentTimeMillis()
+                )
+                budgetRepository.insertBudget(budget)
+                loadBudgets()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun updateBudget(budget: Budget) {
+        viewModelScope.launch {
+            try {
+                budgetRepository.updateBudget(budget)
+                loadBudgets()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
     fun deleteBudget(budget: Budget) {
         viewModelScope.launch {
             try {
                 budgetRepository.deleteBudget(budget)
                 budgetRepository.deleteBudgetItemsByBudgetId(budget.id)
+                loadBudgets()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun addBudgetItem(
+        budgetId: String,
+        name: String,
+        amount: Double,
+        note: String,
+        type: String
+    ) {
+        viewModelScope.launch {
+            try {
+                val budgetItem = BudgetItem(
+                    id = java.util.UUID.randomUUID().toString(),
+                    budgetId = budgetId,
+                    name = name,
+                    amount = amount,
+                    note = note,
+                    type = type,
+                    createdAt = System.currentTimeMillis()
+                )
+                budgetRepository.insertBudgetItem(budgetItem)
+                loadBudgets()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun updateBudgetItem(budgetItem: BudgetItem) {
+        viewModelScope.launch {
+            try {
+                budgetRepository.updateBudgetItem(budgetItem)
+                loadBudgets()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun deleteBudgetItem(budgetItem: BudgetItem) {
+        viewModelScope.launch {
+            try {
+                budgetRepository.deleteBudgetItem(budgetItem)
+                loadBudgets()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun markBudgetAsPaid(budget: Budget, isPaid: Boolean) {
+        viewModelScope.launch {
+            try {
+                val updatedBudget = budget.copy(
+                    isPaid = isPaid,
+                    paidDate = if (isPaid) System.currentTimeMillis() else null
+                )
+                budgetRepository.updateBudget(updatedBudget)
+                loadBudgets()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun copyFromPreviousMonth() {
+        viewModelScope.launch {
+            try {
+                val calendar = Calendar.getInstance()
+                calendar.set(Calendar.YEAR, _uiState.value.selectedYear)
+                calendar.set(Calendar.MONTH, _uiState.value.selectedMonth - 1)
+                calendar.add(Calendar.MONTH, -1)
+
+                val previousMonth = calendar.get(Calendar.MONTH) + 1
+                val previousYear = calendar.get(Calendar.YEAR)
+
+                // Get budgets from previous month
+                budgetRepository.getBudgetsByMonth(previousMonth, previousYear).first().let { previousBudgets ->
+                    previousBudgets.forEach { previousBudget ->
+                        // Create new budget for current month
+                        val newBudget = Budget(
+                            id = java.util.UUID.randomUUID().toString(),
+                            name = previousBudget.name,
+                            category = previousBudget.category,
+                            month = _uiState.value.selectedMonth,
+                            year = _uiState.value.selectedYear,
+                            isRecurring = previousBudget.isRecurring,
+                            dueDate = previousBudget.dueDate,
+                            isPaid = false,
+                            paidDate = null,
+                            notificationId = null,
+                            notifyDaysBefore = previousBudget.notifyDaysBefore,
+                            createdAt = System.currentTimeMillis()
+                        )
+                        budgetRepository.insertBudget(newBudget)
+
+                        // Copy budget items
+                        budgetRepository.getBudgetItems(previousBudget.id).first().let { previousItems ->
+                            previousItems.forEach { previousItem ->
+                                val newItem = BudgetItem(
+                                    id = java.util.UUID.randomUUID().toString(),
+                                    budgetId = newBudget.id,
+                                    name = previousItem.name,
+                                    amount = previousItem.amount,
+                                    note = previousItem.note,
+                                    type = previousItem.type,
+                                    createdAt = System.currentTimeMillis()
+                                )
+                                budgetRepository.insertBudgetItem(newItem)
+                            }
+                        }
+                    }
+                }
+
                 loadBudgets()
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = e.message) }
