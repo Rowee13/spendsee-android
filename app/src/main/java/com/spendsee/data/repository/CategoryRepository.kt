@@ -1,5 +1,7 @@
 package com.spendsee.data.repository
 
+import android.content.Context
+import com.spendsee.data.local.SpendSeeDatabase
 import com.spendsee.data.local.dao.CategoryDao
 import com.spendsee.data.local.entities.Category
 import kotlinx.coroutines.flow.Flow
@@ -46,4 +48,18 @@ class CategoryRepository @Inject constructor(
 
     suspend fun getCustomCategoryCount(): Int =
         categoryDao.getCustomCount()
+
+    companion object {
+        @Volatile
+        private var INSTANCE: CategoryRepository? = null
+
+        fun getInstance(context: Context? = null): CategoryRepository {
+            return INSTANCE ?: synchronized(this) {
+                val db = SpendSeeDatabase.getInstance(context!!)
+                val instance = CategoryRepository(db.categoryDao())
+                INSTANCE = instance
+                instance
+            }
+        }
+    }
 }
