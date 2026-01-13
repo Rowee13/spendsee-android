@@ -59,11 +59,8 @@ fun AccountsScreen(
                 .padding(paddingValues)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            // Header
-            AccountsHeader()
-
-            // Total Balance Card
-            TotalBalanceCard(
+            // Unified Header Section (iOS style)
+            UnifiedAccountsHeaderSection(
                 totalBalance = uiState.totalBalance,
                 totalExpenses = uiState.totalExpenses,
                 totalIncome = uiState.totalIncome
@@ -118,89 +115,95 @@ fun AccountsScreen(
 }
 
 @Composable
-fun AccountsHeader() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 2.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = FeatherIcons.CreditCard,
-                    contentDescription = "Accounts",
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = "Accounts",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
-    }
-}
-
-@Composable
-fun TotalBalanceCard(
+fun UnifiedAccountsHeaderSection(
     totalBalance: Double,
     totalExpenses: Double,
     totalIncome: Double
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        ),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 4.dp
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(MaterialTheme.colorScheme.surface)
         ) {
+            // App Logo and Title
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = FeatherIcons.DollarSign,
+                        contentDescription = "SpendSee Logo",
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "SpendSee",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            // All Accounts subtitle
             Text(
-                text = "Total Balance",
+                text = "All Accounts",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
+
+            // Total Balance (large display)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = formatCurrency(totalBalance),
+                    style = MaterialTheme.typography.displayMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Expenses and Income Stats
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    BalanceStatColumn(
+                        label = "Expenses",
+                        amount = totalExpenses,
+                        color = Color(0xFFEF5350)
+                    )
+                    BalanceStatColumn(
+                        label = "Income",
+                        amount = totalIncome,
+                        color = Color(0xFF66BB6A)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = formatCurrency(totalBalance),
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                BalanceStatColumn("Expenses", totalExpenses, Color(0xFFEF5350))
-                BalanceStatColumn("Income", totalIncome, Color(0xFF66BB6A))
-            }
         }
     }
 }
@@ -211,8 +214,10 @@ fun BalanceStatColumn(label: String, amount: Double, color: Color) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 12.sp
         )
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = formatCurrency(amount),
             style = MaterialTheme.typography.titleMedium,

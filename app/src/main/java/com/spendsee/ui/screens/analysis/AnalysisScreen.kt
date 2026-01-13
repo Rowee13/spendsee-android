@@ -45,19 +45,12 @@ fun AnalysisScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Header
-        AnalysisHeader()
-
-        // Month Navigation
-        MonthNavigationBar(
+        // Unified Header Section (iOS style)
+        UnifiedHeaderSection(
             selectedMonth = uiState.selectedMonth,
             selectedYear = uiState.selectedYear,
             onPreviousMonth = { viewModel.previousMonth() },
-            onNextMonth = { viewModel.nextMonth() }
-        )
-
-        // Stats Card
-        StatsCard(
+            onNextMonth = { viewModel.nextMonth() },
             expenses = uiState.totalExpenses,
             income = uiState.totalIncome,
             net = uiState.netTotal
@@ -110,49 +103,14 @@ fun AnalysisScreen(
 }
 
 @Composable
-fun AnalysisHeader() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 2.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = FeatherIcons.PieChart,
-                    contentDescription = "Analysis",
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = "Analysis",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
-    }
-}
-
-@Composable
-fun MonthNavigationBar(
+fun UnifiedHeaderSection(
     selectedMonth: Int,
     selectedYear: Int,
     onPreviousMonth: () -> Unit,
-    onNextMonth: () -> Unit
+    onNextMonth: () -> Unit,
+    expenses: Double,
+    income: Double,
+    net: Double
 ) {
     val calendar = Calendar.getInstance().apply {
         set(Calendar.MONTH, selectedMonth - 1)
@@ -162,78 +120,103 @@ fun MonthNavigationBar(
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 4.dp
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .background(MaterialTheme.colorScheme.surface)
         ) {
-            IconButton(onClick = onPreviousMonth) {
-                Icon(
-                    FeatherIcons.ChevronLeft,
-                    contentDescription = "Previous Month",
-                    tint = MaterialTheme.colorScheme.primary
+            // App Logo and Title
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = FeatherIcons.DollarSign,
+                        contentDescription = "SpendSee Logo",
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "SpendSee",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
-            Text(
-                text = monthYearText,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            // Month Navigation
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onPreviousMonth) {
+                    Icon(
+                        FeatherIcons.ChevronLeft,
+                        contentDescription = "Previous Month",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
 
-            IconButton(onClick = onNextMonth) {
-                Icon(
-                    FeatherIcons.ChevronRight,
-                    contentDescription = "Next Month",
-                    tint = MaterialTheme.colorScheme.primary
+                Text(
+                    text = monthYearText,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                IconButton(onClick = onNextMonth) {
+                    Icon(
+                        FeatherIcons.ChevronRight,
+                        contentDescription = "Next Month",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
+            // Stats Section
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                StatColumn(
+                    label = "Expenses",
+                    amount = expenses,
+                    color = Color(0xFFEF5350)
+                )
+
+                StatColumn(
+                    label = "Income",
+                    amount = income,
+                    color = Color(0xFF66BB6A)
+                )
+
+                StatColumn(
+                    label = "Net",
+                    amount = net,
+                    color = if (net >= 0) Color(0xFF66BB6A) else Color(0xFFEF5350)
                 )
             }
-        }
-    }
-}
 
-@Composable
-fun StatsCard(
-    expenses: Double,
-    income: Double,
-    net: Double
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            StatColumn("Expenses", expenses, Color(0xFFEF5350))
-            Divider(
-                modifier = Modifier
-                    .height(60.dp)
-                    .width(1.dp),
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-            )
-            StatColumn("Income", income, Color(0xFF66BB6A))
-            Divider(
-                modifier = Modifier
-                    .height(60.dp)
-                    .width(1.dp),
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-            )
-            StatColumn("Net", net, if (net >= 0) Color(0xFF66BB6A) else Color(0xFFEF5350))
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }

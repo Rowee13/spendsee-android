@@ -60,19 +60,12 @@ fun BudgetsScreen(
                 .padding(paddingValues)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            // Header
-            BudgetsHeader()
-
-            // Month Navigation
-            MonthNavigationBar(
+            // Unified Header Section (iOS style)
+            UnifiedBudgetHeaderSection(
                 selectedMonth = uiState.selectedMonth,
                 selectedYear = uiState.selectedYear,
                 onPreviousMonth = { viewModel.previousMonth() },
-                onNextMonth = { viewModel.nextMonth() }
-            )
-
-            // Stats Card
-            BudgetStatsCard(
+                onNextMonth = { viewModel.nextMonth() },
                 allocated = uiState.totalAllocated,
                 spent = uiState.totalSpent,
                 remaining = uiState.totalRemaining
@@ -127,49 +120,14 @@ fun BudgetsScreen(
 }
 
 @Composable
-fun BudgetsHeader() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 2.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = FeatherIcons.DollarSign,
-                    contentDescription = "Budgets",
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = "Budgets",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
-    }
-}
-
-@Composable
-fun MonthNavigationBar(
+fun UnifiedBudgetHeaderSection(
     selectedMonth: Int,
     selectedYear: Int,
     onPreviousMonth: () -> Unit,
-    onNextMonth: () -> Unit
+    onNextMonth: () -> Unit,
+    allocated: Double,
+    spent: Double,
+    remaining: Double
 ) {
     val calendar = Calendar.getInstance().apply {
         set(Calendar.MONTH, selectedMonth - 1)
@@ -179,78 +137,103 @@ fun MonthNavigationBar(
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 4.dp
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .background(MaterialTheme.colorScheme.surface)
         ) {
-            IconButton(onClick = onPreviousMonth) {
-                Icon(
-                    FeatherIcons.ChevronLeft,
-                    contentDescription = "Previous Month",
-                    tint = MaterialTheme.colorScheme.primary
+            // App Logo and Title
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = FeatherIcons.DollarSign,
+                        contentDescription = "SpendSee Logo",
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "SpendSee",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
-            Text(
-                text = monthYearText,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            // Month Navigation
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onPreviousMonth) {
+                    Icon(
+                        FeatherIcons.ChevronLeft,
+                        contentDescription = "Previous Month",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
 
-            IconButton(onClick = onNextMonth) {
-                Icon(
-                    FeatherIcons.ChevronRight,
-                    contentDescription = "Next Month",
-                    tint = MaterialTheme.colorScheme.primary
+                Text(
+                    text = monthYearText,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                IconButton(onClick = onNextMonth) {
+                    Icon(
+                        FeatherIcons.ChevronRight,
+                        contentDescription = "Next Month",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
+            // Stats Section
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                StatColumn(
+                    label = "Allocated",
+                    amount = allocated,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                StatColumn(
+                    label = "Spent",
+                    amount = spent,
+                    color = Color(0xFFEF5350)
+                )
+
+                StatColumn(
+                    label = "Remaining",
+                    amount = remaining,
+                    color = if (remaining >= 0) Color(0xFF66BB6A) else Color(0xFFEF5350)
                 )
             }
-        }
-    }
-}
 
-@Composable
-fun BudgetStatsCard(
-    allocated: Double,
-    spent: Double,
-    remaining: Double
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            StatColumn("Allocated", allocated, MaterialTheme.colorScheme.primary)
-            Divider(
-                modifier = Modifier
-                    .height(60.dp)
-                    .width(1.dp),
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-            )
-            StatColumn("Spent", spent, Color(0xFFEF5350))
-            Divider(
-                modifier = Modifier
-                    .height(60.dp)
-                    .width(1.dp),
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-            )
-            StatColumn("Remaining", remaining, if (remaining >= 0) Color(0xFF66BB6A) else Color(0xFFEF5350))
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
