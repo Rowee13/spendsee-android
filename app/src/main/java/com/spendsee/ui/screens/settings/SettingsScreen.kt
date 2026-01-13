@@ -15,11 +15,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.spendsee.managers.PremiumManager
+import com.spendsee.ui.screens.premium.PremiumPaywallScreen
 
 @Composable
 fun SettingsScreen() {
+    val context = LocalContext.current
+    val premiumManager = remember { PremiumManager.getInstance(context) }
+    val isPremium by premiumManager.isPremium.collectAsState()
+    val isDeveloperMode by remember { mutableStateOf(premiumManager.isDeveloperModeEnabled()) }
+    var showDeveloperMode by remember { mutableStateOf(false) }
+    var showPremiumPaywall by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -128,13 +137,22 @@ fun SettingsScreen() {
             }
 
             item {
-                SettingsItem(
-                    icon = FeatherIcons.Star,
-                    title = "Unlock Premium",
-                    subtitle = "Get all features",
-                    onClick = { /* TODO: Show paywall */ },
-                    isPremiumFeature = true
-                )
+                if (!isPremium) {
+                    SettingsItem(
+                        icon = FeatherIcons.Star,
+                        title = "Unlock Premium",
+                        subtitle = "Get all features",
+                        onClick = { showPremiumPaywall = true },
+                        isPremiumFeature = true
+                    )
+                } else {
+                    SettingsItem(
+                        icon = FeatherIcons.CheckCircle,
+                        title = "Premium Active",
+                        subtitle = "All features unlocked",
+                        onClick = {}
+                    )
+                }
             }
 
             item {
@@ -210,7 +228,46 @@ fun SettingsScreen() {
                     onClick = { /* TODO: Open privacy policy */ }
                 )
             }
+
+            // Developer Mode Section (Debug builds only)
+            if (showDeveloperMode || isDeveloperMode) {
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                item {
+                    SettingsSection(title = "Developer")
+                }
+
+                item {
+                    SettingsSwitchItem(
+                        icon = FeatherIcons.Code,
+                        title = "Premium Override",
+                        subtitle = "Enable all premium features (debug only)",
+                        checked = isDeveloperMode,
+                        onCheckedChange = { enabled ->
+                            premiumManager.setDeveloperMode(enabled)
+                        }
+                    )
+                }
+            }
         }
+    }
+
+    // Show Premium Paywall
+    if (showPremiumPaywall) {
+        PremiumPaywallScreen(
+            onDismiss = { showPremiumPaywall = false },
+            onPurchaseSuccess = {
+                showPremiumPaywall = false
+                // Premium status will be updated automatically via StateFlow
+            }
+        )
+    }
+
+    // Show developer mode on version tap (tap 7 times)
+    LaunchedEffect(Unit) {
+        // This is a placeholder - you can implement tap counter on Version item
     }
 }
 
@@ -340,6 +397,79 @@ fun SettingsItem(
                 imageVector = FeatherIcons.ChevronRight,
                 contentDescription = "Navigate",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsSwitchItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = MaterialTheme.colorScheme.primary,
+                    checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+                )
             )
         }
     }
