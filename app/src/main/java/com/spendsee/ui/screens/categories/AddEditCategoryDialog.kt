@@ -4,8 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,10 +19,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.*
 import com.spendsee.data.local.entities.Category
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEditCategoryDialog(
     category: Category?,
@@ -33,29 +39,51 @@ fun AddEditCategoryDialog(
 
     val isEdit = category != null
 
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            )
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false
+        )
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp)
+                    .fillMaxSize()
+                    .statusBarsPadding()
             ) {
-                // Title
-                Text(
-                    text = if (isEdit) "Edit Category" else "Add Category",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
+                // Top Bar
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = if (isEdit) "Edit Category" else "Add Category",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onDismiss) {
+                            Icon(FeatherIcons.X, contentDescription = "Close")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Scrollable content
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 24.dp)
+                ) {
+                    Spacer(modifier = Modifier.height(8.dp))
 
                 // Category name input
                 OutlinedTextField(
@@ -167,33 +195,42 @@ fun AddEditCategoryDialog(
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
+                }
 
-                // Buttons
-                Row(
+                // Bottom Buttons
+                Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    color = MaterialTheme.colorScheme.surface,
+                    shadowElevation = 8.dp
                 ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text("Cancel")
-                    }
+                        OutlinedButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Cancel")
+                        }
 
-                    Button(
-                        onClick = {
-                            when {
-                                name.isBlank() -> {
-                                    nameError = "Name is required"
+                        Button(
+                            onClick = {
+                                when {
+                                    name.isBlank() -> {
+                                        nameError = "Name is required"
+                                    }
+                                    else -> {
+                                        onSave(name.trim(), selectedIcon, selectedColor)
+                                    }
                                 }
-                                else -> {
-                                    onSave(name.trim(), selectedIcon, selectedColor)
-                                }
-                            }
-                        },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(if (isEdit) "Save" else "Add")
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(if (isEdit) "Save" else "Add")
+                        }
                     }
                 }
             }
@@ -201,6 +238,7 @@ fun AddEditCategoryDialog(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun IconPicker(
     selectedIcon: String,
@@ -233,54 +271,50 @@ fun IconPicker(
         "package" to FeatherIcons.Package
     )
 
-    // Use regular Row/Column instead of LazyVerticalGrid
-    Column(
+    // Use FlowRow for better wrapping and distribution
+    FlowRow(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        maxItemsInEachRow = 6
     ) {
-        icons.chunked(6).forEach { rowIcons ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+        icons.forEach { (iconName, iconVector) ->
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (selectedIcon == iconName)
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                        else
+                            MaterialTheme.colorScheme.surfaceVariant
+                    )
+                    .border(
+                        width = if (selectedIcon == iconName) 2.dp else 0.dp,
+                        color = if (selectedIcon == iconName)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            Color.Transparent,
+                        shape = CircleShape
+                    )
+                    .clickable { onIconSelected(iconName) },
+                contentAlignment = Alignment.Center
             ) {
-                rowIcons.forEach { (iconName, iconVector) ->
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(
-                                if (selectedIcon == iconName)
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                                else
-                                    MaterialTheme.colorScheme.surfaceVariant
-                            )
-                            .border(
-                                width = if (selectedIcon == iconName) 2.dp else 0.dp,
-                                color = if (selectedIcon == iconName)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    Color.Transparent,
-                                shape = CircleShape
-                            )
-                            .clickable { onIconSelected(iconName) },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = iconVector,
-                            contentDescription = iconName,
-                            tint = if (selectedIcon == iconName)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
+                Icon(
+                    imageVector = iconVector,
+                    contentDescription = iconName,
+                    tint = if (selectedIcon == iconName)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(26.dp)
+                )
             }
         }
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ColorPicker(
     selectedColor: String,
@@ -301,42 +335,37 @@ fun ColorPicker(
         "#00C7BE"  // Teal
     )
 
-    // Use regular Row/Column instead of LazyVerticalGrid
-    Column(
+    // Use FlowRow for better distribution
+    FlowRow(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        maxItemsInEachRow = 6
     ) {
-        colors.chunked(6).forEach { rowColors ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+        colors.forEach { colorHex ->
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .background(Color(android.graphics.Color.parseColor(colorHex)))
+                    .border(
+                        width = if (selectedColor == colorHex) 3.dp else 0.dp,
+                        color = if (selectedColor == colorHex)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            Color.Transparent,
+                        shape = CircleShape
+                    )
+                    .clickable { onColorSelected(colorHex) },
+                contentAlignment = Alignment.Center
             ) {
-                rowColors.forEach { colorHex ->
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(Color(android.graphics.Color.parseColor(colorHex)))
-                            .border(
-                                width = if (selectedColor == colorHex) 3.dp else 0.dp,
-                                color = if (selectedColor == colorHex)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    Color.Transparent,
-                                shape = CircleShape
-                            )
-                            .clickable { onColorSelected(colorHex) },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (selectedColor == colorHex) {
-                            Icon(
-                                imageVector = FeatherIcons.Check,
-                                contentDescription = "Selected",
-                                tint = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
+                if (selectedColor == colorHex) {
+                    Icon(
+                        imageVector = FeatherIcons.Check,
+                        contentDescription = "Selected",
+                        tint = Color.White,
+                        modifier = Modifier.size(26.dp)
+                    )
                 }
             }
         }
