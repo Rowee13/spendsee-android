@@ -9,6 +9,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import compose.icons.FeatherIcons
+import compose.icons.feathericons.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -128,7 +130,7 @@ fun AnalysisHeader() {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.BarChart,
+                    imageVector = FeatherIcons.PieChart,
                     contentDescription = "Analysis",
                     tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(24.dp)
@@ -171,7 +173,7 @@ fun MonthNavigationBar(
         ) {
             IconButton(onClick = onPreviousMonth) {
                 Icon(
-                    Icons.Default.ChevronLeft,
+                    FeatherIcons.ChevronLeft,
                     contentDescription = "Previous Month",
                     tint = MaterialTheme.colorScheme.primary
                 )
@@ -186,7 +188,7 @@ fun MonthNavigationBar(
 
             IconButton(onClick = onNextMonth) {
                 Icon(
-                    Icons.Default.ChevronRight,
+                    FeatherIcons.ChevronRight,
                     contentDescription = "Next Month",
                     tint = MaterialTheme.colorScheme.primary
                 )
@@ -580,7 +582,7 @@ fun EmptyState(message: String = "No data available") {
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
-                imageVector = Icons.Default.BarChart,
+                imageVector = FeatherIcons.BarChart,
                 contentDescription = null,
                 modifier = Modifier.size(64.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)

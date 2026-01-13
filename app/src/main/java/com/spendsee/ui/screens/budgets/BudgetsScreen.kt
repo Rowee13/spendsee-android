@@ -11,6 +11,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import compose.icons.FeatherIcons
+import compose.icons.feathericons.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,7 +50,7 @@ fun BudgetsScreen(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Budget")
+                Icon(FeatherIcons.Plus, contentDescription = "Add Budget")
             }
         }
     ) { paddingValues ->
@@ -145,7 +147,7 @@ fun BudgetsHeader() {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.AccountBalanceWallet,
+                    imageVector = FeatherIcons.DollarSign,
                     contentDescription = "Budgets",
                     tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(24.dp)
@@ -188,7 +190,7 @@ fun MonthNavigationBar(
         ) {
             IconButton(onClick = onPreviousMonth) {
                 Icon(
-                    Icons.Default.ChevronLeft,
+                    FeatherIcons.ChevronLeft,
                     contentDescription = "Previous Month",
                     tint = MaterialTheme.colorScheme.primary
                 )
@@ -203,7 +205,7 @@ fun MonthNavigationBar(
 
             IconButton(onClick = onNextMonth) {
                 Icon(
-                    Icons.Default.ChevronRight,
+                    FeatherIcons.ChevronRight,
                     contentDescription = "Next Month",
                     tint = MaterialTheme.colorScheme.primary
                 )
@@ -340,14 +342,14 @@ fun BudgetCard(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        imageVector = if (expanded) FeatherIcons.ChevronUp else FeatherIcons.ChevronDown,
                         contentDescription = if (expanded) "Collapse" else "Expand",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     IconButton(onClick = { showMenu = true }) {
                         Icon(
-                            Icons.Default.MoreVert,
+                            FeatherIcons.MoreVertical,
                             contentDescription = "More Options",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -468,7 +470,7 @@ fun BudgetCard(
                         // TODO: Implement edit
                     },
                     leadingIcon = {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit")
+                        Icon(FeatherIcons.Edit, contentDescription = "Edit")
                     }
                 )
                 DropdownMenuItem(
@@ -478,7 +480,7 @@ fun BudgetCard(
                         onDelete()
                     },
                     leadingIcon = {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red)
+                        Icon(FeatherIcons.Trash2, contentDescription = "Delete", tint = Color.Red)
                     }
                 )
             }
@@ -499,7 +501,7 @@ fun EmptyState() {
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
-                imageVector = Icons.Default.AccountBalanceWallet,
+                imageVector = FeatherIcons.DollarSign,
                 contentDescription = null,
                 modifier = Modifier.size(64.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)

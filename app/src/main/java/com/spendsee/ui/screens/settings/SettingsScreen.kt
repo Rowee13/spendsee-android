@@ -9,6 +9,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import compose.icons.FeatherIcons
+import compose.icons.feathericons.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,7 +39,7 @@ fun SettingsScreen() {
 
             item {
                 SettingsItem(
-                    icon = Icons.Default.Palette,
+                    icon = FeatherIcons.Droplet,
                     title = "Theme",
                     subtitle = "Default",
                     onClick = { /* TODO: Implement theme selector */ }
@@ -46,7 +48,7 @@ fun SettingsScreen() {
 
             item {
                 SettingsItem(
-                    icon = Icons.Default.AttachMoney,
+                    icon = FeatherIcons.DollarSign,
                     title = "Currency",
                     subtitle = "USD ($)",
                     onClick = { /* TODO: Implement currency selector */ }
@@ -55,7 +57,7 @@ fun SettingsScreen() {
 
             item {
                 SettingsItem(
-                    icon = Icons.Default.DarkMode,
+                    icon = FeatherIcons.Moon,
                     title = "Dark Mode",
                     subtitle = "System default",
                     onClick = { /* TODO: Implement dark mode toggle */ }
@@ -73,7 +75,7 @@ fun SettingsScreen() {
 
             item {
                 SettingsItem(
-                    icon = Icons.Default.CloudUpload,
+                    icon = FeatherIcons.Upload,
                     title = "Backup",
                     subtitle = "Export your data",
                     onClick = { /* TODO: Implement backup */ }
@@ -82,7 +84,7 @@ fun SettingsScreen() {
 
             item {
                 SettingsItem(
-                    icon = Icons.Default.CloudDownload,
+                    icon = FeatherIcons.Download,
                     title = "Restore",
                     subtitle = "Import your data",
                     onClick = { /* TODO: Implement restore */ }
@@ -100,7 +102,7 @@ fun SettingsScreen() {
 
             item {
                 SettingsItem(
-                    icon = Icons.Default.Category,
+                    icon = FeatherIcons.Grid,
                     title = "Categories",
                     subtitle = "Manage your categories",
                     onClick = { /* TODO: Implement categories management */ }
@@ -109,7 +111,7 @@ fun SettingsScreen() {
 
             item {
                 SettingsItem(
-                    icon = Icons.Default.Help,
+                    icon = FeatherIcons.HelpCircle,
                     title = "Help & Support",
                     subtitle = "Get help and documentation",
                     onClick = { /* TODO: Implement help */ }
@@ -127,7 +129,7 @@ fun SettingsScreen() {
 
             item {
                 SettingsItem(
-                    icon = Icons.Default.Star,
+                    icon = FeatherIcons.Star,
                     title = "Unlock Premium",
                     subtitle = "Get all features",
                     onClick = { /* TODO: Show paywall */ },
@@ -146,7 +148,7 @@ fun SettingsScreen() {
 
             item {
                 SettingsItem(
-                    icon = Icons.Default.Lock,
+                    icon = FeatherIcons.Lock,
                     title = "Passcode",
                     subtitle = "Protect your data",
                     onClick = { /* TODO: Implement passcode setup */ },
@@ -165,7 +167,7 @@ fun SettingsScreen() {
 
             item {
                 SettingsItem(
-                    icon = Icons.Default.Notifications,
+                    icon = FeatherIcons.Bell,
                     title = "Budget Reminders",
                     subtitle = "Get notified about upcoming payments",
                     onClick = { /* TODO: Implement notifications toggle */ },
@@ -184,7 +186,7 @@ fun SettingsScreen() {
 
             item {
                 SettingsItem(
-                    icon = Icons.Default.Info,
+                    icon = FeatherIcons.Info,
                     title = "Version",
                     subtitle = "1.0.0",
                     onClick = {}
@@ -193,7 +195,7 @@ fun SettingsScreen() {
 
             item {
                 SettingsItem(
-                    icon = Icons.Default.Email,
+                    icon = FeatherIcons.Mail,
                     title = "Support",
                     subtitle = "Contact us",
                     onClick = { /* TODO: Open email */ }
@@ -202,7 +204,7 @@ fun SettingsScreen() {
 
             item {
                 SettingsItem(
-                    icon = Icons.Default.Description,
+                    icon = FeatherIcons.FileText,
                     title = "Privacy Policy",
                     subtitle = "View our privacy policy",
                     onClick = { /* TODO: Open privacy policy */ }
@@ -233,7 +235,7 @@ fun SettingsHeader() {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.Settings,
+                    imageVector = FeatherIcons.Settings,
                     contentDescription = "Settings",
                     tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(24.dp)
@@ -319,7 +321,7 @@ fun SettingsItem(
                         if (isPremiumFeature) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
-                                imageVector = Icons.Default.Star,
+                                imageVector = FeatherIcons.Star,
                                 contentDescription = "Premium",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(16.dp)
@@ -335,7 +337,7 @@ fun SettingsItem(
             }
 
             Icon(
-                imageVector = Icons.Default.ChevronRight,
+                imageVector = FeatherIcons.ChevronRight,
                 contentDescription = "Navigate",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             )

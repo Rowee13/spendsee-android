@@ -10,6 +10,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import compose.icons.FeatherIcons
+import compose.icons.feathericons.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,7 +49,7 @@ fun AccountsScreen(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Account")
+                Icon(FeatherIcons.Plus, contentDescription = "Add Account")
             }
         }
     ) { paddingValues ->
@@ -136,7 +138,7 @@ fun AccountsHeader() {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.AccountBalance,
+                    imageVector = FeatherIcons.CreditCard,
                     contentDescription = "Accounts",
                     tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(24.dp)
@@ -322,7 +324,7 @@ fun AccountCard(
                     // TODO: Implement edit
                 },
                 leadingIcon = {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit")
+                    Icon(FeatherIcons.Edit, contentDescription = "Edit")
                 }
             )
             DropdownMenuItem(
@@ -332,7 +334,7 @@ fun AccountCard(
                     onDelete()
                 },
                 leadingIcon = {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red)
+                    Icon(FeatherIcons.Trash2, contentDescription = "Delete", tint = Color.Red)
                 }
             )
         }
@@ -352,7 +354,7 @@ fun EmptyState() {
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
-                imageVector = Icons.Default.AccountBalance,
+                imageVector = FeatherIcons.CreditCard,
                 contentDescription = null,
                 modifier = Modifier.size(64.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
@@ -382,11 +384,11 @@ private fun formatCurrency(amount: Double): String {
 
 private fun getAccountIcon(iconName: String): androidx.compose.ui.graphics.vector.ImageVector {
     return when (iconName.lowercase()) {
-        "account_balance" -> Icons.Default.AccountBalance
-        "credit_card" -> Icons.Default.CreditCard
-        "wallet" -> Icons.Default.AccountBalanceWallet
-        "savings" -> Icons.Default.Savings
-        "payments" -> Icons.Default.Payment
-        else -> Icons.Default.AccountBalance
+        "account_balance" -> FeatherIcons.Briefcase
+        "credit_card" -> FeatherIcons.CreditCard
+        "wallet" -> FeatherIcons.Package
+        "savings" -> FeatherIcons.TrendingUp
+        "payments" -> FeatherIcons.DollarSign
+        else -> FeatherIcons.Briefcase
     }
 }

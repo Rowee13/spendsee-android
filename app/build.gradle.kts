@@ -143,6 +143,9 @@ dependencies {
     // Animations - Lottie
     implementation("com.airbnb.android:lottie-compose:6.1.0")
 
+    // Icons - Lucide Icons
+    implementation("br.com.devsrsouza.compose.icons:feather:1.1.0")
+
     // Testing
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

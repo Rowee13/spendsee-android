@@ -1,8 +1,8 @@
 package com.spendsee.ui.navigation
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import compose.icons.FeatherIcons
+import compose.icons.feathericons.*
 
 /**
  * Sealed class representing all navigation destinations in the app
@@ -15,31 +15,31 @@ sealed class Screen(
     object Records : Screen(
         route = "records",
         title = "Records",
-        icon = Icons.Default.List
+        icon = FeatherIcons.FileText
     )
 
     object Analysis : Screen(
         route = "analysis",
         title = "Analysis",
-        icon = Icons.Default.BarChart
+        icon = FeatherIcons.PieChart
     )
 
     object Budgets : Screen(
         route = "budgets",
         title = "Budgets",
-        icon = Icons.Default.AccountBalance
+        icon = FeatherIcons.DollarSign
     )
 
     object Accounts : Screen(
         route = "accounts",
         title = "Accounts",
-        icon = Icons.Default.AccountBalanceWallet
+        icon = FeatherIcons.CreditCard
     )
 
     object Settings : Screen(
         route = "settings",
         title = "Settings",
-        icon = Icons.Default.Settings
+        icon = FeatherIcons.Settings
     )
 
     companion object {

@@ -11,6 +11,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import compose.icons.FeatherIcons
+import compose.icons.feathericons.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -150,7 +152,7 @@ fun RecordsHeader() {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.AccountBalance,
+                    imageVector = FeatherIcons.DollarSign,
                     contentDescription = "SpendSee Logo",
                     tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(24.dp)
@@ -462,7 +464,7 @@ fun EmptyState() {
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
-                imageVector = Icons.Default.Receipt,
+                imageVector = FeatherIcons.FileText,
                 contentDescription = null,
                 modifier = Modifier.size(64.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
@@ -526,9 +528,9 @@ private fun getTransactionColor(type: String): Color {
 
 private fun getTransactionIcon(type: String): androidx.compose.ui.graphics.vector.ImageVector {
     return when (type) {
-        "income" -> Icons.Default.TrendingUp
-        "expense" -> Icons.Default.TrendingDown
-        "transfer" -> Icons.Default.SwapHoriz
-        else -> Icons.Default.AttachMoney
+        "income" -> FeatherIcons.ArrowUpCircle
+        "expense" -> FeatherIcons.ArrowDownCircle
+        "transfer" -> FeatherIcons.RefreshCw
+        else -> FeatherIcons.DollarSign
     }
 }
