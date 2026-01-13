@@ -69,79 +69,75 @@ class AnalysisViewModel(
                 val startOfMonth = getStartOfMonth(_uiState.value.selectedMonth, _uiState.value.selectedYear)
                 val endOfMonth = getEndOfMonth(_uiState.value.selectedMonth, _uiState.value.selectedYear)
 
-                transactionRepository.getTransactionsByDateRange(startOfMonth, endOfMonth)
-                    .collect { transactions ->
-                        val expenses = transactions.filter { it.type == "expense" }
-                        val income = transactions.filter { it.type == "income" }
+                // Get transactions once
+                val transactions = transactionRepository.getTransactionsByDateRange(startOfMonth, endOfMonth).first()
+                val expenses = transactions.filter { it.type == "expense" }
+                val income = transactions.filter { it.type == "income" }
 
-                        val totalExpenses = expenses.sumOf { it.amount }
-                        val totalIncome = income.sumOf { it.amount }
+                val totalExpenses = expenses.sumOf { it.amount }
+                val totalIncome = income.sumOf { it.amount }
 
-                        // Calculate category breakdowns
-                        val categoryBreakdowns = expenses
-                            .groupBy { it.category }
-                            .map { (category, trans) ->
-                                val amount = trans.sumOf { it.amount }
-                                CategoryBreakdown(
-                                    category = category,
-                                    amount = amount,
-                                    percentage = if (totalExpenses > 0) (amount / totalExpenses * 100).toFloat() else 0f,
-                                    color = getCategoryColor(category)
-                                )
-                            }
-                            .sortedByDescending { it.amount }
-
-                        // Calculate budget performances
-                        val budgetPerformances = mutableListOf<BudgetPerformance>()
-                        budgetRepository.getBudgetsByMonth(_uiState.value.selectedMonth, _uiState.value.selectedYear)
-                            .collect { budgets ->
-                                budgets.forEach { budget ->
-                                    budgetRepository.getBudgetItems(budget.id).collect { items ->
-                                        val budgetTotal = items.sumOf { it.amount }
-                                        val spent = expenses
-                                            .filter { it.budgetId == budget.id }
-                                            .sumOf { it.amount }
-
-                                        budgetPerformances.add(
-                                            BudgetPerformance(
-                                                budgetName = budget.name,
-                                                planned = budgetTotal,
-                                                spent = spent,
-                                                percentage = if (budgetTotal > 0) (spent / budgetTotal * 100).toFloat() else 0f
-                                            )
-                                        )
-                                    }
-                                }
-                            }
-
-                        // Calculate daily cash flows
-                        val dailyCashFlows = transactions
-                            .groupBy { getDayTimestamp(it.date) }
-                            .map { (day, trans) ->
-                                val dayIncome = trans.filter { it.type == "income" }.sumOf { it.amount }
-                                val dayExpense = trans.filter { it.type == "expense" }.sumOf { it.amount }
-                                DailyCashFlow(
-                                    date = day,
-                                    income = dayIncome,
-                                    expense = dayExpense,
-                                    net = dayIncome - dayExpense
-                                )
-                            }
-                            .sortedBy { it.date }
-
-                        _uiState.update {
-                            it.copy(
-                                totalExpenses = totalExpenses,
-                                totalIncome = totalIncome,
-                                netTotal = totalIncome - totalExpenses,
-                                categoryBreakdowns = categoryBreakdowns,
-                                budgetPerformances = budgetPerformances,
-                                dailyCashFlows = dailyCashFlows,
-                                isLoading = false,
-                                error = null
-                            )
-                        }
+                // Calculate category breakdowns
+                val categoryBreakdowns = expenses
+                    .groupBy { it.category }
+                    .map { (category, trans) ->
+                        val amount = trans.sumOf { it.amount }
+                        CategoryBreakdown(
+                            category = category,
+                            amount = amount,
+                            percentage = if (totalExpenses > 0) (amount / totalExpenses * 100).toFloat() else 0f,
+                            color = getCategoryColor(category)
+                        )
                     }
+                    .sortedByDescending { it.amount }
+
+                // Calculate budget performances
+                val budgetPerformances = mutableListOf<BudgetPerformance>()
+                val budgets = budgetRepository.getBudgetsByMonth(_uiState.value.selectedMonth, _uiState.value.selectedYear).first()
+                budgets.forEach { budget ->
+                    val items = budgetRepository.getBudgetItems(budget.id).first()
+                    val budgetTotal = items.sumOf { it.amount }
+                    val spent = expenses
+                        .filter { it.budgetId == budget.id }
+                        .sumOf { it.amount }
+
+                    budgetPerformances.add(
+                        BudgetPerformance(
+                            budgetName = budget.name,
+                            planned = budgetTotal,
+                            spent = spent,
+                            percentage = if (budgetTotal > 0) (spent / budgetTotal * 100).toFloat() else 0f
+                        )
+                    )
+                }
+
+                // Calculate daily cash flows
+                val dailyCashFlows = transactions
+                    .groupBy { getDayTimestamp(it.date) }
+                    .map { (day, trans) ->
+                        val dayIncome = trans.filter { it.type == "income" }.sumOf { it.amount }
+                        val dayExpense = trans.filter { it.type == "expense" }.sumOf { it.amount }
+                        DailyCashFlow(
+                            date = day,
+                            income = dayIncome,
+                            expense = dayExpense,
+                            net = dayIncome - dayExpense
+                        )
+                    }
+                    .sortedBy { it.date }
+
+                _uiState.update {
+                    it.copy(
+                        totalExpenses = totalExpenses,
+                        totalIncome = totalIncome,
+                        netTotal = totalIncome - totalExpenses,
+                        categoryBreakdowns = categoryBreakdowns,
+                        budgetPerformances = budgetPerformances,
+                        dailyCashFlows = dailyCashFlows,
+                        isLoading = false,
+                        error = null
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = e.message, isLoading = false) }
             }
