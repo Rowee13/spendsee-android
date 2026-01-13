@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.spendsee.managers.PremiumManager
 import com.spendsee.ui.screens.premium.PremiumPaywallScreen
+import com.spendsee.ui.screens.categories.CategoriesScreen
 
 @Composable
 fun SettingsScreen() {
@@ -29,6 +30,7 @@ fun SettingsScreen() {
     val isDeveloperMode by remember { mutableStateOf(premiumManager.isDeveloperModeEnabled()) }
     var showDeveloperMode by remember { mutableStateOf(false) }
     var showPremiumPaywall by remember { mutableStateOf(false) }
+    var showCategoriesScreen by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -114,7 +116,7 @@ fun SettingsScreen() {
                     icon = FeatherIcons.Grid,
                     title = "Categories",
                     subtitle = "Manage your categories",
-                    onClick = { /* TODO: Implement categories management */ }
+                    onClick = { showCategoriesScreen = true }
                 )
             }
 
@@ -262,6 +264,13 @@ fun SettingsScreen() {
                 showPremiumPaywall = false
                 // Premium status will be updated automatically via StateFlow
             }
+        )
+    }
+
+    // Show Categories Screen
+    if (showCategoriesScreen) {
+        CategoriesScreen(
+            onBackClick = { showCategoriesScreen = false }
         )
     }
 
