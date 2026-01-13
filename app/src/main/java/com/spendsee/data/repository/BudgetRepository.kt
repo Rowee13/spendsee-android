@@ -1,5 +1,7 @@
 package com.spendsee.data.repository
 
+import android.content.Context
+import com.spendsee.data.local.SpendSeeDatabase
 import com.spendsee.data.local.dao.BudgetDao
 import com.spendsee.data.local.dao.BudgetItemDao
 import com.spendsee.data.local.entities.Budget
@@ -13,6 +15,22 @@ class BudgetRepository @Inject constructor(
     private val budgetDao: BudgetDao,
     private val budgetItemDao: BudgetItemDao
 ) {
+    companion object {
+        @Volatile
+        private var INSTANCE: BudgetRepository? = null
+
+        fun getInstance(context: Context? = null): BudgetRepository {
+            return INSTANCE ?: synchronized(this) {
+                val db = SpendSeeDatabase.getInstance(context!!)
+                val instance = BudgetRepository(
+                    db.budgetDao(),
+                    db.budgetItemDao()
+                )
+                INSTANCE = instance
+                instance
+            }
+        }
+    }
     fun getAllBudgets(): Flow<List<Budget>> =
         budgetDao.getAllFlow()
 

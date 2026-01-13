@@ -46,6 +46,8 @@ abstract class SpendSeeDatabase : RoomDatabase() {
                 instance
             }
         }
+
+        fun getInstance(context: Context): SpendSeeDatabase = getDatabase(context)
     }
 
     private class DatabaseCallback : Callback() {

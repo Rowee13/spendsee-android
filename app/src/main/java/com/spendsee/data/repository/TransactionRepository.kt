@@ -1,5 +1,7 @@
 package com.spendsee.data.repository
 
+import android.content.Context
+import com.spendsee.data.local.SpendSeeDatabase
 import com.spendsee.data.local.dao.TransactionDao
 import com.spendsee.data.local.entities.Transaction
 import kotlinx.coroutines.flow.Flow
@@ -10,11 +12,26 @@ import javax.inject.Singleton
 class TransactionRepository @Inject constructor(
     private val transactionDao: TransactionDao
 ) {
+    companion object {
+        @Volatile
+        private var INSTANCE: TransactionRepository? = null
+
+        fun getInstance(context: Context? = null): TransactionRepository {
+            return INSTANCE ?: synchronized(this) {
+                val instance = TransactionRepository(
+                    SpendSeeDatabase.getInstance(context!!).transactionDao()
+                )
+                INSTANCE = instance
+                instance
+            }
+        }
+    }
+
     fun getAllTransactions(): Flow<List<Transaction>> =
         transactionDao.getAllFlow()
 
-    fun getTransactionsByMonth(startOfMonth: Long, endOfMonth: Long): Flow<List<Transaction>> =
-        transactionDao.getByMonthFlow(startOfMonth, endOfMonth)
+    fun getTransactionsByDateRange(startDate: Long, endDate: Long): Flow<List<Transaction>> =
+        transactionDao.getByMonthFlow(startDate, endDate)
 
     fun getTransactionsByAccount(accountId: String): Flow<List<Transaction>> =
         transactionDao.getByAccountFlow(accountId)

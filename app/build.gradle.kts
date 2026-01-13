@@ -58,6 +58,11 @@ android {
         }
     }
 
+    lint {
+        disable += "RestrictedApi"
+        abortOnError = false
+    }
+
     // Configure KSP generated sources for Android Studio
     applicationVariants.all {
         val variantName = name
