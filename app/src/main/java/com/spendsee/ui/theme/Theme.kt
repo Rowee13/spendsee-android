@@ -44,6 +44,7 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun SpendSeeTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    selectedScheme: AppColorScheme = AppColorSchemes.Default,
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
@@ -54,8 +55,31 @@ fun SpendSeeTheme(
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        darkTheme -> darkColorScheme(
+            primary = selectedScheme.primaryDark,
+            secondary = selectedScheme.accentDark,
+            tertiary = TransferBlue,
+            background = DarkContentBackground,
+            surface = selectedScheme.cardBackgroundDark,
+            onPrimary = SystemBackgroundLight,
+            onSecondary = SystemBackgroundLight,
+            onTertiary = SystemBackgroundLight,
+            onBackground = SystemBackgroundLight,
+            onSurface = SystemBackgroundLight,
+        )
+
+        else -> lightColorScheme(
+            primary = selectedScheme.primaryLight,
+            secondary = selectedScheme.accentLight,
+            tertiary = TransferBlue,
+            background = SystemBackgroundLight,
+            surface = selectedScheme.cardBackgroundLight,
+            onPrimary = SystemBackgroundLight,
+            onSecondary = SystemBackgroundDark,
+            onTertiary = SystemBackgroundLight,
+            onBackground = SystemBackgroundDark,
+            onSurface = SystemBackgroundDark,
+        )
     }
 
     val view = LocalView.current
