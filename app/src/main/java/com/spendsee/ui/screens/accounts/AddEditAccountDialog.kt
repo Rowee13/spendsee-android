@@ -4,9 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -337,45 +334,50 @@ fun AccountIconPicker(
         "camera" to FeatherIcons.Camera
     )
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(6),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(120.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+    // Use FlowRow instead of LazyVerticalGrid to avoid nesting issues
+    Column(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        items(icons) { (iconName, iconVector) ->
-            Box(
+        icons.chunked(6).forEach { rowIcons ->
+            Row(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (selectedIcon == iconName)
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                        else
-                            MaterialTheme.colorScheme.surfaceVariant
-                    )
-                    .border(
-                        width = if (selectedIcon == iconName) 2.dp else 0.dp,
-                        color = if (selectedIcon == iconName)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            Color.Transparent,
-                        shape = CircleShape
-                    )
-                    .clickable { onIconSelected(iconName) },
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    imageVector = iconVector,
-                    contentDescription = iconName,
-                    tint = if (selectedIcon == iconName)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(24.dp)
-                )
+                rowIcons.forEach { (iconName, iconVector) ->
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (selectedIcon == iconName)
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                else
+                                    MaterialTheme.colorScheme.surfaceVariant
+                            )
+                            .border(
+                                width = if (selectedIcon == iconName) 2.dp else 0.dp,
+                                color = if (selectedIcon == iconName)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    Color.Transparent,
+                                shape = CircleShape
+                            )
+                            .clickable { onIconSelected(iconName) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = iconVector,
+                            contentDescription = iconName,
+                            tint = if (selectedIcon == iconName)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
             }
         }
     }
@@ -392,36 +394,42 @@ fun AccountColorPicker(
         "#FF6482", "#32ADE6", "#BF5AF2", "#00C7BE"
     )
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(6),
+    // Use regular Row/Column instead of LazyVerticalGrid
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(colors) { colorHex ->
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(Color(android.graphics.Color.parseColor(colorHex)))
-                    .border(
-                        width = if (selectedColor == colorHex) 3.dp else 0.dp,
-                        color = if (selectedColor == colorHex)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            Color.Transparent,
-                        shape = CircleShape
-                    )
-                    .clickable { onColorSelected(colorHex) },
-                contentAlignment = Alignment.Center
+        colors.chunked(6).forEach { rowColors ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                if (selectedColor == colorHex) {
-                    Icon(
-                        imageVector = FeatherIcons.Check,
-                        contentDescription = "Selected",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
+                rowColors.forEach { colorHex ->
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(Color(android.graphics.Color.parseColor(colorHex)))
+                            .border(
+                                width = if (selectedColor == colorHex) 3.dp else 0.dp,
+                                color = if (selectedColor == colorHex)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    Color.Transparent,
+                                shape = CircleShape
+                            )
+                            .clickable { onColorSelected(colorHex) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (selectedColor == colorHex) {
+                            Icon(
+                                imageVector = FeatherIcons.Check,
+                                contentDescription = "Selected",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
                 }
             }
         }
