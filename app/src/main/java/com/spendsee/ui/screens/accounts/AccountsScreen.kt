@@ -41,6 +41,8 @@ fun AccountsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showAddAccount by remember { mutableStateOf(false) }
+    var showEditAccount by remember { mutableStateOf(false) }
+    var accountToEdit by remember { mutableStateOf<Account?>(null) }
 
     Scaffold(
         floatingActionButton = {
@@ -79,6 +81,10 @@ fun AccountsScreen(
             } else {
                 AccountsList(
                     accounts = uiState.accounts,
+                    onEditAccount = {
+                        accountToEdit = it
+                        showEditAccount = true
+                    },
                     onDeleteAccount = { viewModel.deleteAccount(it) }
                 )
             }
@@ -99,16 +105,40 @@ fun AccountsScreen(
         }
     }
 
-    // Add Account Dialog (placeholder)
+    // Add Account Dialog
     if (showAddAccount) {
-        AlertDialog(
-            onDismissRequest = { showAddAccount = false },
-            title = { Text("Add Account") },
-            text = { Text("Account form will be implemented here") },
-            confirmButton = {
-                TextButton(onClick = { showAddAccount = false }) {
-                    Text("OK")
+        AddEditAccountDialog(
+            account = null,
+            onDismiss = { showAddAccount = false },
+            onSave = { name, type, balance, icon, color ->
+                viewModel.addAccount(name, type, balance, icon, color)
+                showAddAccount = false
+            }
+        )
+    }
+
+    // Edit Account Dialog
+    if (showEditAccount && accountToEdit != null) {
+        AddEditAccountDialog(
+            account = accountToEdit,
+            onDismiss = {
+                showEditAccount = false
+                accountToEdit = null
+            },
+            onSave = { name, type, balance, icon, color ->
+                accountToEdit?.let { account ->
+                    viewModel.updateAccount(
+                        account.copy(
+                            name = name,
+                            type = type,
+                            balance = balance,
+                            icon = icon,
+                            colorHex = color
+                        )
+                    )
                 }
+                showEditAccount = false
+                accountToEdit = null
             }
         )
     }
@@ -230,6 +260,7 @@ fun BalanceStatColumn(label: String, amount: Double, color: Color) {
 @Composable
 fun AccountsList(
     accounts: List<Account>,
+    onEditAccount: (Account) -> Unit,
     onDeleteAccount: (Account) -> Unit
 ) {
     LazyColumn(
@@ -239,6 +270,7 @@ fun AccountsList(
         items(accounts) { account ->
             AccountCard(
                 account = account,
+                onEdit = { onEditAccount(account) },
                 onDelete = { onDeleteAccount(account) }
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -250,6 +282,7 @@ fun AccountsList(
 @Composable
 fun AccountCard(
     account: Account,
+    onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -326,10 +359,10 @@ fun AccountCard(
                 text = { Text("Edit") },
                 onClick = {
                     showMenu = false
-                    // TODO: Implement edit
+                    onEdit()
                 },
                 leadingIcon = {
-                    Icon(FeatherIcons.Edit, contentDescription = "Edit")
+                    Icon(FeatherIcons.Edit2, contentDescription = "Edit")
                 }
             )
             DropdownMenuItem(

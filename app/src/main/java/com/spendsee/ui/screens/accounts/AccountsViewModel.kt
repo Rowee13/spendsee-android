@@ -65,6 +65,43 @@ class AccountsViewModel(
         }
     }
 
+    fun addAccount(
+        name: String,
+        type: String,
+        balance: Double,
+        icon: String,
+        colorHex: String
+    ) {
+        viewModelScope.launch {
+            try {
+                val account = Account(
+                    id = java.util.UUID.randomUUID().toString(),
+                    name = name,
+                    type = type,
+                    balance = balance,
+                    icon = icon,
+                    colorHex = colorHex,
+                    createdAt = System.currentTimeMillis()
+                )
+                accountRepository.insertAccount(account)
+                loadAccounts()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun updateAccount(account: Account) {
+        viewModelScope.launch {
+            try {
+                accountRepository.updateAccount(account)
+                loadAccounts()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
     fun deleteAccount(account: Account) {
         viewModelScope.launch {
             try {
