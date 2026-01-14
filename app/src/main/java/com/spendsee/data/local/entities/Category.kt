@@ -2,8 +2,10 @@ package com.spendsee.data.local.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.serialization.Serializable
 import java.util.UUID
 
+@Serializable
 @Entity(tableName = "categories")
 data class Category(
     @PrimaryKey

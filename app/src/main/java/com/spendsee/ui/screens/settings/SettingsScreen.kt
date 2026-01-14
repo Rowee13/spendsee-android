@@ -1,5 +1,8 @@
 package com.spendsee.ui.screens.settings
 
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,17 +24,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.spendsee.R
+import com.spendsee.managers.BackupManager
 import com.spendsee.managers.PremiumManager
 import com.spendsee.managers.CurrencyManager
 import com.spendsee.utils.Currency
 import com.spendsee.ui.screens.premium.PremiumPaywallScreen
 import com.spendsee.ui.screens.categories.CategoriesScreen
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen() {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val premiumManager = remember { PremiumManager.getInstance(context) }
     val currencyManager = remember { CurrencyManager.getInstance(context) }
+    val backupManager = remember { BackupManager.getInstance(context) }
     val isPremium by premiumManager.isPremium.collectAsState()
     val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
     val isDeveloperMode by remember { mutableStateOf(premiumManager.isDeveloperModeEnabled()) }
@@ -39,6 +46,60 @@ fun SettingsScreen() {
     var showPremiumPaywall by remember { mutableStateOf(false) }
     var showCategoriesScreen by remember { mutableStateOf(false) }
     var showCurrencySelector by remember { mutableStateOf(false) }
+    var isExporting by remember { mutableStateOf(false) }
+    var isImporting by remember { mutableStateOf(false) }
+
+    // Export backup launcher
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let {
+            scope.launch {
+                try {
+                    isExporting = true
+                    val (_, jsonContent) = backupManager.exportBackup()
+                    context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                        outputStream.write(jsonContent.toByteArray())
+                    }
+                    Toast.makeText(context, "Backup exported successfully", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Export failed: ${e.message}", Toast.LENGTH_LONG).show()
+                } finally {
+                    isExporting = false
+                }
+            }
+        }
+    }
+
+    // Import backup launcher
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            scope.launch {
+                try {
+                    isImporting = true
+                    val result = backupManager.importBackup(uri)
+                    if (result.success) {
+                        val message = buildString {
+                            append("Import successful!\n")
+                            append("Transactions: ${result.transactionsImported}\n")
+                            append("Accounts: ${result.accountsImported}\n")
+                            append("Budgets: ${result.budgetsImported}\n")
+                            append("Categories: ${result.categoriesImported}")
+                        }
+                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(context, "Import failed: ${result.errors.firstOrNull()}", Toast.LENGTH_LONG).show()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Import failed: ${e.message}", Toast.LENGTH_LONG).show()
+                } finally {
+                    isImporting = false
+                }
+            }
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -96,8 +157,15 @@ fun SettingsScreen() {
                 SettingsItem(
                     icon = FeatherIcons.Upload,
                     title = "Backup",
-                    subtitle = "Export your data",
-                    onClick = { /* TODO: Implement backup */ }
+                    subtitle = if (isExporting) "Exporting..." else "Export your data",
+                    onClick = {
+                        if (!isExporting) {
+                            scope.launch {
+                                val (filename, _) = backupManager.exportBackup()
+                                exportLauncher.launch(filename)
+                            }
+                        }
+                    }
                 )
             }
 
@@ -105,8 +173,12 @@ fun SettingsScreen() {
                 SettingsItem(
                     icon = FeatherIcons.Download,
                     title = "Restore",
-                    subtitle = "Import your data",
-                    onClick = { /* TODO: Implement restore */ }
+                    subtitle = if (isImporting) "Importing..." else "Import your data",
+                    onClick = {
+                        if (!isImporting) {
+                            importLauncher.launch(arrayOf("application/json"))
+                        }
+                    }
                 )
             }
 
