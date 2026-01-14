@@ -21,6 +21,9 @@ class PremiumManager(private val context: Context) {
     private val _purchaseState = MutableStateFlow<PurchaseState>(PurchaseState.Idle)
     val purchaseState: StateFlow<PurchaseState> = _purchaseState.asStateFlow()
 
+    private val _purchaseDetails = MutableStateFlow<PurchaseDetails?>(null)
+    val purchaseDetails: StateFlow<PurchaseDetails?> = _purchaseDetails.asStateFlow()
+
     companion object {
         const val PRODUCT_ID = "com.spendsee.premium"
         private const val PREF_DEVELOPER_MODE = "developer_premium_override"
@@ -43,6 +46,14 @@ class PremiumManager(private val context: Context) {
         object Success : PurchaseState()
         data class Error(val message: String) : PurchaseState()
     }
+
+    data class PurchaseDetails(
+        val orderId: String,
+        val purchaseTime: Long,
+        val productId: String,
+        val purchaseToken: String,
+        val isAcknowledged: Boolean
+    )
 
     private val purchasesUpdatedListener = PurchasesUpdatedListener { billingResult, purchases ->
         when (billingResult.responseCode) {
@@ -98,11 +109,26 @@ class PremiumManager(private val context: Context) {
                 .build()
         ) { billingResult, purchases ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                val hasPremium = purchases.any {
+                val premiumPurchase = purchases.firstOrNull {
                     it.products.contains(PRODUCT_ID) &&
                     it.purchaseState == Purchase.PurchaseState.PURCHASED
                 }
-                _isPremium.value = hasPremium || isDeveloperModeEnabled()
+
+                if (premiumPurchase != null) {
+                    _isPremium.value = true
+                    _purchaseDetails.value = PurchaseDetails(
+                        orderId = premiumPurchase.orderId ?: "N/A",
+                        purchaseTime = premiumPurchase.purchaseTime,
+                        productId = PRODUCT_ID,
+                        purchaseToken = premiumPurchase.purchaseToken,
+                        isAcknowledged = premiumPurchase.isAcknowledged
+                    )
+                } else {
+                    _isPremium.value = isDeveloperModeEnabled()
+                    if (!isDeveloperModeEnabled()) {
+                        _purchaseDetails.value = null
+                    }
+                }
             }
         }
     }
@@ -157,6 +183,15 @@ class PremiumManager(private val context: Context) {
 
     private fun handlePurchase(purchase: Purchase) {
         if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
+            // Store purchase details
+            _purchaseDetails.value = PurchaseDetails(
+                orderId = purchase.orderId ?: "N/A",
+                purchaseTime = purchase.purchaseTime,
+                productId = PRODUCT_ID,
+                purchaseToken = purchase.purchaseToken,
+                isAcknowledged = purchase.isAcknowledged
+            )
+
             if (!purchase.isAcknowledged) {
                 val acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
                     .setPurchaseToken(purchase.purchaseToken)
@@ -166,6 +201,8 @@ class PremiumManager(private val context: Context) {
                     if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                         _isPremium.value = true
                         _purchaseState.value = PurchaseState.Success
+                        // Update acknowledged status
+                        _purchaseDetails.value = _purchaseDetails.value?.copy(isAcknowledged = true)
                     }
                 }
             } else {

@@ -53,6 +53,7 @@ fun SettingsScreen() {
     var showCategoriesScreen by remember { mutableStateOf(false) }
     var showCurrencySelector by remember { mutableStateOf(false) }
     var showThemeSelector by remember { mutableStateOf(false) }
+    var showPurchaseDetails by remember { mutableStateOf(false) }
     var isExporting by remember { mutableStateOf(false) }
     var isImporting by remember { mutableStateOf(false) }
     var versionTapCount by remember { mutableStateOf(0) }
@@ -240,8 +241,8 @@ fun SettingsScreen() {
                     SettingsItem(
                         icon = FeatherIcons.CheckCircle,
                         title = "Premium Active",
-                        subtitle = "All features unlocked",
-                        onClick = {}
+                        subtitle = "Tap to view purchase details",
+                        onClick = { showPurchaseDetails = true }
                     )
                 }
             }
@@ -404,6 +405,20 @@ fun SettingsScreen() {
                 }
             },
             onDismiss = { showThemeSelector = false }
+        )
+    }
+
+    // Show Purchase Details
+    if (showPurchaseDetails) {
+        val purchaseDetails by premiumManager.purchaseDetails.collectAsState()
+        PurchaseDetailsDialog(
+            purchaseDetails = purchaseDetails,
+            isDeveloperMode = isDeveloperMode,
+            onRestorePurchases = {
+                premiumManager.restorePurchases()
+                Toast.makeText(context, "Checking for purchases...", Toast.LENGTH_SHORT).show()
+            },
+            onDismiss = { showPurchaseDetails = false }
         )
     }
 }
@@ -788,4 +803,166 @@ fun ThemeSelectorDialog(
             }
         }
     )
+}
+
+@Composable
+fun PurchaseDetailsDialog(
+    purchaseDetails: PremiumManager.PurchaseDetails?,
+    isDeveloperMode: Boolean,
+    onRestorePurchases: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = FeatherIcons.CheckCircle,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Premium Active",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (isDeveloperMode && purchaseDetails == null) {
+                    // Developer mode message
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = FeatherIcons.Code,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "Developer Mode Enabled",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "All premium features are unlocked for testing. This is not a real purchase.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else if (purchaseDetails != null) {
+                    // Purchase details
+                    PurchaseDetailItem(
+                        label = "Status",
+                        value = "Active",
+                        icon = FeatherIcons.CheckCircle
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    PurchaseDetailItem(
+                        label = "Product",
+                        value = "SpendSee Premium",
+                        icon = FeatherIcons.Star
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    PurchaseDetailItem(
+                        label = "Purchase Date",
+                        value = formatPurchaseDate(purchaseDetails.purchaseTime),
+                        icon = FeatherIcons.Calendar
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    PurchaseDetailItem(
+                        label = "Order ID",
+                        value = purchaseDetails.orderId,
+                        icon = FeatherIcons.FileText
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Restore purchases button
+                    OutlinedButton(
+                        onClick = onRestorePurchases,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = FeatherIcons.RefreshCw,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Restore Purchases")
+                    }
+                } else {
+                    // No purchase found (shouldn't happen if isPremium is true)
+                    Text(
+                        text = "No purchase information available.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
+}
+
+@Composable
+private fun PurchaseDetailItem(
+    label: String,
+    value: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
+
+private fun formatPurchaseDate(timestamp: Long): String {
+    val dateFormat = java.text.SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", java.util.Locale.getDefault())
+    return dateFormat.format(java.util.Date(timestamp))
 }
