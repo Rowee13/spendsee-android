@@ -74,7 +74,6 @@ fun BudgetsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .background(MaterialTheme.colorScheme.background)
         ) {
             // Unified Header Section (iOS style)
@@ -249,6 +248,7 @@ fun UnifiedBudgetHeaderSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surface)
+                .statusBarsPadding()
         ) {
             // App Logo and Title
             Row(
