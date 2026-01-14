@@ -19,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -439,7 +440,8 @@ fun SettingsHeader() {
             Image(
                 painter = painterResource(id = R.drawable.app_logo),
                 contentDescription = "Settings",
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(32.dp),
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
