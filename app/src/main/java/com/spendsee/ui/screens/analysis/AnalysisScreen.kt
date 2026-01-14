@@ -145,7 +145,6 @@ fun UnifiedHeaderSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surface)
-                .statusBarsPadding()
         ) {
             // App Logo and Title
             Row(
