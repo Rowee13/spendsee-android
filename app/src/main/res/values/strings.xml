@@ -59,4 +59,9 @@
     <string name="permission_camera_message">Camera access is needed to scan receipts</string>
     <string name="permission_notification_title">Notification Permission</string>
     <string name="permission_notification_message">Notification access is needed for budget reminders</string>
+
+    <!-- Widgets -->
+    <string name="balance_widget_description">Shows your total balance and account count</string>
+    <string name="summary_widget_description">Displays monthly expenses, income, and net summary</string>
+    <string name="budget_widget_description">Tracks budget progress for the current month</string>
 </resources>
