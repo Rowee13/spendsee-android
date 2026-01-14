@@ -1,5 +1,6 @@
 package com.spendsee.ui.screens.records
 
+import android.graphics.Bitmap
 import androidx.compose.animation.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -35,6 +36,11 @@ import com.spendsee.data.repository.TransactionRepository
 import com.spendsee.data.repository.AccountRepository
 import com.spendsee.data.repository.CategoryRepository
 import com.spendsee.managers.CurrencyManager
+import com.spendsee.managers.PremiumManager
+import com.spendsee.managers.ReceiptParser
+import com.spendsee.ui.screens.camera.CameraScreen
+import com.spendsee.ui.screens.premium.PremiumPaywallScreen
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -50,10 +56,20 @@ fun RecordsScreen(
 ) {
     val context = LocalContext.current
     val currencyManager = remember { CurrencyManager.getInstance(context) }
+    val premiumManager = remember { PremiumManager.getInstance(context) }
+    val receiptParser = remember { ReceiptParser() }
+    val scope = rememberCoroutineScope()
+
     val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
+    val isPremium by premiumManager.isPremium.collectAsState()
+
     var showAddTransaction by remember { mutableStateOf(false) }
     var transactionToEdit by remember { mutableStateOf<Transaction?>(null) }
+    var showCamera by remember { mutableStateOf(false) }
+    var isProcessingReceipt by remember { mutableStateOf(false) }
+    var showPremiumPaywall by remember { mutableStateOf(false) }
+    var fabExpanded by remember { mutableStateOf(false) }
 
     // Load accounts and categories
     val accounts by AccountRepository.getInstance(context).getAllAccounts().collectAsState(initial = emptyList())
@@ -61,12 +77,94 @@ fun RecordsScreen(
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddTransaction = true },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Transaction")
+                // Scan Receipt FAB (shown when expanded)
+                AnimatedVisibility(
+                    visible = fabExpanded,
+                    enter = fadeIn() + scaleIn(),
+                    exit = fadeOut() + scaleOut()
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.surface,
+                            shape = RoundedCornerShape(8.dp),
+                            shadowElevation = 2.dp
+                        ) {
+                            Text(
+                                text = "Scan Receipt",
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        SmallFloatingActionButton(
+                            onClick = {
+                                if (isPremium) {
+                                    showCamera = true
+                                    fabExpanded = false
+                                } else {
+                                    showPremiumPaywall = true
+                                    fabExpanded = false
+                                }
+                            },
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        ) {
+                            Icon(FeatherIcons.Camera, contentDescription = "Scan Receipt")
+                        }
+                    }
+                }
+
+                // Manual Add FAB (shown when expanded)
+                AnimatedVisibility(
+                    visible = fabExpanded,
+                    enter = fadeIn() + scaleIn(),
+                    exit = fadeOut() + scaleOut()
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.surface,
+                            shape = RoundedCornerShape(8.dp),
+                            shadowElevation = 2.dp
+                        ) {
+                            Text(
+                                text = "Add Manually",
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        SmallFloatingActionButton(
+                            onClick = {
+                                showAddTransaction = true
+                                fabExpanded = false
+                            },
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        ) {
+                            Icon(FeatherIcons.Edit, contentDescription = "Add Manually")
+                        }
+                    }
+                }
+
+                // Main FAB (always visible)
+                FloatingActionButton(
+                    onClick = { fabExpanded = !fabExpanded },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(
+                        imageVector = if (fabExpanded) FeatherIcons.X else Icons.Default.Add,
+                        contentDescription = if (fabExpanded) "Close menu" else "Add transaction"
+                    )
+                }
             }
         }
     ) { paddingValues ->
@@ -154,6 +252,84 @@ fun RecordsScreen(
                 }
                 showAddTransaction = false
                 transactionToEdit = null
+            }
+        )
+    }
+
+    // Camera Screen for Receipt Scanning
+    if (showCamera) {
+        CameraScreen(
+            onImageCaptured = { bitmap ->
+                showCamera = false
+                isProcessingReceipt = true
+
+                scope.launch {
+                    try {
+                        val receiptData = receiptParser.parseReceipt(bitmap)
+
+                        // Create a temporary transaction with scanned data
+                        transactionToEdit = Transaction(
+                            id = "",
+                            title = receiptData.merchantName ?: "",
+                            amount = receiptData.amount ?: 0.0,
+                            type = "expense",
+                            category = "", // Will be auto-selected in dialog
+                            date = receiptData.date ?: System.currentTimeMillis(),
+                            notes = if (receiptData.items.isNotEmpty()) {
+                                "Items:\n" + receiptData.items.joinToString("\n")
+                            } else {
+                                ""
+                            },
+                            accountId = accounts.firstOrNull()?.id,
+                            toAccountId = null,
+                            budgetId = null,
+                            createdAt = System.currentTimeMillis()
+                        )
+
+                        showAddTransaction = true
+                        isProcessingReceipt = false
+                    } catch (e: Exception) {
+                        isProcessingReceipt = false
+                        // Show error - could add a Snackbar here
+                    }
+                }
+            },
+            onDismiss = {
+                showCamera = false
+            }
+        )
+    }
+
+    // Processing Indicator
+    if (isProcessingReceipt) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(enabled = false) { },
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                CircularProgressIndicator(color = Color.White)
+                Text(
+                    text = "Processing receipt...",
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+        }
+    }
+
+    // Premium Paywall
+    if (showPremiumPaywall) {
+        PremiumPaywallScreen(
+            onDismiss = { showPremiumPaywall = false },
+            onPurchaseSuccess = {
+                showPremiumPaywall = false
+                // Premium status will be updated automatically via StateFlow
             }
         )
     }
