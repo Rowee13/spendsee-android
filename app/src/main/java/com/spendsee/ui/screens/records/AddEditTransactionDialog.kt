@@ -6,8 +6,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,9 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import compose.icons.FeatherIcons
@@ -47,7 +48,7 @@ fun AddEditTransactionDialog(
     ) -> Unit
 ) {
     var selectedType by remember { mutableStateOf(transaction?.type ?: "expense") }
-    var amount by remember { mutableStateOf(transaction?.amount?.toString() ?: "") }
+    var calculatorDisplay by remember { mutableStateOf(transaction?.amount?.toString() ?: "0") }
     var title by remember { mutableStateOf(transaction?.title ?: "") }
     var selectedCategory by remember { mutableStateOf(transaction?.category ?: "") }
     var selectedAccountId by remember { mutableStateOf(transaction?.accountId ?: accounts.firstOrNull()?.id) }
@@ -55,14 +56,11 @@ fun AddEditTransactionDialog(
     var date by remember { mutableStateOf(transaction?.date ?: System.currentTimeMillis()) }
     var notes by remember { mutableStateOf(transaction?.notes ?: "") }
 
-    var amountError by remember { mutableStateOf<String?>(null) }
-    var titleError by remember { mutableStateOf<String?>(null) }
-    var categoryError by remember { mutableStateOf<String?>(null) }
-    var accountError by remember { mutableStateOf<String?>(null) }
     var showCategoryPicker by remember { mutableStateOf(false) }
     var showAccountPicker by remember { mutableStateOf(false) }
     var showToAccountPicker by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
 
     val isEdit = transaction != null
 
@@ -85,6 +83,39 @@ fun AddEditTransactionDialog(
         }
     }
 
+    // Calculator functions
+    fun handleCalculatorInput(input: String) {
+        when (input) {
+            "C" -> calculatorDisplay = "0"
+            "⌫" -> {
+                calculatorDisplay = if (calculatorDisplay.length > 1) {
+                    calculatorDisplay.dropLast(1)
+                } else {
+                    "0"
+                }
+            }
+            "=" -> {
+                try {
+                    val result = evaluateExpression(calculatorDisplay)
+                    calculatorDisplay = if (result % 1.0 == 0.0) {
+                        result.toInt().toString()
+                    } else {
+                        String.format("%.2f", result)
+                    }
+                } catch (e: Exception) {
+                    calculatorDisplay = "Error"
+                }
+            }
+            else -> {
+                if (calculatorDisplay == "0" && input !in listOf("+", "-", "×", "÷", ".")) {
+                    calculatorDisplay = input
+                } else {
+                    calculatorDisplay += input
+                }
+            }
+        }
+    }
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
@@ -101,404 +132,45 @@ fun AddEditTransactionDialog(
                     .fillMaxSize()
                     .statusBarsPadding()
             ) {
-                // Top Bar
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = if (isEdit) "Edit Transaction" else "Add Transaction",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onDismiss) {
-                            Icon(FeatherIcons.X, contentDescription = "Close")
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
-                )
-
-                // Scrollable content
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 16.dp)
-                ) {
-                    // Transaction Type Selector (iOS segmented control style)
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            SegmentedButton(
-                                text = "Expense",
-                                isSelected = selectedType == "expense",
-                                onClick = { selectedType = "expense" },
-                                modifier = Modifier.weight(1f),
-                                color = Color(0xFFEF5350)
-                            )
-                            SegmentedButton(
-                                text = "Income",
-                                isSelected = selectedType == "income",
-                                onClick = { selectedType = "income" },
-                                modifier = Modifier.weight(1f),
-                                color = Color(0xFF66BB6A)
-                            )
-                            SegmentedButton(
-                                text = "Transfer",
-                                isSelected = selectedType == "transfer",
-                                onClick = { selectedType = "transfer" },
-                                modifier = Modifier.weight(1f),
-                                color = Color(0xFF42A5F5)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    // Amount Card (iOS style - large and prominent)
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(20.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = "Amount",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Text(
-                                    "$",
-                                    style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = when (selectedType) {
-                                        "income" -> Color(0xFF66BB6A)
-                                        "expense" -> Color(0xFFEF5350)
-                                        else -> MaterialTheme.colorScheme.primary
-                                    }
-                                )
-                                OutlinedTextField(
-                                    value = amount,
-                                    onValueChange = {
-                                        amount = it
-                                        amountError = null
-                                    },
-                                    modifier = Modifier.width(200.dp),
-                                    singleLine = true,
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                                    textStyle = MaterialTheme.typography.displayMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = when (selectedType) {
-                                            "income" -> Color(0xFF66BB6A)
-                                            "expense" -> Color(0xFFEF5350)
-                                            else -> MaterialTheme.colorScheme.primary
-                                        },
-                                        textAlign = TextAlign.Center
-                                    ),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = Color.Transparent,
-                                        unfocusedBorderColor = Color.Transparent
-                                    ),
-                                    placeholder = {
-                                        Text(
-                                            "0.00",
-                                            style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold),
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-                                        )
-                                    }
-                                )
-                            }
-                            if (amountError != null) {
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    amountError!!,
-                                    color = MaterialTheme.colorScheme.error,
-                                    style = MaterialTheme.typography.bodySmall
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Description
-                    OutlinedTextField(
-                        value = title,
-                        onValueChange = {
-                            title = it
-                            titleError = null
-                        },
-                        label = { Text("Description") },
-                        placeholder = { Text(if (selectedType == "transfer") "Transfer" else "What did you spend on?") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        isError = titleError != null,
-                        supportingText = titleError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } }
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Category (only for income/expense)
-                    if (selectedType != "transfer") {
-                        ExposedDropdownMenuBox(
-                            expanded = showCategoryPicker,
-                            onExpandedChange = { showCategoryPicker = it }
-                        ) {
-                            OutlinedTextField(
-                                value = selectedCategory,
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("Category") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCategoryPicker) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .menuAnchor(),
-                                isError = categoryError != null,
-                                supportingText = categoryError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } }
-                            )
-
-                            ExposedDropdownMenu(
-                                expanded = showCategoryPicker,
-                                onDismissRequest = { showCategoryPicker = false }
-                            ) {
-                                filteredCategories.forEach { category ->
-                                    DropdownMenuItem(
-                                        text = {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .size(32.dp)
-                                                        .clip(CircleShape)
-                                                        .background(
-                                                            Color(android.graphics.Color.parseColor(category.colorHex))
-                                                                .copy(alpha = 0.2f)
-                                                        ),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    Icon(
-                                                        imageVector = getCategoryIcon(category.icon),
-                                                        contentDescription = null,
-                                                        tint = Color(android.graphics.Color.parseColor(category.colorHex)),
-                                                        modifier = Modifier.size(16.dp)
-                                                    )
-                                                }
-                                                Spacer(modifier = Modifier.width(12.dp))
-                                                Text(category.name)
-                                            }
-                                        },
-                                        onClick = {
-                                            selectedCategory = category.name
-                                            showCategoryPicker = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-                    }
-
-                    // Account Picker
-                    ExposedDropdownMenuBox(
-                        expanded = showAccountPicker,
-                        onExpandedChange = { showAccountPicker = it }
-                    ) {
-                        OutlinedTextField(
-                            value = accounts.find { it.id == selectedAccountId }?.name ?: "Select Account",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text(if (selectedType == "transfer") "From Account" else "Account") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showAccountPicker) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(),
-                            isError = accountError != null,
-                            supportingText = accountError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } }
-                        )
-
-                        ExposedDropdownMenu(
-                            expanded = showAccountPicker,
-                            onDismissRequest = { showAccountPicker = false }
-                        ) {
-                            accounts.forEach { account ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Text(account.name)
-                                            Text(
-                                                text = "$${String.format("%.2f", account.balance)}",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    },
-                                    onClick = {
-                                        selectedAccountId = account.id
-                                        showAccountPicker = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // To Account (only for transfers)
-                    if (selectedType == "transfer") {
-                        ExposedDropdownMenuBox(
-                            expanded = showToAccountPicker,
-                            onExpandedChange = { showToAccountPicker = it }
-                        ) {
-                            OutlinedTextField(
-                                value = accounts.find { it.id == selectedToAccountId }?.name ?: "Select Account",
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("To Account") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showToAccountPicker) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .menuAnchor()
-                            )
-
-                            ExposedDropdownMenu(
-                                expanded = showToAccountPicker,
-                                onDismissRequest = { showToAccountPicker = false }
-                            ) {
-                                accounts.filter { it.id != selectedAccountId }.forEach { account ->
-                                    DropdownMenuItem(
-                                        text = {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween
-                                            ) {
-                                                Text(account.name)
-                                                Text(
-                                                    text = "$${String.format("%.2f", account.balance)}",
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                        },
-                                        onClick = {
-                                            selectedToAccountId = account.id
-                                            showToAccountPicker = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-                    }
-
-                    // Date Picker
-                    OutlinedButton(
-                        onClick = { showDatePicker = true },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(FeatherIcons.Calendar, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(Date(date)))
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Notes
-                    OutlinedTextField(
-                        value = notes,
-                        onValueChange = { notes = it },
-                        label = { Text("Notes (Optional)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 3,
-                        maxLines = 5
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-
-                // Bottom Buttons
+                // Top Navigation Bar (iOS style)
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.surface,
-                    shadowElevation = 8.dp
+                    shadowElevation = 1.dp
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        OutlinedButton(
-                            onClick = onDismiss,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("Cancel")
+                        TextButton(onClick = onDismiss) {
+                            Text("Cancel", fontSize = 17.sp)
                         }
 
-                        Button(
+                        Text(
+                            text = if (isEdit) "Edit Record" else "Add Record",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold
+                        )
+
+                        TextButton(
                             onClick = {
-                                var hasError = false
-
-                                if (amount.isBlank()) {
-                                    amountError = "Amount is required"
-                                    hasError = true
-                                } else {
-                                    try {
-                                        amount.toDouble()
-                                    } catch (e: NumberFormatException) {
-                                        amountError = "Invalid amount"
-                                        hasError = true
-                                    }
+                                val finalAmount = try {
+                                    val evaluated = evaluateExpression(calculatorDisplay)
+                                    if (evaluated > 0) evaluated else return@TextButton
+                                } catch (e: Exception) {
+                                    return@TextButton
                                 }
 
-                                if (title.isBlank()) {
-                                    titleError = "Description is required"
-                                    hasError = true
-                                }
-
-                                if (selectedType != "transfer" && selectedCategory.isEmpty()) {
-                                    categoryError = "Category is required"
-                                    hasError = true
-                                }
-
-                                if (selectedAccountId == null) {
-                                    accountError = "Account is required"
-                                    hasError = true
-                                }
-
-                                if (selectedType == "transfer" && selectedToAccountId == null) {
-                                    accountError = "To Account is required"
-                                    hasError = true
-                                }
-
-                                if (!hasError) {
+                                if (title.isNotBlank() &&
+                                    (selectedType == "transfer" || selectedCategory.isNotBlank()) &&
+                                    selectedAccountId != null &&
+                                    (selectedType != "transfer" || selectedToAccountId != null)) {
                                     onSave(
                                         title.trim(),
-                                        amount.toDouble(),
+                                        finalAmount,
                                         selectedType,
                                         if (selectedType == "transfer") "" else selectedCategory,
                                         date,
@@ -507,15 +179,377 @@ fun AddEditTransactionDialog(
                                         selectedToAccountId
                                     )
                                 }
-                            },
-                            modifier = Modifier.weight(1f)
+                            }
                         ) {
-                            Text(if (isEdit) "Save" else "Add")
+                            Text("Save", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
+
+                // Scrollable content
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Transaction Type Selector (iOS style - simple text buttons with checkmark)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        TypeButton(
+                            text = "Income",
+                            isSelected = selectedType == "income",
+                            onClick = { selectedType = "income" }
+                        )
+                        TypeButton(
+                            text = "Expense",
+                            isSelected = selectedType == "expense",
+                            onClick = { selectedType = "expense" }
+                        )
+                        TypeButton(
+                            text = "Transfer",
+                            isSelected = selectedType == "transfer",
+                            onClick = { selectedType = "transfer" }
+                        )
+                    }
+
+                    // Account and Category Row (side by side)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Account
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (selectedType == "transfer") "From Account" else "Account",
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            OutlinedButton(
+                                onClick = { showAccountPicker = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surface
+                                )
+                            ) {
+                                Text(
+                                    text = accounts.find { it.id == selectedAccountId }?.name ?: "Select Account",
+                                    fontSize = 15.sp,
+                                    color = if (selectedAccountId == null)
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    else
+                                        MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+
+                        // Category (hide for transfer)
+                        if (selectedType != "transfer") {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Category",
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+                                OutlinedButton(
+                                    onClick = { showCategoryPicker = true },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.surface
+                                    )
+                                ) {
+                                    Text(
+                                        text = if (selectedCategory.isEmpty()) "Select Category" else selectedCategory,
+                                        fontSize = 15.sp,
+                                        color = if (selectedCategory.isEmpty())
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        else
+                                            MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                        } else {
+                            // To Account for transfer
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "To Account",
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+                                OutlinedButton(
+                                    onClick = { showToAccountPicker = true },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.surface
+                                    )
+                                ) {
+                                    Text(
+                                        text = accounts.find { it.id == selectedToAccountId }?.name ?: "Select Account",
+                                        fontSize = 15.sp,
+                                        color = if (selectedToAccountId == null)
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        else
+                                            MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Title Field
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        placeholder = { Text("Title") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface
+                        )
+                    )
+
+                    // Notes Field
+                    OutlinedTextField(
+                        value = notes,
+                        onValueChange = { notes = it },
+                        placeholder = { Text("Notes") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface
+                        )
+                    )
+
+                    // Calculator Display
+                    OutlinedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 20.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = calculatorDisplay,
+                                fontSize = 32.sp,
+                                fontWeight = FontWeight.Normal,
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(
+                                onClick = { handleCalculatorInput("⌫") },
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(
+                                    imageVector = FeatherIcons.X,
+                                    contentDescription = "Delete",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // Calculator Keypad (4x4 grid)
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Row 1: +, 7, 8, 9
+                        CalculatorRow(
+                            buttons = listOf("+", "7", "8", "9"),
+                            onButtonClick = { handleCalculatorInput(it) }
+                        )
+                        // Row 2: -, 4, 5, 6
+                        CalculatorRow(
+                            buttons = listOf("-", "4", "5", "6"),
+                            onButtonClick = { handleCalculatorInput(it) }
+                        )
+                        // Row 3: ×, 1, 2, 3
+                        CalculatorRow(
+                            buttons = listOf("×", "1", "2", "3"),
+                            onButtonClick = { handleCalculatorInput(it) }
+                        )
+                        // Row 4: ÷, 0, ., =
+                        CalculatorRow(
+                            buttons = listOf("÷", "0", ".", "="),
+                            onButtonClick = { handleCalculatorInput(it) }
+                        )
+                    }
+
+                    // Date and Time Row (side by side)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { showDatePicker = true },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            )
+                        ) {
+                            Text(
+                                SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(date)),
+                                fontSize = 15.sp
+                            )
+                        }
+
+                        OutlinedButton(
+                            onClick = { showTimePicker = true },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            )
+                        ) {
+                            Text(
+                                SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(date)),
+                                fontSize = 15.sp
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
             }
         }
+    }
+
+    // Account Picker Dialog
+    if (showAccountPicker) {
+        AlertDialog(
+            onDismissRequest = { showAccountPicker = false },
+            title = { Text(if (selectedType == "transfer") "Select From Account" else "Select Account") },
+            text = {
+                Column {
+                    accounts.forEach { account ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedAccountId = account.id
+                                    showAccountPicker = false
+                                }
+                                .padding(vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(account.name)
+                            Text(
+                                text = "$${String.format("%.2f", account.balance)}",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAccountPicker = false }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+
+    // To Account Picker Dialog
+    if (showToAccountPicker) {
+        AlertDialog(
+            onDismissRequest = { showToAccountPicker = false },
+            title = { Text("Select To Account") },
+            text = {
+                Column {
+                    accounts.filter { it.id != selectedAccountId }.forEach { account ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedToAccountId = account.id
+                                    showToAccountPicker = false
+                                }
+                                .padding(vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(account.name)
+                            Text(
+                                text = "$${String.format("%.2f", account.balance)}",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showToAccountPicker = false }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+
+    // Category Picker Dialog
+    if (showCategoryPicker) {
+        AlertDialog(
+            onDismissRequest = { showCategoryPicker = false },
+            title = { Text("Select Category") },
+            text = {
+                Column {
+                    filteredCategories.forEach { category ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedCategory = category.name
+                                    showCategoryPicker = false
+                                }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        Color(android.graphics.Color.parseColor(category.colorHex))
+                                            .copy(alpha = 0.2f)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = getCategoryIcon(category.icon),
+                                    contentDescription = null,
+                                    tint = Color(android.graphics.Color.parseColor(category.colorHex)),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(category.name)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showCategoryPicker = false }) {
+                    Text("Close")
+                }
+            }
+        )
     }
 
     // Date Picker Dialog
@@ -547,33 +581,167 @@ fun AddEditTransactionDialog(
             DatePicker(state = datePickerState)
         }
     }
+
+    // Time Picker Dialog (simplified - just updates the time portion of the date)
+    if (showTimePicker) {
+        val calendar = Calendar.getInstance().apply { timeInMillis = date }
+        val timePickerState = rememberTimePickerState(
+            initialHour = calendar.get(Calendar.HOUR_OF_DAY),
+            initialMinute = calendar.get(Calendar.MINUTE)
+        )
+
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        calendar.set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+                        calendar.set(Calendar.MINUTE, timePickerState.minute)
+                        date = calendar.timeInMillis
+                        showTimePicker = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text("Cancel")
+                }
+            },
+            text = {
+                TimePicker(state = timePickerState)
+            }
+        )
+    }
 }
 
 @Composable
-fun SegmentedButton(
+fun TypeButton(
     text: String,
     isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    color: Color
+    onClick: () -> Unit
 ) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier.height(36.dp),
-        shape = RoundedCornerShape(8.dp),
-        color = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent
+    Row(
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = text,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                color = if (isSelected) color else MaterialTheme.colorScheme.onSurfaceVariant
+        if (isSelected) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "Selected",
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurface
             )
+            Spacer(modifier = Modifier.width(4.dp))
         }
+        Text(
+            text = text,
+            fontSize = 17.sp,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+fun CalculatorRow(
+    buttons: List<String>,
+    onButtonClick: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        buttons.forEach { button ->
+            OutlinedButton(
+                onClick = { onButtonClick(button) },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(60.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Text(
+                    text = button,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Normal
+                )
+            }
+        }
+    }
+}
+
+// Simple expression evaluator for calculator
+fun evaluateExpression(expression: String): Double {
+    if (expression == "0" || expression.isEmpty()) return 0.0
+
+    try {
+        var exp = expression
+            .replace("×", "*")
+            .replace("÷", "/")
+
+        // Simple evaluation - handle one operation at a time
+        val tokens = mutableListOf<String>()
+        var currentNumber = ""
+
+        for (char in exp) {
+            if (char.isDigit() || char == '.') {
+                currentNumber += char
+            } else if (char in listOf('+', '-', '*', '/')) {
+                if (currentNumber.isNotEmpty()) {
+                    tokens.add(currentNumber)
+                    currentNumber = ""
+                }
+                tokens.add(char.toString())
+            }
+        }
+        if (currentNumber.isNotEmpty()) {
+            tokens.add(currentNumber)
+        }
+
+        if (tokens.size == 1) {
+            return tokens[0].toDoubleOrNull() ?: 0.0
+        }
+
+        // Evaluate multiplication and division first
+        var i = 1
+        while (i < tokens.size) {
+            if (tokens[i] == "*" || tokens[i] == "/") {
+                val left = tokens[i - 1].toDouble()
+                val right = tokens[i + 1].toDouble()
+                val result = if (tokens[i] == "*") left * right else left / right
+                tokens[i - 1] = result.toString()
+                tokens.removeAt(i)
+                tokens.removeAt(i)
+            } else {
+                i += 2
+            }
+        }
+
+        // Evaluate addition and subtraction
+        i = 1
+        while (i < tokens.size) {
+            if (tokens[i] == "+" || tokens[i] == "-") {
+                val left = tokens[i - 1].toDouble()
+                val right = tokens[i + 1].toDouble()
+                val result = if (tokens[i] == "+") left + right else left - right
+                tokens[i - 1] = result.toString()
+                tokens.removeAt(i)
+                tokens.removeAt(i)
+            } else {
+                i += 2
+            }
+        }
+
+        return tokens[0].toDouble()
+    } catch (e: Exception) {
+        return 0.0
     }
 }
 
