@@ -37,12 +37,16 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BudgetsScreen(
-    viewModel: BudgetsViewModel = viewModel(
-        factory = BudgetsViewModelFactory(
-            BudgetRepository.getInstance(LocalContext.current),
-            TransactionRepository.getInstance(LocalContext.current)
+    viewModel: BudgetsViewModel = run {
+        val context = LocalContext.current
+        viewModel(
+            factory = BudgetsViewModelFactory(
+                BudgetRepository.getInstance(context),
+                TransactionRepository.getInstance(context),
+                context
+            )
         )
-    )
+    }
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current

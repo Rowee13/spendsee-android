@@ -1,11 +1,13 @@
 package com.spendsee.ui.screens.budgets
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.spendsee.data.local.entities.Budget
 import com.spendsee.data.local.entities.BudgetItem
 import com.spendsee.data.repository.BudgetRepository
 import com.spendsee.data.repository.TransactionRepository
+import com.spendsee.managers.BudgetNotificationManager
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -32,9 +34,11 @@ data class BudgetsUiState(
 
 class BudgetsViewModel(
     private val budgetRepository: BudgetRepository,
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    private val context: Context
 ) : ViewModel() {
 
+    private val notificationManager = BudgetNotificationManager.getInstance(context)
     private val _uiState = MutableStateFlow(BudgetsUiState())
     val uiState: StateFlow<BudgetsUiState> = _uiState.asStateFlow()
 
@@ -157,6 +161,12 @@ class BudgetsViewModel(
                     createdAt = System.currentTimeMillis()
                 )
                 budgetRepository.insertBudget(budget)
+
+                // Schedule notification if budget has due date
+                if (dueDate != null) {
+                    notificationManager.scheduleBudgetNotification(budget)
+                }
+
                 loadBudgets()
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = e.message) }
@@ -168,6 +178,15 @@ class BudgetsViewModel(
         viewModelScope.launch {
             try {
                 budgetRepository.updateBudget(budget)
+
+                // Reschedule notification if budget has due date
+                // If budget is marked as paid, cancel notification
+                if (budget.isPaid) {
+                    budget.notificationId?.let { notificationManager.cancelNotification(it) }
+                } else if (budget.dueDate != null) {
+                    notificationManager.scheduleBudgetNotification(budget)
+                }
+
                 loadBudgets()
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = e.message) }
@@ -178,6 +197,9 @@ class BudgetsViewModel(
     fun deleteBudget(budget: Budget) {
         viewModelScope.launch {
             try {
+                // Cancel notification if it exists
+                budget.notificationId?.let { notificationManager.cancelNotification(it) }
+
                 budgetRepository.deleteBudget(budget)
                 budgetRepository.deleteBudgetItemsByBudgetId(budget.id)
                 loadBudgets()
