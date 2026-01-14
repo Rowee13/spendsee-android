@@ -1,7 +1,6 @@
 package com.spendsee.ui.screens.records
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -17,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -71,7 +71,7 @@ fun AddEditTransactionDialog(
         when (selectedType) {
             "income" -> it.type == "income"
             "expense" -> it.type == "expense"
-            "transfer" -> false // Transfers don't use categories
+            "transfer" -> false
             else -> false
         }
     }
@@ -120,93 +120,146 @@ fun AddEditTransactionDialog(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
                 // Scrollable content
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 24.dp)
+                        .padding(horizontal = 16.dp, vertical = 16.dp)
                 ) {
-                    // Transaction Type Selector
-                    Row(
+                    // Transaction Type Selector (iOS segmented control style)
+                    Surface(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant
                     ) {
-                        TransactionTypeButton(
-                            text = "Expense",
-                            icon = FeatherIcons.TrendingDown,
-                            color = Color(0xFFEF5350),
-                            isSelected = selectedType == "expense",
-                            onClick = { selectedType = "expense" },
-                            modifier = Modifier.weight(1f)
-                        )
-                        TransactionTypeButton(
-                            text = "Income",
-                            icon = FeatherIcons.TrendingUp,
-                            color = Color(0xFF66BB6A),
-                            isSelected = selectedType == "income",
-                            onClick = { selectedType = "income" },
-                            modifier = Modifier.weight(1f)
-                        )
-                        TransactionTypeButton(
-                            text = "Transfer",
-                            icon = FeatherIcons.ArrowRightCircle,
-                            color = Color(0xFF42A5F5),
-                            isSelected = selectedType == "transfer",
-                            onClick = { selectedType = "transfer" },
-                            modifier = Modifier.weight(1f)
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            SegmentedButton(
+                                text = "Expense",
+                                isSelected = selectedType == "expense",
+                                onClick = { selectedType = "expense" },
+                                modifier = Modifier.weight(1f),
+                                color = Color(0xFFEF5350)
+                            )
+                            SegmentedButton(
+                                text = "Income",
+                                isSelected = selectedType == "income",
+                                onClick = { selectedType = "income" },
+                                modifier = Modifier.weight(1f),
+                                color = Color(0xFF66BB6A)
+                            )
+                            SegmentedButton(
+                                text = "Transfer",
+                                isSelected = selectedType == "transfer",
+                                onClick = { selectedType = "transfer" },
+                                modifier = Modifier.weight(1f),
+                                color = Color(0xFF42A5F5)
+                            )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                    // Amount input
-                    OutlinedTextField(
-                        value = amount,
-                        onValueChange = {
-                            amount = it
-                            amountError = null
-                        },
-                        label = { Text("Amount") },
+                    // Amount Card (iOS style - large and prominent)
+                    Card(
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        isError = amountError != null,
-                        supportingText = {
-                            if (amountError != null) {
-                                Text(amountError!!, color = MaterialTheme.colorScheme.error)
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Amount",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    "$",
+                                    style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = when (selectedType) {
+                                        "income" -> Color(0xFF66BB6A)
+                                        "expense" -> Color(0xFFEF5350)
+                                        else -> MaterialTheme.colorScheme.primary
+                                    }
+                                )
+                                OutlinedTextField(
+                                    value = amount,
+                                    onValueChange = {
+                                        amount = it
+                                        amountError = null
+                                    },
+                                    modifier = Modifier.width(200.dp),
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                    textStyle = MaterialTheme.typography.displayMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = when (selectedType) {
+                                            "income" -> Color(0xFF66BB6A)
+                                            "expense" -> Color(0xFFEF5350)
+                                            else -> MaterialTheme.colorScheme.primary
+                                        },
+                                        textAlign = TextAlign.Center
+                                    ),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = Color.Transparent,
+                                        unfocusedBorderColor = Color.Transparent
+                                    ),
+                                    placeholder = {
+                                        Text(
+                                            "0.00",
+                                            style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold),
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                                        )
+                                    }
+                                )
                             }
-                        },
-                        prefix = { Text("$", style = MaterialTheme.typography.titleLarge) },
-                        textStyle = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                    )
+                            if (amountError != null) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    amountError!!,
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Title input
+                    // Description
                     OutlinedTextField(
                         value = title,
                         onValueChange = {
                             title = it
                             titleError = null
                         },
-                        label = { Text("Title") },
-                        placeholder = { Text(if (selectedType == "transfer") "Transfer" else "Description") },
+                        label = { Text("Description") },
+                        placeholder = { Text(if (selectedType == "transfer") "Transfer" else "What did you spend on?") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         isError = titleError != null,
-                        supportingText = {
-                            if (titleError != null) {
-                                Text(titleError!!, color = MaterialTheme.colorScheme.error)
-                            }
-                        }
+                        supportingText = titleError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } }
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    // Category picker (only for income/expense)
+                    // Category (only for income/expense)
                     if (selectedType != "transfer") {
                         ExposedDropdownMenuBox(
                             expanded = showCategoryPicker,
@@ -222,11 +275,7 @@ fun AddEditTransactionDialog(
                                     .fillMaxWidth()
                                     .menuAnchor(),
                                 isError = categoryError != null,
-                                supportingText = {
-                                    if (categoryError != null) {
-                                        Text(categoryError!!, color = MaterialTheme.colorScheme.error)
-                                    }
-                                }
+                                supportingText = categoryError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } }
                             )
 
                             ExposedDropdownMenu(
@@ -267,10 +316,10 @@ fun AddEditTransactionDialog(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                     }
 
-                    // Account picker (From account)
+                    // Account Picker
                     ExposedDropdownMenuBox(
                         expanded = showAccountPicker,
                         onExpandedChange = { showAccountPicker = it }
@@ -285,11 +334,7 @@ fun AddEditTransactionDialog(
                                 .fillMaxWidth()
                                 .menuAnchor(),
                             isError = accountError != null,
-                            supportingText = {
-                                if (accountError != null) {
-                                    Text(accountError!!, color = MaterialTheme.colorScheme.error)
-                                }
-                            }
+                            supportingText = accountError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } }
                         )
 
                         ExposedDropdownMenu(
@@ -301,8 +346,7 @@ fun AddEditTransactionDialog(
                                     text = {
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
+                                            horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
                                             Text(account.name)
                                             Text(
@@ -321,9 +365,9 @@ fun AddEditTransactionDialog(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    // To Account picker (only for transfers)
+                    // To Account (only for transfers)
                     if (selectedType == "transfer") {
                         ExposedDropdownMenuBox(
                             expanded = showToAccountPicker,
@@ -349,8 +393,7 @@ fun AddEditTransactionDialog(
                                         text = {
                                             Row(
                                                 modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
+                                                horizontalArrangement = Arrangement.SpaceBetween
                                             ) {
                                                 Text(account.name)
                                                 Text(
@@ -369,22 +412,22 @@ fun AddEditTransactionDialog(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                     }
 
-                    // Date picker
+                    // Date Picker
                     OutlinedButton(
                         onClick = { showDatePicker = true },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(FeatherIcons.Calendar, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date(date)))
+                        Text(SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(Date(date)))
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    // Notes input
+                    // Notes
                     OutlinedTextField(
                         value = notes,
                         onValueChange = { notes = it },
@@ -433,7 +476,7 @@ fun AddEditTransactionDialog(
                                 }
 
                                 if (title.isBlank()) {
-                                    titleError = "Title is required"
+                                    titleError = "Description is required"
                                     hasError = true
                                 }
 
@@ -507,37 +550,28 @@ fun AddEditTransactionDialog(
 }
 
 @Composable
-fun TransactionTypeButton(
+fun SegmentedButton(
     text: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    color: Color,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    color: Color
 ) {
-    Button(
+    Surface(
         onClick = onClick,
-        modifier = modifier.height(80.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) color else MaterialTheme.colorScheme.surfaceVariant,
-            contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
-        ),
-        shape = RoundedCornerShape(12.dp)
+        modifier = modifier.height(36.dp),
+        shape = RoundedCornerShape(8.dp),
+        color = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = text,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = text,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (isSelected) color else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
