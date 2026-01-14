@@ -29,7 +29,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.spendsee.R
 import com.spendsee.data.repository.BudgetRepository
 import com.spendsee.data.repository.TransactionRepository
-import java.text.NumberFormat
+import com.spendsee.managers.CurrencyManager
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -44,6 +44,9 @@ fun BudgetsScreen(
     )
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val currencyManager = remember { CurrencyManager.getInstance(context) }
+    val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
     var showAddBudget by remember { mutableStateOf(false) }
     var showEditBudget by remember { mutableStateOf(false) }
     var budgetToEdit by remember { mutableStateOf<BudgetWithDetails?>(null) }
@@ -77,7 +80,8 @@ fun BudgetsScreen(
                 onNextMonth = { viewModel.nextMonth() },
                 allocated = uiState.totalAllocated,
                 spent = uiState.totalSpent,
-                remaining = uiState.totalRemaining
+                remaining = uiState.totalRemaining,
+                currencySymbol = selectedCurrency.symbol
             )
 
             // Budgets List
@@ -109,7 +113,8 @@ fun BudgetsScreen(
                     onDeleteBudgetItem = { viewModel.deleteBudgetItem(it) },
                     onMarkAsPaid = { budget, isPaid ->
                         viewModel.markBudgetAsPaid(budget, isPaid)
-                    }
+                    },
+                    currencySymbol = selectedCurrency.symbol
                 )
             }
 
@@ -221,7 +226,8 @@ fun UnifiedBudgetHeaderSection(
     onNextMonth: () -> Unit,
     allocated: Double,
     spent: Double,
-    remaining: Double
+    remaining: Double,
+    currencySymbol: String
 ) {
     val calendar = Calendar.getInstance().apply {
         set(Calendar.MONTH, selectedMonth - 1)
@@ -302,19 +308,22 @@ fun UnifiedBudgetHeaderSection(
                 StatColumn(
                     label = "Allocated",
                     amount = allocated,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    currencySymbol = currencySymbol
                 )
 
                 StatColumn(
                     label = "Spent",
                     amount = spent,
-                    color = Color(0xFFEF5350)
+                    color = Color(0xFFEF5350),
+                    currencySymbol = currencySymbol
                 )
 
                 StatColumn(
                     label = "Remaining",
                     amount = remaining,
-                    color = if (remaining >= 0) Color(0xFF66BB6A) else Color(0xFFEF5350)
+                    color = if (remaining >= 0) Color(0xFF66BB6A) else Color(0xFFEF5350),
+                    currencySymbol = currencySymbol
                 )
             }
 
@@ -324,7 +333,7 @@ fun UnifiedBudgetHeaderSection(
 }
 
 @Composable
-fun StatColumn(label: String, amount: Double, color: Color) {
+fun StatColumn(label: String, amount: Double, color: Color, currencySymbol: String) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -337,7 +346,7 @@ fun StatColumn(label: String, amount: Double, color: Color) {
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = formatCurrency(amount),
+            text = formatCurrency(amount, currencySymbol),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = color,
@@ -354,7 +363,8 @@ fun BudgetsList(
     onAddBudgetItem: (String) -> Unit,
     onEditBudgetItem: (com.spendsee.data.local.entities.BudgetItem) -> Unit,
     onDeleteBudgetItem: (com.spendsee.data.local.entities.BudgetItem) -> Unit,
-    onMarkAsPaid: (com.spendsee.data.local.entities.Budget, Boolean) -> Unit
+    onMarkAsPaid: (com.spendsee.data.local.entities.Budget, Boolean) -> Unit,
+    currencySymbol: String
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -368,7 +378,8 @@ fun BudgetsList(
                 onAddItem = { onAddBudgetItem(budgetWithDetails.budget.id) },
                 onEditItem = onEditBudgetItem,
                 onDeleteItem = onDeleteBudgetItem,
-                onMarkAsPaid = { isPaid -> onMarkAsPaid(budgetWithDetails.budget, isPaid) }
+                onMarkAsPaid = { isPaid -> onMarkAsPaid(budgetWithDetails.budget, isPaid) },
+                currencySymbol = currencySymbol
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -384,7 +395,8 @@ fun BudgetCard(
     onAddItem: () -> Unit,
     onEditItem: (com.spendsee.data.local.entities.BudgetItem) -> Unit,
     onDeleteItem: (com.spendsee.data.local.entities.BudgetItem) -> Unit,
-    onMarkAsPaid: (Boolean) -> Unit
+    onMarkAsPaid: (Boolean) -> Unit,
+    currencySymbol: String
 ) {
     var expanded by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
@@ -469,7 +481,7 @@ fun BudgetCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = formatCurrency(budgetWithDetails.planned),
+                        text = formatCurrency(budgetWithDetails.planned, currencySymbol),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium
                     )
@@ -482,7 +494,7 @@ fun BudgetCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = formatCurrency(budgetWithDetails.spent),
+                        text = formatCurrency(budgetWithDetails.spent, currencySymbol),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = if (isOverBudget) Color(0xFFEF5350) else MaterialTheme.colorScheme.onSurface
@@ -496,7 +508,7 @@ fun BudgetCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = formatCurrency(budgetWithDetails.remaining),
+                        text = formatCurrency(budgetWithDetails.remaining, currencySymbol),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = if (budgetWithDetails.remaining < 0) Color(0xFFEF5350) else Color(0xFF66BB6A)
@@ -572,7 +584,7 @@ fun BudgetCard(
                                 }
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        text = formatCurrency(item.amount),
+                                        text = formatCurrency(item.amount, currencySymbol),
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Medium
                                     )
@@ -700,7 +712,6 @@ fun EmptyState() {
     }
 }
 
-private fun formatCurrency(amount: Double): String {
-    val formatter = NumberFormat.getCurrencyInstance(Locale.US)
-    return formatter.format(amount)
+private fun formatCurrency(amount: Double, currencySymbol: String): String {
+    return "$currencySymbol${String.format("%.2f", amount)}"
 }

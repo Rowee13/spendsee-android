@@ -27,7 +27,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.spendsee.R
 import com.spendsee.data.repository.BudgetRepository
 import com.spendsee.data.repository.TransactionRepository
-import java.text.NumberFormat
+import com.spendsee.managers.CurrencyManager
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -41,6 +41,9 @@ fun AnalysisScreen(
         )
     )
 ) {
+    val context = LocalContext.current
+    val currencyManager = remember { CurrencyManager.getInstance(context) }
+    val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
 
     Column(
@@ -56,7 +59,8 @@ fun AnalysisScreen(
             onNextMonth = { viewModel.nextMonth() },
             expenses = uiState.totalExpenses,
             income = uiState.totalIncome,
-            net = uiState.netTotal
+            net = uiState.netTotal,
+            currencySymbol = selectedCurrency.symbol
         )
 
         // View Type Selector
@@ -78,13 +82,22 @@ fun AnalysisScreen(
         } else {
             when (uiState.selectedViewType) {
                 AnalysisViewType.SPENDING_ANALYTICS -> {
-                    SpendingAnalytics(categoryBreakdowns = uiState.categoryBreakdowns)
+                    SpendingAnalytics(
+                        categoryBreakdowns = uiState.categoryBreakdowns,
+                        currencySymbol = selectedCurrency.symbol
+                    )
                 }
                 AnalysisViewType.BUDGET_PERFORMANCE -> {
-                    BudgetPerformance(budgetPerformances = uiState.budgetPerformances)
+                    BudgetPerformance(
+                        budgetPerformances = uiState.budgetPerformances,
+                        currencySymbol = selectedCurrency.symbol
+                    )
                 }
                 AnalysisViewType.CASH_FLOW -> {
-                    CashFlow(dailyCashFlows = uiState.dailyCashFlows)
+                    CashFlow(
+                        dailyCashFlows = uiState.dailyCashFlows,
+                        currencySymbol = selectedCurrency.symbol
+                    )
                 }
             }
         }
@@ -113,7 +126,8 @@ fun UnifiedHeaderSection(
     onNextMonth: () -> Unit,
     expenses: Double,
     income: Double,
-    net: Double
+    net: Double,
+    currencySymbol: String
 ) {
     val calendar = Calendar.getInstance().apply {
         set(Calendar.MONTH, selectedMonth - 1)
@@ -194,19 +208,22 @@ fun UnifiedHeaderSection(
                 StatColumn(
                     label = "Expenses",
                     amount = expenses,
-                    color = Color(0xFFEF5350)
+                    color = Color(0xFFEF5350),
+                    currencySymbol = currencySymbol
                 )
 
                 StatColumn(
                     label = "Income",
                     amount = income,
-                    color = Color(0xFF66BB6A)
+                    color = Color(0xFF66BB6A),
+                    currencySymbol = currencySymbol
                 )
 
                 StatColumn(
                     label = "Net",
                     amount = net,
-                    color = if (net >= 0) Color(0xFF66BB6A) else Color(0xFFEF5350)
+                    color = if (net >= 0) Color(0xFF66BB6A) else Color(0xFFEF5350),
+                    currencySymbol = currencySymbol
                 )
             }
 
@@ -216,7 +233,7 @@ fun UnifiedHeaderSection(
 }
 
 @Composable
-fun StatColumn(label: String, amount: Double, color: Color) {
+fun StatColumn(label: String, amount: Double, color: Color, currencySymbol: String) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -229,7 +246,7 @@ fun StatColumn(label: String, amount: Double, color: Color) {
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = formatCurrency(amount),
+            text = formatCurrency(amount, currencySymbol),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = color,
@@ -288,7 +305,7 @@ fun ViewTypeSelector(
 }
 
 @Composable
-fun SpendingAnalytics(categoryBreakdowns: List<CategoryBreakdown>) {
+fun SpendingAnalytics(categoryBreakdowns: List<CategoryBreakdown>, currencySymbol: String) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp)
@@ -303,14 +320,14 @@ fun SpendingAnalytics(categoryBreakdowns: List<CategoryBreakdown>) {
         }
 
         items(categoryBreakdowns) { breakdown ->
-            CategoryBreakdownCard(breakdown)
+            CategoryBreakdownCard(breakdown, currencySymbol)
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
 
 @Composable
-fun CategoryBreakdownCard(breakdown: CategoryBreakdown) {
+fun CategoryBreakdownCard(breakdown: CategoryBreakdown, currencySymbol: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -367,7 +384,7 @@ fun CategoryBreakdownCard(breakdown: CategoryBreakdown) {
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = formatCurrency(breakdown.amount),
+                text = formatCurrency(breakdown.amount, currencySymbol),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -376,7 +393,7 @@ fun CategoryBreakdownCard(breakdown: CategoryBreakdown) {
 }
 
 @Composable
-fun BudgetPerformance(budgetPerformances: List<BudgetPerformance>) {
+fun BudgetPerformance(budgetPerformances: List<BudgetPerformance>, currencySymbol: String) {
     if (budgetPerformances.isEmpty()) {
         EmptyState(message = "No budgets for this month")
     } else {
@@ -394,7 +411,7 @@ fun BudgetPerformance(budgetPerformances: List<BudgetPerformance>) {
             }
 
             items(budgetPerformances) { performance ->
-                BudgetPerformanceCard(performance)
+                BudgetPerformanceCard(performance, currencySymbol)
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
@@ -402,7 +419,7 @@ fun BudgetPerformance(budgetPerformances: List<BudgetPerformance>) {
 }
 
 @Composable
-fun BudgetPerformanceCard(performance: BudgetPerformance) {
+fun BudgetPerformanceCard(performance: BudgetPerformance, currencySymbol: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -435,7 +452,7 @@ fun BudgetPerformanceCard(performance: BudgetPerformance) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = formatCurrency(performance.planned),
+                        text = formatCurrency(performance.planned, currencySymbol),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium
                     )
@@ -448,7 +465,7 @@ fun BudgetPerformanceCard(performance: BudgetPerformance) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = formatCurrency(performance.spent),
+                        text = formatCurrency(performance.spent, currencySymbol),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = if (performance.spent > performance.planned) Color(0xFFEF5350) else MaterialTheme.colorScheme.onSurface
@@ -471,7 +488,7 @@ fun BudgetPerformanceCard(performance: BudgetPerformance) {
 }
 
 @Composable
-fun CashFlow(dailyCashFlows: List<DailyCashFlow>) {
+fun CashFlow(dailyCashFlows: List<DailyCashFlow>, currencySymbol: String) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp)
@@ -486,14 +503,14 @@ fun CashFlow(dailyCashFlows: List<DailyCashFlow>) {
         }
 
         items(dailyCashFlows) { cashFlow ->
-            DailyCashFlowCard(cashFlow)
+            DailyCashFlowCard(cashFlow, currencySymbol)
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
 
 @Composable
-fun DailyCashFlowCard(cashFlow: DailyCashFlow) {
+fun DailyCashFlowCard(cashFlow: DailyCashFlow, currencySymbol: String) {
     val dateFormat = SimpleDateFormat("EEE, MMM d", Locale.getDefault())
 
     Card(
@@ -520,13 +537,13 @@ fun DailyCashFlowCard(cashFlow: DailyCashFlow) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = formatCurrency(cashFlow.income),
+                        text = formatCurrency(cashFlow.income, currencySymbol),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF66BB6A),
                         fontSize = 12.sp
                     )
                     Text(
-                        text = formatCurrency(cashFlow.expense),
+                        text = formatCurrency(cashFlow.expense, currencySymbol),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFFEF5350),
                         fontSize = 12.sp
@@ -536,7 +553,7 @@ fun DailyCashFlowCard(cashFlow: DailyCashFlow) {
                 Spacer(modifier = Modifier.width(16.dp))
 
                 Text(
-                    text = formatCurrency(cashFlow.net),
+                    text = formatCurrency(cashFlow.net, currencySymbol),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,
                     color = if (cashFlow.net >= 0) Color(0xFF66BB6A) else Color(0xFFEF5350)
@@ -576,9 +593,8 @@ fun EmptyState(message: String = "No data available") {
     }
 }
 
-private fun formatCurrency(amount: Double): String {
-    val formatter = NumberFormat.getCurrencyInstance(Locale.US)
-    return formatter.format(amount)
+private fun formatCurrency(amount: Double, currencySymbol: String): String {
+    return "$currencySymbol${String.format("%.2f", amount)}"
 }
 
 private fun AnalysisViewType.displayName(): String {

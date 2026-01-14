@@ -29,8 +29,7 @@ import com.spendsee.R
 import com.spendsee.data.local.entities.Account
 import com.spendsee.data.repository.AccountRepository
 import com.spendsee.data.repository.TransactionRepository
-import java.text.NumberFormat
-import java.util.*
+import com.spendsee.managers.CurrencyManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,6 +41,9 @@ fun AccountsScreen(
         )
     )
 ) {
+    val context = LocalContext.current
+    val currencyManager = remember { CurrencyManager.getInstance(context) }
+    val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
     var showAddAccount by remember { mutableStateOf(false) }
     var showEditAccount by remember { mutableStateOf(false) }
@@ -68,7 +70,8 @@ fun AccountsScreen(
             UnifiedAccountsHeaderSection(
                 totalBalance = uiState.totalBalance,
                 totalExpenses = uiState.totalExpenses,
-                totalIncome = uiState.totalIncome
+                totalIncome = uiState.totalIncome,
+                currencySymbol = selectedCurrency.symbol
             )
 
             // Accounts List
@@ -88,7 +91,8 @@ fun AccountsScreen(
                         accountToEdit = it
                         showEditAccount = true
                     },
-                    onDeleteAccount = { viewModel.deleteAccount(it) }
+                    onDeleteAccount = { viewModel.deleteAccount(it) },
+                    currencySymbol = selectedCurrency.symbol
                 )
             }
 
@@ -151,7 +155,8 @@ fun AccountsScreen(
 fun UnifiedAccountsHeaderSection(
     totalBalance: Double,
     totalExpenses: Double,
-    totalIncome: Double
+    totalIncome: Double,
+    currencySymbol: String
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -201,7 +206,7 @@ fun UnifiedAccountsHeaderSection(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = formatCurrency(totalBalance),
+                    text = formatCurrency(totalBalance, currencySymbol),
                     style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -217,12 +222,14 @@ fun UnifiedAccountsHeaderSection(
                     BalanceStatColumn(
                         label = "Expenses",
                         amount = totalExpenses,
-                        color = Color(0xFFEF5350)
+                        color = Color(0xFFEF5350),
+                        currencySymbol = currencySymbol
                     )
                     BalanceStatColumn(
                         label = "Income",
                         amount = totalIncome,
-                        color = Color(0xFF66BB6A)
+                        color = Color(0xFF66BB6A),
+                        currencySymbol = currencySymbol
                     )
                 }
             }
@@ -233,7 +240,7 @@ fun UnifiedAccountsHeaderSection(
 }
 
 @Composable
-fun BalanceStatColumn(label: String, amount: Double, color: Color) {
+fun BalanceStatColumn(label: String, amount: Double, color: Color, currencySymbol: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = label,
@@ -243,7 +250,7 @@ fun BalanceStatColumn(label: String, amount: Double, color: Color) {
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = formatCurrency(amount),
+            text = formatCurrency(amount, currencySymbol),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             color = color
@@ -255,7 +262,8 @@ fun BalanceStatColumn(label: String, amount: Double, color: Color) {
 fun AccountsList(
     accounts: List<Account>,
     onEditAccount: (Account) -> Unit,
-    onDeleteAccount: (Account) -> Unit
+    onDeleteAccount: (Account) -> Unit,
+    currencySymbol: String
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -265,7 +273,8 @@ fun AccountsList(
             AccountCard(
                 account = account,
                 onEdit = { onEditAccount(account) },
-                onDelete = { onDeleteAccount(account) }
+                onDelete = { onDeleteAccount(account) },
+                currencySymbol = currencySymbol
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -277,7 +286,8 @@ fun AccountsList(
 fun AccountCard(
     account: Account,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    currencySymbol: String
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
@@ -337,7 +347,7 @@ fun AccountCard(
 
             // Right side: Balance
             Text(
-                text = formatCurrency(account.balance),
+                text = formatCurrency(account.balance, currencySymbol),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = if (account.balance >= 0) MaterialTheme.colorScheme.onSurface else Color(0xFFEF5350)
@@ -409,9 +419,8 @@ fun EmptyState() {
     }
 }
 
-private fun formatCurrency(amount: Double): String {
-    val formatter = NumberFormat.getCurrencyInstance(Locale.US)
-    return formatter.format(amount)
+private fun formatCurrency(amount: Double, currencySymbol: String): String {
+    return "$currencySymbol${String.format("%.2f", amount)}"
 }
 
 private fun getAccountIcon(iconName: String): androidx.compose.ui.graphics.vector.ImageVector {
