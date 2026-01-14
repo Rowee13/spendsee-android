@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.spendsee.R
 import com.spendsee.managers.BackupManager
+import com.spendsee.managers.BudgetNotificationManager
 import com.spendsee.managers.PremiumManager
 import com.spendsee.managers.CurrencyManager
 import com.spendsee.managers.ThemeManager
@@ -44,6 +45,7 @@ fun SettingsScreen() {
     val currencyManager = remember { CurrencyManager.getInstance(context) }
     val backupManager = remember { BackupManager.getInstance(context) }
     val themeManager = remember { ThemeManager.getInstance(context) }
+    val notificationManager = remember { BudgetNotificationManager.getInstance(context) }
     val isPremium by premiumManager.isPremium.collectAsState()
     val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
     val isDarkMode by themeManager.isDarkMode.collectAsState()
@@ -58,6 +60,11 @@ fun SettingsScreen() {
     var isExporting by remember { mutableStateOf(false) }
     var isImporting by remember { mutableStateOf(false) }
     var versionTapCount by remember { mutableStateOf(0) }
+
+    // Notification settings
+    var notificationsEnabled by remember { mutableStateOf(notificationManager.areNotificationsEnabled()) }
+    var showDaysBeforeDialog by remember { mutableStateOf(false) }
+    var showNotificationTimeDialog by remember { mutableStateOf(false) }
 
     // Export backup launcher
     val exportLauncher = rememberLauncherForActivityResult(
@@ -277,13 +284,55 @@ fun SettingsScreen() {
             }
 
             item {
-                SettingsItem(
-                    icon = FeatherIcons.Bell,
-                    title = "Budget Reminders",
-                    subtitle = "Get notified about upcoming payments",
-                    onClick = { /* TODO: Implement notifications toggle */ },
-                    isPremiumFeature = true
-                )
+                if (!isPremium) {
+                    SettingsItem(
+                        icon = FeatherIcons.Bell,
+                        title = "Budget Reminders",
+                        subtitle = "Get notified about upcoming payments",
+                        onClick = { showPremiumPaywall = true },
+                        isPremiumFeature = true
+                    )
+                } else {
+                    SettingsSwitchItem(
+                        icon = FeatherIcons.Bell,
+                        title = "Budget Reminders",
+                        subtitle = if (notificationsEnabled) "Enabled" else "Disabled",
+                        checked = notificationsEnabled,
+                        onCheckedChange = { enabled ->
+                            notificationsEnabled = enabled
+                            notificationManager.setNotificationsEnabled(enabled)
+                            Toast.makeText(
+                                context,
+                                if (enabled) "Notifications enabled" else "Notifications disabled",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    )
+                }
+            }
+
+            // Show additional notification settings only if premium and enabled
+            if (isPremium && notificationsEnabled) {
+                item {
+                    SettingsItem(
+                        icon = FeatherIcons.Calendar,
+                        title = "Days Before Due Date",
+                        subtitle = "${notificationManager.getDaysBeforeDueDate()} days",
+                        onClick = { showDaysBeforeDialog = true }
+                    )
+                }
+
+                item {
+                    val hour = notificationManager.getNotificationHour()
+                    val amPm = if (hour >= 12) "PM" else "AM"
+                    val displayHour = if (hour > 12) hour - 12 else if (hour == 0) 12 else hour
+                    SettingsItem(
+                        icon = FeatherIcons.Clock,
+                        title = "Notification Time",
+                        subtitle = String.format("%d:00 %s", displayHour, amPm),
+                        onClick = { showNotificationTimeDialog = true }
+                    )
+                }
             }
 
             item {
@@ -420,6 +469,34 @@ fun SettingsScreen() {
                 Toast.makeText(context, "Checking for purchases...", Toast.LENGTH_SHORT).show()
             },
             onDismiss = { showPurchaseDetails = false }
+        )
+    }
+
+    // Show Days Before Dialog
+    if (showDaysBeforeDialog) {
+        DaysBeforeDialog(
+            currentDays = notificationManager.getDaysBeforeDueDate(),
+            onDaysSelected = { days ->
+                notificationManager.setDaysBeforeDueDate(days)
+                showDaysBeforeDialog = false
+                Toast.makeText(context, "Reminder set to $days days before", Toast.LENGTH_SHORT).show()
+            },
+            onDismiss = { showDaysBeforeDialog = false }
+        )
+    }
+
+    // Show Notification Time Dialog
+    if (showNotificationTimeDialog) {
+        NotificationTimeDialog(
+            currentHour = notificationManager.getNotificationHour(),
+            onTimeSelected = { hour ->
+                notificationManager.setNotificationHour(hour)
+                showNotificationTimeDialog = false
+                val amPm = if (hour >= 12) "PM" else "AM"
+                val displayHour = if (hour > 12) hour - 12 else if (hour == 0) 12 else hour
+                Toast.makeText(context, "Notification time set to $displayHour:00 $amPm", Toast.LENGTH_SHORT).show()
+            },
+            onDismiss = { showNotificationTimeDialog = false }
         )
     }
 }
@@ -967,4 +1044,136 @@ private fun PurchaseDetailItem(
 private fun formatPurchaseDate(timestamp: Long): String {
     val dateFormat = java.text.SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", java.util.Locale.getDefault())
     return dateFormat.format(java.util.Date(timestamp))
+}
+
+@Composable
+fun DaysBeforeDialog(
+    currentDays: Int,
+    onDaysSelected: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val daysOptions = listOf(1, 2, 3, 5, 7)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Days Before Due Date",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(daysOptions.size) { index ->
+                    val days = daysOptions[index]
+                    val isSelected = days == currentDays
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onDaysSelected(days) }
+                            .padding(vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "$days day${if (days > 1) "s" else ""} before",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+
+                        if (isSelected) {
+                            Icon(
+                                imageVector = FeatherIcons.Check,
+                                contentDescription = "Selected",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+
+                    if (index < daysOptions.size - 1) {
+                        Divider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
+}
+
+@Composable
+fun NotificationTimeDialog(
+    currentHour: Int,
+    onTimeSelected: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val timeOptions = listOf(6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Notification Time",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(timeOptions.size) { index ->
+                    val hour = timeOptions[index]
+                    val isSelected = hour == currentHour
+                    val amPm = if (hour >= 12) "PM" else "AM"
+                    val displayHour = if (hour > 12) hour - 12 else if (hour == 0) 12 else hour
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onTimeSelected(hour) }
+                            .padding(vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = String.format("%d:00 %s", displayHour, amPm),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+
+                        if (isSelected) {
+                            Icon(
+                                imageVector = FeatherIcons.Check,
+                                contentDescription = "Selected",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+
+                    if (index < timeOptions.size - 1) {
+                        Divider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
 }
