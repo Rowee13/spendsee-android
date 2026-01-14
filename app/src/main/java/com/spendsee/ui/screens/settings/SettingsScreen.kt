@@ -27,9 +27,12 @@ import com.spendsee.R
 import com.spendsee.managers.BackupManager
 import com.spendsee.managers.PremiumManager
 import com.spendsee.managers.CurrencyManager
+import com.spendsee.managers.ThemeManager
 import com.spendsee.utils.Currency
 import com.spendsee.ui.screens.premium.PremiumPaywallScreen
 import com.spendsee.ui.screens.categories.CategoriesScreen
+import com.spendsee.ui.theme.AppColorScheme
+import com.spendsee.ui.theme.AppColorSchemes
 import kotlinx.coroutines.launch
 
 @Composable
@@ -39,13 +42,17 @@ fun SettingsScreen() {
     val premiumManager = remember { PremiumManager.getInstance(context) }
     val currencyManager = remember { CurrencyManager.getInstance(context) }
     val backupManager = remember { BackupManager.getInstance(context) }
+    val themeManager = remember { ThemeManager.getInstance(context) }
     val isPremium by premiumManager.isPremium.collectAsState()
     val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
+    val selectedTheme by themeManager.selectedTheme.collectAsState()
     val isDeveloperMode by remember { mutableStateOf(premiumManager.isDeveloperModeEnabled()) }
     var showDeveloperMode by remember { mutableStateOf(false) }
     var showPremiumPaywall by remember { mutableStateOf(false) }
     var showCategoriesScreen by remember { mutableStateOf(false) }
     var showCurrencySelector by remember { mutableStateOf(false) }
+    var showThemeSelector by remember { mutableStateOf(false) }
     var isExporting by remember { mutableStateOf(false) }
     var isImporting by remember { mutableStateOf(false) }
 
@@ -121,8 +128,8 @@ fun SettingsScreen() {
                 SettingsItem(
                     icon = FeatherIcons.Droplet,
                     title = "Theme",
-                    subtitle = "Default",
-                    onClick = { /* TODO: Implement theme selector */ }
+                    subtitle = AppColorSchemes.themeById(selectedTheme).name,
+                    onClick = { showThemeSelector = true }
                 )
             }
 
@@ -136,11 +143,12 @@ fun SettingsScreen() {
             }
 
             item {
-                SettingsItem(
+                SettingsSwitchItem(
                     icon = FeatherIcons.Moon,
                     title = "Dark Mode",
-                    subtitle = "System default",
-                    onClick = { /* TODO: Implement dark mode toggle */ }
+                    subtitle = if (isDarkMode) "Enabled" else "Disabled",
+                    checked = isDarkMode,
+                    onCheckedChange = { themeManager.setDarkMode(it) }
                 )
             }
 
@@ -363,6 +371,24 @@ fun SettingsScreen() {
                 showCurrencySelector = false
             },
             onDismiss = { showCurrencySelector = false }
+        )
+    }
+
+    // Show Theme Selector
+    if (showThemeSelector) {
+        ThemeSelectorDialog(
+            currentTheme = selectedTheme,
+            isPremium = isPremium,
+            onThemeSelected = { theme ->
+                if (!theme.isPremium || isPremium) {
+                    themeManager.setTheme(theme.id)
+                    showThemeSelector = false
+                } else {
+                    showThemeSelector = false
+                    showPremiumPaywall = true
+                }
+            },
+            onDismiss = { showThemeSelector = false }
         )
     }
 
@@ -632,6 +658,112 @@ fun CurrencySelectorDialog(
                     }
 
                     if (index < Currency.ALL_CURRENCIES.size - 1) {
+                        Divider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
+}
+
+@Composable
+fun ThemeSelectorDialog(
+    currentTheme: String,
+    isPremium: Boolean,
+    onThemeSelected: (AppColorScheme) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Select Theme",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(AppColorSchemes.allThemes.size) { index ->
+                    val theme = AppColorSchemes.allThemes[index]
+                    val isSelected = theme.id == currentTheme
+                    val isLocked = theme.isPremium && !isPremium
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(enabled = !isLocked) { onThemeSelected(theme) }
+                            .padding(vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            // Color preview circles
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(theme.primaryLight)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(theme.accentLight)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = theme.name,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = if (isLocked) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
+                                    )
+                                    if (theme.isPremium) {
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Icon(
+                                            imageVector = FeatherIcons.Star,
+                                            contentDescription = "Premium",
+                                            tint = if (isLocked) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        when {
+                            isLocked -> Icon(
+                                imageVector = FeatherIcons.Lock,
+                                contentDescription = "Locked",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                modifier = Modifier.size(24.dp)
+                            )
+                            isSelected -> Icon(
+                                imageVector = FeatherIcons.Check,
+                                contentDescription = "Selected",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+
+                    if (index < AppColorSchemes.allThemes.size - 1) {
                         Divider(
                             modifier = Modifier.padding(vertical = 4.dp),
                             color = MaterialTheme.colorScheme.outlineVariant
