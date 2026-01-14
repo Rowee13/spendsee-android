@@ -30,7 +30,7 @@ import com.spendsee.data.local.entities.Category
 import com.spendsee.data.repository.TransactionRepository
 import com.spendsee.data.repository.AccountRepository
 import com.spendsee.data.repository.CategoryRepository
-import java.text.NumberFormat
+import com.spendsee.managers.CurrencyManager
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -45,6 +45,8 @@ fun RecordsScreen(
     )
 ) {
     val context = LocalContext.current
+    val currencyManager = remember { CurrencyManager.getInstance(context) }
+    val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
     var showAddTransaction by remember { mutableStateOf(false) }
     var transactionToEdit by remember { mutableStateOf<Transaction?>(null) }
@@ -78,7 +80,8 @@ fun RecordsScreen(
                 onNextMonth = { viewModel.nextMonth() },
                 expenses = uiState.totalExpenses,
                 income = uiState.totalIncome,
-                net = uiState.netTotal
+                net = uiState.netTotal,
+                currencySymbol = selectedCurrency.symbol
             )
 
             // Transaction List
@@ -98,7 +101,8 @@ fun RecordsScreen(
                         transactionToEdit = transaction
                         showAddTransaction = true
                     },
-                    onDeleteTransaction = { viewModel.deleteTransaction(it) }
+                    onDeleteTransaction = { viewModel.deleteTransaction(it) },
+                    currencySymbol = selectedCurrency.symbol
                 )
             }
 
@@ -159,7 +163,8 @@ fun UnifiedHeaderSection(
     onNextMonth: () -> Unit,
     expenses: Double,
     income: Double,
-    net: Double
+    net: Double,
+    currencySymbol: String
 ) {
     val calendar = Calendar.getInstance().apply {
         set(Calendar.MONTH, selectedMonth - 1)
@@ -249,19 +254,22 @@ fun UnifiedHeaderSection(
                 StatColumn(
                     label = "Expenses",
                     amount = expenses,
-                    color = Color(0xFFEF5350)
+                    color = Color(0xFFEF5350),
+                    currencySymbol = currencySymbol
                 )
 
                 StatColumn(
                     label = "Income",
                     amount = income,
-                    color = Color(0xFF66BB6A)
+                    color = Color(0xFF66BB6A),
+                    currencySymbol = currencySymbol
                 )
 
                 StatColumn(
                     label = "Net",
                     amount = net,
-                    color = if (net >= 0) Color(0xFF66BB6A) else Color(0xFFEF5350)
+                    color = if (net >= 0) Color(0xFF66BB6A) else Color(0xFFEF5350),
+                    currencySymbol = currencySymbol
                 )
             }
 
@@ -274,7 +282,8 @@ fun UnifiedHeaderSection(
 fun StatColumn(
     label: String,
     amount: Double,
-    color: Color
+    color: Color,
+    currencySymbol: String
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -288,7 +297,7 @@ fun StatColumn(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = formatCurrency(amount),
+            text = formatCurrency(amount, currencySymbol),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = color,
@@ -301,7 +310,8 @@ fun StatColumn(
 fun TransactionList(
     groupedTransactions: Map<Long, List<Transaction>>,
     onEditTransaction: (Transaction) -> Unit,
-    onDeleteTransaction: (Transaction) -> Unit
+    onDeleteTransaction: (Transaction) -> Unit,
+    currencySymbol: String
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -316,7 +326,8 @@ fun TransactionList(
                 TransactionRow(
                     transaction = transaction,
                     onEdit = { onEditTransaction(transaction) },
-                    onDelete = { onDeleteTransaction(transaction) }
+                    onDelete = { onDeleteTransaction(transaction) },
+                    currencySymbol = currencySymbol
                 )
             }
 
@@ -346,7 +357,8 @@ fun DateHeader(date: Long) {
 fun TransactionRow(
     transaction: Transaction,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    currencySymbol: String
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
@@ -409,7 +421,7 @@ fun TransactionRow(
 
             // Right side: Amount
             Text(
-                text = formatCurrency(transaction.amount),
+                text = formatCurrency(transaction.amount, currencySymbol),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 color = getTransactionColor(transaction.type)
@@ -482,9 +494,8 @@ fun EmptyState() {
 }
 
 // Helper Functions
-private fun formatCurrency(amount: Double): String {
-    val formatter = NumberFormat.getCurrencyInstance(Locale.US)
-    return formatter.format(amount)
+private fun formatCurrency(amount: Double, currencySymbol: String): String {
+    return "$currencySymbol${String.format("%.2f", amount)}"
 }
 
 private fun getTransactionColor(type: String): Color {

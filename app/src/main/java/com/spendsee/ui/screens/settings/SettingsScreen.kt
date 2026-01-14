@@ -19,6 +19,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.spendsee.managers.PremiumManager
+import com.spendsee.managers.CurrencyManager
+import com.spendsee.utils.Currency
 import com.spendsee.ui.screens.premium.PremiumPaywallScreen
 import com.spendsee.ui.screens.categories.CategoriesScreen
 
@@ -26,11 +28,14 @@ import com.spendsee.ui.screens.categories.CategoriesScreen
 fun SettingsScreen() {
     val context = LocalContext.current
     val premiumManager = remember { PremiumManager.getInstance(context) }
+    val currencyManager = remember { CurrencyManager.getInstance(context) }
     val isPremium by premiumManager.isPremium.collectAsState()
+    val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
     val isDeveloperMode by remember { mutableStateOf(premiumManager.isDeveloperModeEnabled()) }
     var showDeveloperMode by remember { mutableStateOf(false) }
     var showPremiumPaywall by remember { mutableStateOf(false) }
     var showCategoriesScreen by remember { mutableStateOf(false) }
+    var showCurrencySelector by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -61,8 +66,8 @@ fun SettingsScreen() {
                 SettingsItem(
                     icon = FeatherIcons.DollarSign,
                     title = "Currency",
-                    subtitle = "USD ($)",
-                    onClick = { /* TODO: Implement currency selector */ }
+                    subtitle = "${selectedCurrency.name} (${selectedCurrency.symbol})",
+                    onClick = { showCurrencySelector = true }
                 )
             }
 
@@ -274,6 +279,18 @@ fun SettingsScreen() {
         )
     }
 
+    // Show Currency Selector
+    if (showCurrencySelector) {
+        CurrencySelectorDialog(
+            currentCurrency = selectedCurrency,
+            onCurrencySelected = { currency ->
+                currencyManager.setCurrency(currency)
+                showCurrencySelector = false
+            },
+            onDismiss = { showCurrencySelector = false }
+        )
+    }
+
     // Show developer mode on version tap (tap 7 times)
     LaunchedEffect(Unit) {
         // This is a placeholder - you can implement tap counter on Version item
@@ -482,4 +499,85 @@ fun SettingsSwitchItem(
             )
         }
     }
+}
+
+@Composable
+fun CurrencySelectorDialog(
+    currentCurrency: Currency,
+    onCurrencySelected: (Currency) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Select Currency",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(Currency.ALL_CURRENCIES.size) { index ->
+                    val currency = Currency.ALL_CURRENCIES[index]
+                    val isSelected = currency.code == currentCurrency.code
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onCurrencySelected(currency) }
+                            .padding(vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = currency.symbol,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.width(40.dp)
+                            )
+                            Column {
+                                Text(
+                                    text = currency.name,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    text = currency.code,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        if (isSelected) {
+                            Icon(
+                                imageVector = FeatherIcons.Check,
+                                contentDescription = "Selected",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+
+                    if (index < Currency.ALL_CURRENCIES.size - 1) {
+                        Divider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
 }
