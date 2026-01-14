@@ -12,6 +12,8 @@
     <style name="Theme.SpendSee" parent="android:Theme.Material.Light.NoActionBar">
         <!-- Primary brand color -->
         <item name="android:colorPrimary">@color/default_primary_light</item>
-        <item name="android:statusBarColor">@color/default_primary_light</item>
+        <!-- Status bar color is set programmatically in MainActivity -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 </resources>
