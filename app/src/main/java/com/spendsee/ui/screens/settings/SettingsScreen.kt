@@ -47,14 +47,15 @@ fun SettingsScreen() {
     val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
     val isDarkMode by themeManager.isDarkMode.collectAsState()
     val selectedTheme by themeManager.selectedTheme.collectAsState()
-    val isDeveloperMode by remember { mutableStateOf(premiumManager.isDeveloperModeEnabled()) }
-    var showDeveloperMode by remember { mutableStateOf(false) }
+    var isDeveloperMode by remember { mutableStateOf(premiumManager.isDeveloperModeEnabled()) }
+    var showDeveloperMode by remember { mutableStateOf(premiumManager.isDeveloperModeEnabled()) }
     var showPremiumPaywall by remember { mutableStateOf(false) }
     var showCategoriesScreen by remember { mutableStateOf(false) }
     var showCurrencySelector by remember { mutableStateOf(false) }
     var showThemeSelector by remember { mutableStateOf(false) }
     var isExporting by remember { mutableStateOf(false) }
     var isImporting by remember { mutableStateOf(false) }
+    var versionTapCount by remember { mutableStateOf(0) }
 
     // Export backup launcher
     val exportLauncher = rememberLauncherForActivityResult(
@@ -296,8 +297,16 @@ fun SettingsScreen() {
                 SettingsItem(
                     icon = FeatherIcons.Info,
                     title = "Version",
-                    subtitle = "1.0.0",
-                    onClick = {}
+                    subtitle = if (showDeveloperMode) "1.0.0 (Developer Mode)" else "1.0.0",
+                    onClick = {
+                        if (!showDeveloperMode) {
+                            versionTapCount++
+                            if (versionTapCount >= 7) {
+                                showDeveloperMode = true
+                                Toast.makeText(context, "Developer mode unlocked!", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
                 )
             }
 
@@ -337,6 +346,12 @@ fun SettingsScreen() {
                         checked = isDeveloperMode,
                         onCheckedChange = { enabled ->
                             premiumManager.setDeveloperMode(enabled)
+                            isDeveloperMode = enabled
+                            Toast.makeText(
+                                context,
+                                if (enabled) "Premium features unlocked" else "Premium features locked",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     )
                 }
@@ -390,11 +405,6 @@ fun SettingsScreen() {
             },
             onDismiss = { showThemeSelector = false }
         )
-    }
-
-    // Show developer mode on version tap (tap 7 times)
-    LaunchedEffect(Unit) {
-        // This is a placeholder - you can implement tap counter on Version item
     }
 }
 
