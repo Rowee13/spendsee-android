@@ -3,7 +3,7 @@
     <!-- Splash Screen Theme -->
     <style name="Theme.SpendSee.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/app_icon</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/app_logo</item>
         <item name="windowSplashScreenAnimationDuration">500</item>
         <item name="postSplashScreenTheme">@style/Theme.SpendSee</item>
     </style>

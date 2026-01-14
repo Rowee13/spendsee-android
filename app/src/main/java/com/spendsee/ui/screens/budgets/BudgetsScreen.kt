@@ -247,7 +247,7 @@ fun UnifiedBudgetHeaderSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
-                    painter = painterResource(id = R.mipmap.app_icon),
+                    painter = painterResource(id = R.drawable.app_logo),
                     contentDescription = "SpendSee Logo",
                     modifier = Modifier.size(40.dp)
                 )
