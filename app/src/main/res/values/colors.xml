@@ -31,4 +31,7 @@
 
     <!-- Material 3 Seed Colors -->
     <color name="seed_color">#007AFF</color>
+
+    <!-- Splash Screen -->
+    <color name="splash_background">#91C8BE</color>
 </resources>
