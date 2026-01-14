@@ -173,7 +173,7 @@ fun UnifiedAccountsHeaderSection(
                 Image(
                     painter = painterResource(id = R.drawable.app_logo),
                     contentDescription = "SpendSee Logo",
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(32.dp)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(

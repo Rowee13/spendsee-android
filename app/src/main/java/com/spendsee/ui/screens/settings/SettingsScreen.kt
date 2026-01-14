@@ -316,7 +316,7 @@ fun SettingsHeader() {
             Image(
                 painter = painterResource(id = R.drawable.app_logo),
                 contentDescription = "Settings",
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(

@@ -1,5 +1,6 @@
 package com.spendsee.ui.screens.analysis
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,11 +18,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.spendsee.R
 import com.spendsee.data.repository.BudgetRepository
 import com.spendsee.data.repository.TransactionRepository
 import java.text.NumberFormat
@@ -135,20 +138,11 @@ fun UnifiedHeaderSection(
                     .padding(horizontal = 16.dp, vertical = 20.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = FeatherIcons.DollarSign,
-                        contentDescription = "SpendSee Logo",
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+                Image(
+                    painter = painterResource(id = R.drawable.app_logo),
+                    contentDescription = "SpendSee Logo",
+                    modifier = Modifier.size(32.dp)
+                )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = "SpendSee",
