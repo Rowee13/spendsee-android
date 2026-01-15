@@ -306,8 +306,8 @@ fun SettingsScreen() {
                 item {
                     SettingsSwitchItem(
                         icon = Icons.Default.Fingerprint,
-                        title = "Biometric Unlock",
-                        subtitle = if (biometricEnabled) "Enabled" else "Disabled",
+                        title = "Biometric Authentication",
+                        subtitle = if (biometricEnabled) "Fingerprint or Face Recognition" else "Disabled",
                         checked = biometricEnabled,
                         onCheckedChange = {
                             biometricEnabled = it

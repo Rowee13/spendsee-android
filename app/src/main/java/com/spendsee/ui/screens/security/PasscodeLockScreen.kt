@@ -196,7 +196,7 @@ fun PasscodeLockScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Fingerprint,
-                        contentDescription = "Use Biometric",
+                        contentDescription = "Use Biometric Authentication",
                         modifier = Modifier.size(32.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )

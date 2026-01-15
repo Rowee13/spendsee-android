@@ -153,7 +153,7 @@ class PasscodeManager private constructor(private val context: Context) {
 
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle("Unlock SpendSee")
-            .setSubtitle("Use fingerprint or face to unlock")
+            .setSubtitle("Use biometric authentication to unlock")
             .setNegativeButtonText("Use Passcode")
             .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
             .build()
