@@ -77,6 +77,27 @@ fun SettingsScreen() {
     var showPasscodeChange by remember { mutableStateOf(false) }
     var showPasscodeOptions by remember { mutableStateOf(false) }
 
+    // Notification permission launcher (Android 13+)
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Permission granted, enable notifications
+            notificationsEnabled = true
+            notificationManager.setNotificationsEnabled(true)
+            Toast.makeText(context, "Notifications enabled", Toast.LENGTH_SHORT).show()
+        } else {
+            // Permission denied
+            notificationsEnabled = false
+            notificationManager.setNotificationsEnabled(false)
+            Toast.makeText(
+                context,
+                "Notification permission denied. Enable it in system settings to receive reminders.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
     // Export backup launcher
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
@@ -342,13 +363,35 @@ fun SettingsScreen() {
                         subtitle = if (notificationsEnabled) "Enabled" else "Disabled",
                         checked = notificationsEnabled,
                         onCheckedChange = { enabled ->
-                            notificationsEnabled = enabled
-                            notificationManager.setNotificationsEnabled(enabled)
-                            Toast.makeText(
-                                context,
-                                if (enabled) "Notifications enabled" else "Notifications disabled",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            if (enabled) {
+                                // Check if we need to request permission (Android 13+)
+                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                                    // Check if permission is already granted
+                                    if (androidx.core.content.ContextCompat.checkSelfPermission(
+                                            context,
+                                            android.Manifest.permission.POST_NOTIFICATIONS
+                                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                                    ) {
+                                        // Permission already granted
+                                        notificationsEnabled = true
+                                        notificationManager.setNotificationsEnabled(true)
+                                        Toast.makeText(context, "Notifications enabled", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        // Request permission
+                                        notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                                    }
+                                } else {
+                                    // No permission needed for Android 12 and below
+                                    notificationsEnabled = true
+                                    notificationManager.setNotificationsEnabled(true)
+                                    Toast.makeText(context, "Notifications enabled", Toast.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                // Disabling notifications - no permission needed
+                                notificationsEnabled = false
+                                notificationManager.setNotificationsEnabled(false)
+                                Toast.makeText(context, "Notifications disabled", Toast.LENGTH_SHORT).show()
+                            }
                         }
                     )
                 }
