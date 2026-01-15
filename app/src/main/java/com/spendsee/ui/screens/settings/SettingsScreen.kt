@@ -30,9 +30,12 @@ import com.spendsee.managers.BudgetNotificationManager
 import com.spendsee.managers.PremiumManager
 import com.spendsee.managers.CurrencyManager
 import com.spendsee.managers.ThemeManager
+import com.spendsee.managers.PasscodeManager
 import com.spendsee.utils.Currency
 import com.spendsee.ui.screens.premium.PremiumPaywallScreen
 import com.spendsee.ui.screens.categories.CategoriesScreen
+import com.spendsee.ui.screens.security.PasscodeLockScreen
+import com.spendsee.ui.screens.security.PasscodeMode
 import com.spendsee.ui.theme.AppColorScheme
 import com.spendsee.ui.theme.AppColorSchemes
 import kotlinx.coroutines.launch
@@ -46,6 +49,7 @@ fun SettingsScreen() {
     val backupManager = remember { BackupManager.getInstance(context) }
     val themeManager = remember { ThemeManager.getInstance(context) }
     val notificationManager = remember { BudgetNotificationManager.getInstance(context) }
+    val passcodeManager = remember { PasscodeManager.getInstance(context) }
     val isPremium by premiumManager.isPremium.collectAsState()
     val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
     val isDarkMode by themeManager.isDarkMode.collectAsState()
@@ -65,6 +69,13 @@ fun SettingsScreen() {
     var notificationsEnabled by remember { mutableStateOf(notificationManager.areNotificationsEnabled()) }
     var showDaysBeforeDialog by remember { mutableStateOf(false) }
     var showNotificationTimeDialog by remember { mutableStateOf(false) }
+
+    // Passcode settings
+    var passcodeEnabled by remember { mutableStateOf(passcodeManager.isPasscodeEnabled()) }
+    var biometricEnabled by remember { mutableStateOf(passcodeManager.isBiometricEnabled()) }
+    var showPasscodeSetup by remember { mutableStateOf(false) }
+    var showPasscodeChange by remember { mutableStateOf(false) }
+    var showPasscodeOptions by remember { mutableStateOf(false) }
 
     // Export backup launcher
     val exportLauncher = rememberLauncherForActivityResult(
@@ -265,13 +276,45 @@ fun SettingsScreen() {
             }
 
             item {
-                SettingsItem(
-                    icon = FeatherIcons.Lock,
-                    title = "Passcode",
-                    subtitle = "Protect your data",
-                    onClick = { /* TODO: Implement passcode setup */ },
-                    isPremiumFeature = true
-                )
+                if (!isPremium) {
+                    SettingsItem(
+                        icon = FeatherIcons.Lock,
+                        title = "Passcode Protection",
+                        subtitle = "Protect your data with a passcode",
+                        onClick = { showPremiumPaywall = true },
+                        isPremiumFeature = true
+                    )
+                } else if (!passcodeEnabled) {
+                    SettingsItem(
+                        icon = FeatherIcons.Lock,
+                        title = "Passcode Protection",
+                        subtitle = "Not enabled",
+                        onClick = { showPasscodeSetup = true }
+                    )
+                } else {
+                    SettingsItem(
+                        icon = FeatherIcons.Lock,
+                        title = "Passcode Protection",
+                        subtitle = "Enabled",
+                        onClick = { showPasscodeOptions = true }
+                    )
+                }
+            }
+
+            // Biometric toggle (only if passcode is enabled)
+            if (isPremium && passcodeEnabled && passcodeManager.isBiometricAvailable()) {
+                item {
+                    SettingsSwitchItem(
+                        icon = Icons.Default.Fingerprint,
+                        title = "Biometric Unlock",
+                        subtitle = if (biometricEnabled) "Enabled" else "Disabled",
+                        checked = biometricEnabled,
+                        onCheckedChange = {
+                            biometricEnabled = it
+                            passcodeManager.setBiometricEnabled(it)
+                        }
+                    )
+                }
             }
 
             item {
@@ -455,6 +498,49 @@ fun SettingsScreen() {
                 }
             },
             onDismiss = { showThemeSelector = false }
+        )
+    }
+
+    // Show Passcode Setup
+    if (showPasscodeSetup) {
+        PasscodeLockScreen(
+            mode = PasscodeMode.SET,
+            onUnlocked = {
+                showPasscodeSetup = false
+                passcodeEnabled = true
+                Toast.makeText(context, "Passcode enabled successfully", Toast.LENGTH_SHORT).show()
+            },
+            onDismiss = { showPasscodeSetup = false }
+        )
+    }
+
+    // Show Passcode Change
+    if (showPasscodeChange) {
+        PasscodeLockScreen(
+            mode = PasscodeMode.CHANGE,
+            onUnlocked = {
+                showPasscodeChange = false
+                Toast.makeText(context, "Passcode changed successfully", Toast.LENGTH_SHORT).show()
+            },
+            onDismiss = { showPasscodeChange = false }
+        )
+    }
+
+    // Show Passcode Options
+    if (showPasscodeOptions) {
+        PasscodeOptionsDialog(
+            onChangePasscode = {
+                showPasscodeOptions = false
+                showPasscodeChange = true
+            },
+            onDisablePasscode = {
+                passcodeManager.deletePasscode()
+                passcodeEnabled = false
+                biometricEnabled = false
+                showPasscodeOptions = false
+                Toast.makeText(context, "Passcode disabled", Toast.LENGTH_SHORT).show()
+            },
+            onDismiss = { showPasscodeOptions = false }
         )
     }
 
@@ -1173,6 +1259,115 @@ fun NotificationTimeDialog(
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text("Close")
+            }
+        }
+    )
+}
+
+@Composable
+private fun PasscodeOptionsDialog(
+    onChangePasscode: () -> Unit,
+    onDisablePasscode: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                imageVector = FeatherIcons.Lock,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        },
+        title = {
+            Text(
+                text = "Passcode Options",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Change Passcode
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onChangePasscode() },
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = FeatherIcons.Edit2,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text(
+                                text = "Change Passcode",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = "Set a new 6-digit passcode",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                // Disable Passcode
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onDisablePasscode() },
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = FeatherIcons.Trash2,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text(
+                                text = "Disable Passcode",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                text = "Turn off passcode protection",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
             }
         }
     )

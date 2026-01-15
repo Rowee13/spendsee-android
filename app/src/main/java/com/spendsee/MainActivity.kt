@@ -7,15 +7,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.WindowCompat
+import com.spendsee.managers.PasscodeManager
 import com.spendsee.managers.ThemeManager
 import com.spendsee.ui.navigation.MainNavigation
+import com.spendsee.ui.screens.security.PasscodeLockScreen
+import com.spendsee.ui.screens.security.PasscodeMode
 import com.spendsee.ui.theme.AppColorSchemes
 import com.spendsee.ui.theme.SpendSeeTheme
 
@@ -26,9 +26,15 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val themeManager = remember { ThemeManager.getInstance(this) }
+            val passcodeManager = remember { PasscodeManager.getInstance(this) }
             val isDarkMode by themeManager.isDarkMode.collectAsState()
             val selectedThemeId by themeManager.selectedTheme.collectAsState()
             val selectedScheme = AppColorSchemes.themeById(selectedThemeId)
+
+            // Track if app is locked
+            var isLocked by remember {
+                mutableStateOf(passcodeManager.isPasscodeEnabled())
+            }
 
             SpendSeeTheme(
                 darkTheme = isDarkMode,
@@ -51,7 +57,16 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainNavigation()
+                    if (isLocked) {
+                        PasscodeLockScreen(
+                            mode = PasscodeMode.ENTER,
+                            onUnlocked = {
+                                isLocked = false
+                            }
+                        )
+                    } else {
+                        MainNavigation()
+                    }
                 }
             }
         }
