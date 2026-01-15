@@ -26,7 +26,9 @@ fun MainNavigation() {
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface
+            ) {
                 Screen.bottomNavItems.forEach { screen ->
                     NavigationBarItem(
                         icon = { Icon(screen.icon, contentDescription = screen.title) },
