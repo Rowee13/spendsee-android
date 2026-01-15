@@ -23,6 +23,8 @@ import androidx.compose.ui.window.DialogProperties
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.*
 import com.spendsee.data.local.entities.Account
+import androidx.compose.ui.platform.LocalContext
+import com.spendsee.managers.CurrencyManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +33,10 @@ fun AddEditAccountDialog(
     onDismiss: () -> Unit,
     onSave: (name: String, type: String, balance: Double, icon: String, color: String) -> Unit
 ) {
+    val context = LocalContext.current
+    val currencyManager = remember { CurrencyManager.getInstance(context) }
+    val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
+
     var name by remember { mutableStateOf(account?.name ?: "") }
     var selectedType by remember { mutableStateOf(account?.type ?: "cash") }
     var balance by remember { mutableStateOf(account?.balance?.toString() ?: "") }
@@ -167,7 +173,7 @@ fun AddEditAccountDialog(
                                 Text(balanceError!!, color = MaterialTheme.colorScheme.error)
                             }
                         },
-                        prefix = { Text("$") }
+                        prefix = { Text(selectedCurrency.symbol) }
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -226,7 +232,7 @@ fun AddEditAccountDialog(
                                         MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = "$${balance.ifEmpty { "0.00" }}",
+                                    text = "${selectedCurrency.symbol}${balance.ifEmpty { "0.00" }}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

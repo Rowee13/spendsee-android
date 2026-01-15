@@ -7,6 +7,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -15,6 +16,7 @@ import androidx.compose.ui.window.DialogProperties
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.*
 import com.spendsee.data.local.entities.BudgetItem
+import com.spendsee.managers.CurrencyManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,6 +25,10 @@ fun AddEditBudgetItemDialog(
     onDismiss: () -> Unit,
     onSave: (name: String, amount: Double, note: String, type: String) -> Unit
 ) {
+    val context = LocalContext.current
+    val currencyManager = remember { CurrencyManager.getInstance(context) }
+    val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
+
     var name by remember { mutableStateOf(budgetItem?.name ?: "") }
     var amount by remember { mutableStateOf(budgetItem?.amount?.toString() ?: "") }
     var note by remember { mutableStateOf(budgetItem?.note ?: "") }
@@ -117,7 +123,7 @@ fun AddEditBudgetItemDialog(
                                 Text(amountError!!, color = MaterialTheme.colorScheme.error)
                             }
                         },
-                        prefix = { Text("$") }
+                        prefix = { Text(selectedCurrency.symbol) }
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
