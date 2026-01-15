@@ -88,10 +88,11 @@ object WidgetDataManager {
     }
 
     fun formatCurrency(amount: Double, symbol: String): String {
+        val formatter = java.text.DecimalFormat("#,##0.00")
         return if (amount >= 0) {
-            "$symbol${String.format("%.2f", amount)}"
+            "$symbol${formatter.format(amount)}"
         } else {
-            "-$symbol${String.format("%.2f", Math.abs(amount))}"
+            "-$symbol${formatter.format(Math.abs(amount))}"
         }
     }
 

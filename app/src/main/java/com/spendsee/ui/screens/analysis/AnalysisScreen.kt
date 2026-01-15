@@ -596,7 +596,8 @@ fun EmptyState(message: String = "No data available") {
 }
 
 private fun formatCurrency(amount: Double, currencySymbol: String): String {
-    return "$currencySymbol${String.format("%.2f", amount)}"
+    val formatter = java.text.DecimalFormat("#,##0.00")
+    return "$currencySymbol${formatter.format(amount)}"
 }
 
 private fun AnalysisViewType.displayName(): String {
