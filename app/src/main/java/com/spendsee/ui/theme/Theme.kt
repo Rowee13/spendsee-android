@@ -61,11 +61,13 @@ fun SpendSeeTheme(
             tertiary = TransferBlue,
             background = DarkContentBackground,
             surface = selectedScheme.cardBackgroundDark,
-            onPrimary = SystemBackgroundLight,
-            onSecondary = SystemBackgroundLight,
+            onPrimary = SystemBackgroundDark,  // Dark text on light primary colors
+            onSecondary = SystemBackgroundDark, // Dark text on light secondary colors
             onTertiary = SystemBackgroundLight,
             onBackground = SystemBackgroundLight,
             onSurface = SystemBackgroundLight,
+            primaryContainer = selectedScheme.primaryDark.copy(alpha = 0.3f), // Dimmed primary
+            onPrimaryContainer = SystemBackgroundLight, // White text on dimmed container
         )
 
         else -> lightColorScheme(
@@ -74,11 +76,13 @@ fun SpendSeeTheme(
             tertiary = TransferBlue,
             background = SystemBackgroundLight,
             surface = selectedScheme.cardBackgroundLight,
-            onPrimary = SystemBackgroundLight,
+            onPrimary = SystemBackgroundLight, // White text on dark primary
             onSecondary = SystemBackgroundDark,
             onTertiary = SystemBackgroundLight,
             onBackground = SystemBackgroundDark,
             onSurface = SystemBackgroundDark,
+            primaryContainer = selectedScheme.primaryLight.copy(alpha = 0.15f), // Light tint
+            onPrimaryContainer = selectedScheme.primaryLight, // Primary color text on light container
         )
     }
 
