@@ -101,27 +101,74 @@ fun BudgetsScreen(
                     onCopyFromPrevious = { viewModel.copyFromPreviousMonth() }
                 )
             } else {
-                BudgetsList(
-                    budgets = uiState.budgetsWithDetails,
-                    onEditBudget = {
-                        budgetToEdit = it
-                        showEditBudget = true
-                    },
-                    onDeleteBudget = { viewModel.deleteBudget(it.budget) },
-                    onAddBudgetItem = { budgetId ->
-                        selectedBudgetId = budgetId
-                        showAddBudgetItem = true
-                    },
-                    onEditBudgetItem = { item ->
-                        budgetItemToEdit = item
-                        showEditBudgetItem = true
-                    },
-                    onDeleteBudgetItem = { viewModel.deleteBudgetItem(it) },
-                    onMarkAsPaid = { budget, isPaid ->
-                        viewModel.markBudgetAsPaid(budget, isPaid)
-                    },
-                    currencySymbol = selectedCurrency.symbol
-                )
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // Show "Copy Missing Budgets" button if there are missing budgets
+                    if (uiState.missingBudgetsCount > 0) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "${uiState.missingBudgetsCount} budget${if (uiState.missingBudgetsCount > 1) "s" else ""} not copied",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = "From previous month",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                                    )
+                                }
+                                Button(
+                                    onClick = { viewModel.copyMissingBudgets() },
+                                    modifier = Modifier.padding(start = 8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = FeatherIcons.Copy,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Copy")
+                                }
+                            }
+                        }
+                    }
+
+                    BudgetsList(
+                        budgets = uiState.budgetsWithDetails,
+                        onEditBudget = {
+                            budgetToEdit = it
+                            showEditBudget = true
+                        },
+                        onDeleteBudget = { viewModel.deleteBudget(it.budget) },
+                        onAddBudgetItem = { budgetId ->
+                            selectedBudgetId = budgetId
+                            showAddBudgetItem = true
+                        },
+                        onEditBudgetItem = { item ->
+                            budgetItemToEdit = item
+                            showEditBudgetItem = true
+                        },
+                        onDeleteBudgetItem = { viewModel.deleteBudgetItem(it) },
+                        onMarkAsPaid = { budget, isPaid ->
+                            viewModel.markBudgetAsPaid(budget, isPaid)
+                        },
+                        currencySymbol = selectedCurrency.symbol
+                    )
+                }
             }
 
             // Error Message

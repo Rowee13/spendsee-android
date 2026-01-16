@@ -28,6 +28,7 @@ data class BudgetsUiState(
     val totalAllocated: Double = 0.0,
     val totalSpent: Double = 0.0,
     val totalRemaining: Double = 0.0,
+    val missingBudgetsCount: Int = 0,
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -96,6 +97,9 @@ class BudgetsViewModel(
                             error = null
                         )
                     }
+
+                    // Check for missing budgets from previous month
+                    checkMissingBudgets()
                 }.catch { error ->
                     _uiState.update { it.copy(error = error.message, isLoading = false) }
                 }.collect()
@@ -316,6 +320,101 @@ class BudgetsViewModel(
                                     createdAt = System.currentTimeMillis()
                                 )
                                 budgetRepository.insertBudgetItem(newItem)
+                            }
+                        }
+                    }
+                }
+
+                loadBudgets()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    private suspend fun checkMissingBudgets() {
+        try {
+            val calendar = Calendar.getInstance()
+            calendar.set(Calendar.YEAR, _uiState.value.selectedYear)
+            calendar.set(Calendar.MONTH, _uiState.value.selectedMonth - 1)
+            calendar.add(Calendar.MONTH, -1)
+
+            val previousMonth = calendar.get(Calendar.MONTH) + 1
+            val previousYear = calendar.get(Calendar.YEAR)
+
+            // Get budgets from previous and current month
+            val previousBudgets = budgetRepository.getBudgetsByMonth(previousMonth, previousYear).first()
+            val currentBudgets = _uiState.value.budgetsWithDetails.map { it.budget }
+
+            // Find missing budgets (budgets that exist in previous month but not in current month)
+            // Compare by name and category
+            val missingCount = previousBudgets.count { previousBudget ->
+                !currentBudgets.any { currentBudget ->
+                    currentBudget.name == previousBudget.name &&
+                    currentBudget.category == previousBudget.category
+                }
+            }
+
+            _uiState.update { it.copy(missingBudgetsCount = missingCount) }
+        } catch (e: Exception) {
+            // Silent fail - missing budgets is a nice-to-have feature
+        }
+    }
+
+    fun copyMissingBudgets() {
+        viewModelScope.launch {
+            try {
+                val calendar = Calendar.getInstance()
+                calendar.set(Calendar.YEAR, _uiState.value.selectedYear)
+                calendar.set(Calendar.MONTH, _uiState.value.selectedMonth - 1)
+                calendar.add(Calendar.MONTH, -1)
+
+                val previousMonth = calendar.get(Calendar.MONTH) + 1
+                val previousYear = calendar.get(Calendar.YEAR)
+
+                // Get budgets from previous and current month
+                budgetRepository.getBudgetsByMonth(previousMonth, previousYear).first().let { previousBudgets ->
+                    val currentBudgets = _uiState.value.budgetsWithDetails.map { it.budget }
+
+                    // Find and copy only missing budgets
+                    previousBudgets.forEach { previousBudget ->
+                        val exists = currentBudgets.any { currentBudget ->
+                            currentBudget.name == previousBudget.name &&
+                            currentBudget.category == previousBudget.category
+                        }
+
+                        if (!exists) {
+                            // Create new budget for current month
+                            val newBudget = Budget(
+                                id = java.util.UUID.randomUUID().toString(),
+                                name = previousBudget.name,
+                                category = previousBudget.category,
+                                month = _uiState.value.selectedMonth,
+                                year = _uiState.value.selectedYear,
+                                isRecurring = previousBudget.isRecurring,
+                                dueDate = previousBudget.dueDate,
+                                isPaid = false,
+                                paidDate = null,
+                                notificationId = null,
+                                notifyDaysBefore = previousBudget.notifyDaysBefore,
+                                createdAt = System.currentTimeMillis()
+                            )
+                            budgetRepository.insertBudget(newBudget)
+
+                            // Copy budget items
+                            budgetRepository.getBudgetItems(previousBudget.id).first().let { previousItems ->
+                                previousItems.forEach { previousItem ->
+                                    val newItem = BudgetItem(
+                                        id = java.util.UUID.randomUUID().toString(),
+                                        budgetId = newBudget.id,
+                                        name = previousItem.name,
+                                        amount = previousItem.amount,
+                                        note = previousItem.note,
+                                        type = previousItem.type,
+                                        createdAt = System.currentTimeMillis()
+                                    )
+                                    budgetRepository.insertBudgetItem(newItem)
+                                }
                             }
                         }
                     }
