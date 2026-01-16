@@ -45,9 +45,9 @@ sealed class Screen(
     companion object {
         val bottomNavItems = listOf(
             Records,
-            Analysis,
             Budgets,
             Accounts,
+            Analysis,
             Settings
         )
     }
