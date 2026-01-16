@@ -48,7 +48,20 @@ fun AddEditTransactionDialog(
     ) -> Unit
 ) {
     var selectedType by remember { mutableStateOf(transaction?.type ?: "expense") }
-    var calculatorDisplay by remember { mutableStateOf(transaction?.amount?.toString() ?: "0") }
+    var calculatorDisplay by remember {
+        mutableStateOf(
+            if (transaction?.amount != null && transaction.amount > 0.0) {
+                // Format amount: remove ".0" if whole number
+                if (transaction.amount % 1.0 == 0.0) {
+                    transaction.amount.toInt().toString()
+                } else {
+                    String.format("%.2f", transaction.amount)
+                }
+            } else {
+                "0"
+            }
+        )
+    }
     var title by remember { mutableStateOf(transaction?.title ?: "") }
     var selectedCategory by remember { mutableStateOf(transaction?.category ?: "") }
     var selectedAccountId by remember { mutableStateOf(transaction?.accountId ?: accounts.firstOrNull()?.id) }

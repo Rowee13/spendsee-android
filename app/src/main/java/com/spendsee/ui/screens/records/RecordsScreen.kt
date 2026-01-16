@@ -279,6 +279,23 @@ fun RecordsScreen(
                         val receiptData = receiptParser.parseReceipt(bitmap)
 
                         // Create a temporary transaction with scanned data
+                        // Build comprehensive notes with detected information
+                        val detectedInfo = buildString {
+                            if (receiptData.amount != null && receiptData.amount > 0) {
+                                append("💰 Amount detected: $${String.format("%.2f", receiptData.amount)}\n")
+                            }
+                            if (receiptData.date != null) {
+                                val dateFormat = SimpleDateFormat("MMM d, yyyy h:mm a", Locale.getDefault())
+                                append("📅 Date detected: ${dateFormat.format(Date(receiptData.date))}\n")
+                            }
+                            if (receiptData.merchantName?.isNotBlank() == true) {
+                                append("🏪 Merchant: ${receiptData.merchantName}\n")
+                            }
+                            if (receiptData.items.isNotEmpty()) {
+                                append("\n📝 Items:\n${receiptData.items.joinToString("\n")}")
+                            }
+                        }
+
                         transactionToEdit = Transaction(
                             id = "",
                             title = receiptData.merchantName ?: "",
@@ -286,10 +303,8 @@ fun RecordsScreen(
                             type = "expense",
                             category = "", // Will be auto-selected in dialog
                             date = receiptData.date ?: System.currentTimeMillis(),
-                            notes = if (receiptData.items.isNotEmpty()) {
-                                "Items:\n" + receiptData.items.joinToString("\n")
-                            } else {
-                                ""
+                            notes = detectedInfo.ifBlank {
+                                "No details detected from receipt"
                             },
                             accountId = accounts.firstOrNull()?.id,
                             toAccountId = null,
