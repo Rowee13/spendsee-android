@@ -97,7 +97,9 @@ fun BudgetsScreen(
                     CircularProgressIndicator()
                 }
             } else if (uiState.budgetsWithDetails.isEmpty()) {
-                EmptyState()
+                EmptyState(
+                    onCopyFromPrevious = { viewModel.copyFromPreviousMonth() }
+                )
             } else {
                 BudgetsList(
                     budgets = uiState.budgetsWithDetails,
@@ -682,7 +684,9 @@ fun BudgetCard(
 }
 
 @Composable
-fun EmptyState() {
+fun EmptyState(
+    onCopyFromPrevious: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -713,6 +717,19 @@ fun EmptyState() {
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center
             )
+            Spacer(modifier = Modifier.height(24.dp))
+            OutlinedButton(
+                onClick = onCopyFromPrevious,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            ) {
+                Icon(
+                    imageVector = FeatherIcons.Copy,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Copy from Previous Month")
+            }
         }
     }
 }

@@ -1,6 +1,9 @@
 package com.spendsee.ui.screens.records
 
+import android.Manifest
 import android.graphics.Bitmap
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -71,6 +74,15 @@ fun RecordsScreen(
     var showPremiumPaywall by remember { mutableStateOf(false) }
     var fabExpanded by remember { mutableStateOf(false) }
 
+    // Camera permission launcher
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            showCamera = true
+        }
+    }
+
     // Load accounts and categories
     val accounts by AccountRepository.getInstance(context).getAllAccounts().collectAsState(initial = emptyList())
     val categories by CategoryRepository.getInstance(context).getAllCategories().collectAsState(initial = emptyList())
@@ -105,7 +117,7 @@ fun RecordsScreen(
                         SmallFloatingActionButton(
                             onClick = {
                                 if (isPremium) {
-                                    showCamera = true
+                                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                                     fabExpanded = false
                                 } else {
                                     showPremiumPaywall = true
