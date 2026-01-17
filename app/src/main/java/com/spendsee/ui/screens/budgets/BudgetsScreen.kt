@@ -604,6 +604,65 @@ fun BudgetCard(
                     Divider()
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    // Mark as Paid/Unpaid Button (only show if has due date)
+                    if (budgetWithDetails.budget.dueDate != null) {
+                        val isPaid = budgetWithDetails.budget.isPaid
+                        Button(
+                            onClick = {
+                                if (isPremium) {
+                                    onMarkAsPaid(!isPaid)
+                                } else {
+                                    onShowPremiumPaywall()
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isPaid) Color(0xFF757575) else Color(0xFF4CAF50)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = if (isPaid) FeatherIcons.XCircle else FeatherIcons.CheckCircle,
+                                        contentDescription = if (isPaid) "Mark as Unpaid" else "Mark as Paid",
+                                        tint = Color.White
+                                    )
+                                    Text(
+                                        text = if (isPaid) "Mark as Unpaid" else "Mark as Paid",
+                                        color = Color.White,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    if (!isPremium) {
+                                        Icon(
+                                            imageVector = FeatherIcons.Award,
+                                            contentDescription = "Premium",
+                                            modifier = Modifier.size(16.dp),
+                                            tint = Color(0xFFFFD700)
+                                        )
+                                    }
+                                }
+                                Icon(
+                                    imageVector = FeatherIcons.ChevronRight,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -724,40 +783,6 @@ fun BudgetCard(
                         Icon(FeatherIcons.Edit, contentDescription = "Edit")
                     }
                 )
-                if (budgetWithDetails.budget.dueDate != null) {
-                    DropdownMenuItem(
-                        text = {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(if (budgetWithDetails.budget.isPaid) "Mark as Unpaid" else "Mark as Paid")
-                                if (!isPremium) {
-                                    Icon(
-                                        imageVector = FeatherIcons.Award,
-                                        contentDescription = "Premium",
-                                        modifier = Modifier.size(16.dp),
-                                        tint = Color(0xFFFFD700)
-                                    )
-                                }
-                            }
-                        },
-                        onClick = {
-                            showMenu = false
-                            if (isPremium) {
-                                onMarkAsPaid(!budgetWithDetails.budget.isPaid)
-                            } else {
-                                onShowPremiumPaywall()
-                            }
-                        },
-                        leadingIcon = {
-                            Icon(
-                                if (budgetWithDetails.budget.isPaid) FeatherIcons.X else FeatherIcons.Check,
-                                contentDescription = if (budgetWithDetails.budget.isPaid) "Mark as Unpaid" else "Mark as Paid"
-                            )
-                        }
-                    )
-                }
                 DropdownMenuItem(
                     text = { Text("Delete", color = Color.Red) },
                     onClick = {
