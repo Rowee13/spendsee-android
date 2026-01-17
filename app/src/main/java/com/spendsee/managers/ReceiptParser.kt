@@ -49,83 +49,178 @@ class ReceiptParser {
     }
 
     private fun extractAmount(lines: List<String>): Double? {
-        // Priority 1: Lines containing "TOTAL" or "AMOUNT"
-        val totalKeywords = listOf("total", "amount", "balance", "grand total", "subtotal")
+        val amounts = mutableMapOf<Double, Int>() // amount to priority score
 
-        for (line in lines) {
-            val lowerLine = line.lowercase()
-            if (totalKeywords.any { lowerLine.contains(it) }) {
-                val amount = extractNumberFromLine(line)
+        // Priority 1: Look for TOTAL with amount on same line (highest priority)
+        val totalPattern = Regex("""(total|amount|balance|grand\s*total|net\s*total|sum)[:\s]*[$₱€£¥₩₹]?\s*([\d,]+\.?\d{0,2})""", RegexOption.IGNORE_CASE)
+
+        for ((index, line) in lines.withIndex()) {
+            val match = totalPattern.find(line)
+            if (match != null) {
+                val amountStr = match.groupValues[2].replace(",", "")
+                val amount = amountStr.toDoubleOrNull()
                 if (amount != null && amount > 0) {
-                    return amount
+                    // Higher priority for "total" found earlier in receipt
+                    val priority = 1000 - index
+                    amounts[amount] = amounts.getOrDefault(amount, 0) + priority
                 }
             }
         }
 
-        // Priority 2: Look for currency symbols with numbers
-        val currencyPattern = Regex("""[$₱€£¥₩₹]\s*([\d,]+\.?\d*)""")
-        val amounts = mutableListOf<Double>()
+        // Priority 2: Look for amount patterns with currency symbols
+        val currencyPattern = Regex("""[$₱€£¥₩₹]\s*([\d,]+\.?\d{0,2})""")
 
-        for (line in lines) {
+        for ((index, line) in lines.withIndex()) {
+            // Skip if line already matched as total
+            if (totalPattern.find(line) != null) continue
+
             val matches = currencyPattern.findAll(line)
             for (match in matches) {
-                val numberStr = match.groupValues[1].replace(",", "")
-                numberStr.toDoubleOrNull()?.let { amounts.add(it) }
+                val amountStr = match.groupValues[1].replace(",", "")
+                val amount = amountStr.toDoubleOrNull()
+                if (amount != null && amount > 0) {
+                    // Lower priority than explicit totals
+                    val priority = 500 - index
+                    amounts[amount] = amounts.getOrDefault(amount, 0) + priority
+                }
             }
         }
 
-        // Return the largest amount found (likely the total)
-        return amounts.maxOrNull()
-    }
+        // Priority 3: Look for numbers with two decimal places (common for money)
+        val decimalPattern = Regex("""(\d{1,6}\.\d{2})(?!\d)""")
 
-    private fun extractNumberFromLine(line: String): Double? {
-        // Extract number with optional currency symbol and decimal
-        val numberPattern = Regex("""([\d,]+\.?\d*)""")
-        val matches = numberPattern.findAll(line)
+        for ((index, line) in lines.withIndex()) {
+            val lowerLine = line.lowercase()
+            // Only check if line might contain total
+            if (lowerLine.contains("total") || lowerLine.contains("amount") ||
+                lowerLine.contains("balance") || lowerLine.contains("pay")) {
 
-        for (match in matches) {
-            val numberStr = match.value.replace(",", "")
-            val number = numberStr.toDoubleOrNull()
-            if (number != null && number > 0) {
-                return number
+                val matches = decimalPattern.findAll(line)
+                for (match in matches) {
+                    val amount = match.groupValues[1].toDoubleOrNull()
+                    if (amount != null && amount > 0) {
+                        val priority = 300 - index
+                        amounts[amount] = amounts.getOrDefault(amount, 0) + priority
+                    }
+                }
             }
         }
 
-        return null
+        // Return the amount with highest priority score
+        return amounts.maxByOrNull { it.value }?.key
     }
 
     private fun extractDate(lines: List<String>): Long? {
-        // Common date patterns
-        val datePatterns = listOf(
-            SimpleDateFormat("MM/dd/yyyy", Locale.US),
-            SimpleDateFormat("dd/MM/yyyy", Locale.US),
-            SimpleDateFormat("yyyy-MM-dd", Locale.US),
-            SimpleDateFormat("MM-dd-yyyy", Locale.US),
-            SimpleDateFormat("dd-MM-yyyy", Locale.US),
-            SimpleDateFormat("MMM dd, yyyy", Locale.US),
-            SimpleDateFormat("dd MMM yyyy", Locale.US),
-            SimpleDateFormat("MMMM dd, yyyy", Locale.US),
-            SimpleDateFormat("MM/dd/yy", Locale.US),
-            SimpleDateFormat("dd/MM/yy", Locale.US)
+        val calendar = Calendar.getInstance()
+
+        // Date regex patterns to find within lines
+        val dateRegexPatterns = listOf(
+            // MM/DD/YYYY or MM-DD-YYYY
+            Regex("""(\d{1,2})[/-](\d{1,2})[/-](\d{4})"""),
+            // DD/MM/YYYY or DD-MM-YYYY
+            Regex("""(\d{1,2})[/-](\d{1,2})[/-](\d{4})"""),
+            // YYYY-MM-DD
+            Regex("""(\d{4})[/-](\d{1,2})[/-](\d{1,2})"""),
+            // MM/DD/YY
+            Regex("""(\d{1,2})[/-](\d{1,2})[/-](\d{2})(?!\d)"""),
+            // Month names: Jan 15, 2024 or January 15, 2024
+            Regex("""(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s,]+(\d{1,2})[\s,]+(\d{4})""", RegexOption.IGNORE_CASE),
+            // 15 Jan 2024
+            Regex("""(\d{1,2})[\s,]+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s,]+(\d{4})""", RegexOption.IGNORE_CASE)
         )
 
-        for (line in lines.take(10)) { // Check first 10 lines
-            for (pattern in datePatterns) {
+        // Date format parsers
+        val dateFormats = mapOf(
+            0 to SimpleDateFormat("MM/dd/yyyy", Locale.US),
+            1 to SimpleDateFormat("dd/MM/yyyy", Locale.US),
+            2 to SimpleDateFormat("yyyy-MM-dd", Locale.US),
+            3 to SimpleDateFormat("MM/dd/yy", Locale.US),
+            4 to SimpleDateFormat("MMM dd, yyyy", Locale.US),
+            5 to SimpleDateFormat("dd MMM yyyy", Locale.US)
+        )
+
+        // Try to find date in first 15 lines
+        for (line in lines.take(15)) {
+            for ((patternIndex, regex) in dateRegexPatterns.withIndex()) {
+                val match = regex.find(line)
+                if (match != null) {
+                    try {
+                        val dateStr = match.value
+                        val format = dateFormats[patternIndex]
+                        if (format != null) {
+                            format.isLenient = false
+                            val parsedDate = format.parse(dateStr)
+                            if (parsedDate != null) {
+                                calendar.time = parsedDate
+
+                                // Try to extract time from same line
+                                val timeMatch = extractTime(line)
+                                if (timeMatch != null) {
+                                    calendar.set(Calendar.HOUR_OF_DAY, timeMatch.first)
+                                    calendar.set(Calendar.MINUTE, timeMatch.second)
+                                }
+
+                                return calendar.timeInMillis
+                            }
+                        }
+                    } catch (e: Exception) {
+                        continue
+                    }
+                }
+            }
+        }
+
+        // If no date found, return current date with any time found
+        for (line in lines.take(15)) {
+            val timeMatch = extractTime(line)
+            if (timeMatch != null) {
+                calendar.timeInMillis = System.currentTimeMillis()
+                calendar.set(Calendar.HOUR_OF_DAY, timeMatch.first)
+                calendar.set(Calendar.MINUTE, timeMatch.second)
+                return calendar.timeInMillis
+            }
+        }
+
+        return System.currentTimeMillis()
+    }
+
+    private fun extractTime(line: String): Pair<Int, Int>? {
+        // Time patterns: HH:MM AM/PM or HH:MM (24-hour)
+        val timePatterns = listOf(
+            // 12-hour format with AM/PM
+            Regex("""(\d{1,2}):(\d{2})\s*(AM|PM)""", RegexOption.IGNORE_CASE),
+            // 24-hour format
+            Regex("""(\d{1,2}):(\d{2})(?!\d)""")
+        )
+
+        for (regex in timePatterns) {
+            val match = regex.find(line)
+            if (match != null) {
                 try {
-                    pattern.isLenient = false
-                    val date = pattern.parse(line)
-                    if (date != null) {
-                        return date.time
+                    var hour = match.groupValues[1].toInt()
+                    val minute = match.groupValues[2].toInt()
+
+                    // Handle AM/PM if present
+                    if (match.groupValues.size > 3) {
+                        val amPm = match.groupValues[3].uppercase()
+                        if (amPm == "PM" && hour < 12) {
+                            hour += 12
+                        } else if (amPm == "AM" && hour == 12) {
+                            hour = 0
+                        }
+                    }
+
+                    // Validate hour and minute
+                    if (hour in 0..23 && minute in 0..59) {
+                        return Pair(hour, minute)
                     }
                 } catch (e: Exception) {
-                    // Try next pattern or line
                     continue
                 }
             }
         }
 
-        // If no date found, return current date
-        return System.currentTimeMillis()
+        return null
     }
 
     private fun extractMerchant(lines: List<String>): String? {
