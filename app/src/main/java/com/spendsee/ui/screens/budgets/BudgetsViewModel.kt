@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.spendsee.data.local.entities.Budget
 import com.spendsee.data.local.entities.BudgetItem
+import com.spendsee.data.local.entities.Transaction
+import com.spendsee.data.repository.AccountRepository
 import com.spendsee.data.repository.BudgetRepository
 import com.spendsee.data.repository.TransactionRepository
 import com.spendsee.managers.BudgetNotificationManager
@@ -36,6 +38,7 @@ data class BudgetsUiState(
 class BudgetsViewModel(
     private val budgetRepository: BudgetRepository,
     private val transactionRepository: TransactionRepository,
+    private val accountRepository: AccountRepository,
     private val context: Context
 ) : ViewModel() {
 
@@ -270,6 +273,54 @@ class BudgetsViewModel(
                 )
                 budgetRepository.updateBudget(updatedBudget)
                 loadBudgets()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun createPaymentTransaction(
+        budget: Budget,
+        amount: Double,
+        accountId: String,
+        date: Long
+    ) {
+        viewModelScope.launch {
+            try {
+                // Get the account and update its balance
+                accountRepository.getAccountById(accountId).first()?.let { account ->
+                    // Create transaction
+                    val transaction = Transaction(
+                        id = java.util.UUID.randomUUID().toString(),
+                        title = budget.name,
+                        amount = amount,
+                        type = "expense",
+                        category = budget.category,
+                        date = date,
+                        notes = "",
+                        accountId = accountId,
+                        toAccountId = null,
+                        budgetId = budget.id,
+                        createdAt = System.currentTimeMillis()
+                    )
+                    transactionRepository.insertTransaction(transaction)
+
+                    // Update account balance
+                    val updatedAccount = account.copy(balance = account.balance - amount)
+                    accountRepository.updateAccount(updatedAccount)
+
+                    // Mark budget as paid
+                    val updatedBudget = budget.copy(
+                        isPaid = true,
+                        paidDate = System.currentTimeMillis()
+                    )
+                    budgetRepository.updateBudget(updatedBudget)
+
+                    // Cancel notification if exists
+                    budget.notificationId?.let { notificationManager.cancelNotification(it) }
+
+                    loadBudgets()
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = e.message) }
             }

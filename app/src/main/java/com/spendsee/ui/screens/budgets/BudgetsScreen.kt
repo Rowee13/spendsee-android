@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.spendsee.R
+import com.spendsee.data.repository.AccountRepository
 import com.spendsee.data.repository.BudgetRepository
 import com.spendsee.data.repository.TransactionRepository
 import com.spendsee.managers.CurrencyManager
@@ -45,6 +46,7 @@ fun BudgetsScreen(
             factory = BudgetsViewModelFactory(
                 BudgetRepository.getInstance(context),
                 TransactionRepository.getInstance(context),
+                AccountRepository.getInstance(context),
                 context
             )
         )
@@ -56,6 +58,8 @@ fun BudgetsScreen(
     val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
     val premiumManager = remember { PremiumManager.getInstance(context) }
     val isPremium by premiumManager.isPremium.collectAsState()
+    val accountRepository = remember { AccountRepository.getInstance(context) }
+    val accounts by accountRepository.getAllAccounts().collectAsState(initial = emptyList())
     var showAddBudget by remember { mutableStateOf(false) }
     var showEditBudget by remember { mutableStateOf(false) }
     var budgetToEdit by remember { mutableStateOf<BudgetWithDetails?>(null) }
@@ -64,6 +68,8 @@ fun BudgetsScreen(
     var budgetItemToEdit by remember { mutableStateOf<com.spendsee.data.local.entities.BudgetItem?>(null) }
     var selectedBudgetId by remember { mutableStateOf<String?>(null) }
     var showPremiumPaywall by remember { mutableStateOf(false) }
+    var showPaymentConfirmation by remember { mutableStateOf(false) }
+    var budgetToPayFor by remember { mutableStateOf<BudgetWithDetails?>(null) }
 
     Scaffold(
         floatingActionButton = {
@@ -168,8 +174,13 @@ fun BudgetsScreen(
                             showEditBudgetItem = true
                         },
                         onDeleteBudgetItem = { viewModel.deleteBudgetItem(it) },
-                        onMarkAsPaid = { budget, isPaid ->
-                            viewModel.markBudgetAsPaid(budget, isPaid)
+                        onMarkAsPaid = { budgetWithDetails ->
+                            if (isPremium) {
+                                budgetToPayFor = budgetWithDetails
+                                showPaymentConfirmation = true
+                            } else {
+                                showPremiumPaywall = true
+                            }
                         },
                         currencySymbol = selectedCurrency.symbol,
                         isPremium = isPremium,
@@ -284,6 +295,30 @@ fun BudgetsScreen(
             onPurchaseSuccess = {
                 showPremiumPaywall = false
                 // Premium status will be updated automatically via StateFlow
+            }
+        )
+    }
+
+    // Payment Confirmation Dialog
+    if (showPaymentConfirmation && budgetToPayFor != null) {
+        PaymentConfirmationDialog(
+            budget = budgetToPayFor!!.budget,
+            plannedAmount = budgetToPayFor!!.planned,
+            accounts = accounts,
+            currencySymbol = selectedCurrency.symbol,
+            onDismiss = {
+                showPaymentConfirmation = false
+                budgetToPayFor = null
+            },
+            onConfirm = { amount, accountId, date ->
+                viewModel.createPaymentTransaction(
+                    budget = budgetToPayFor!!.budget,
+                    amount = amount,
+                    accountId = accountId,
+                    date = date
+                )
+                showPaymentConfirmation = false
+                budgetToPayFor = null
             }
         )
     }
@@ -435,7 +470,7 @@ fun BudgetsList(
     onAddBudgetItem: (String) -> Unit,
     onEditBudgetItem: (com.spendsee.data.local.entities.BudgetItem) -> Unit,
     onDeleteBudgetItem: (com.spendsee.data.local.entities.BudgetItem) -> Unit,
-    onMarkAsPaid: (com.spendsee.data.local.entities.Budget, Boolean) -> Unit,
+    onMarkAsPaid: (BudgetWithDetails) -> Unit,
     currencySymbol: String,
     isPremium: Boolean,
     onShowPremiumPaywall: () -> Unit
@@ -452,7 +487,7 @@ fun BudgetsList(
                 onAddItem = { onAddBudgetItem(budgetWithDetails.budget.id) },
                 onEditItem = onEditBudgetItem,
                 onDeleteItem = onDeleteBudgetItem,
-                onMarkAsPaid = { isPaid -> onMarkAsPaid(budgetWithDetails.budget, isPaid) },
+                onMarkAsPaid = { onMarkAsPaid(budgetWithDetails) },
                 currencySymbol = currencySymbol,
                 isPremium = isPremium,
                 onShowPremiumPaywall = onShowPremiumPaywall
@@ -471,7 +506,7 @@ fun BudgetCard(
     onAddItem: () -> Unit,
     onEditItem: (com.spendsee.data.local.entities.BudgetItem) -> Unit,
     onDeleteItem: (com.spendsee.data.local.entities.BudgetItem) -> Unit,
-    onMarkAsPaid: (Boolean) -> Unit,
+    onMarkAsPaid: () -> Unit,
     currencySymbol: String,
     isPremium: Boolean,
     onShowPremiumPaywall: () -> Unit
@@ -604,13 +639,12 @@ fun BudgetCard(
                     Divider()
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Mark as Paid/Unpaid Button (only show if has due date)
-                    if (budgetWithDetails.budget.dueDate != null) {
-                        val isPaid = budgetWithDetails.budget.isPaid
+                    // Mark as Paid Button (only show if has due date and not yet paid)
+                    if (budgetWithDetails.budget.dueDate != null && !budgetWithDetails.budget.isPaid) {
                         Button(
                             onClick = {
                                 if (isPremium) {
-                                    onMarkAsPaid(!isPaid)
+                                    onMarkAsPaid()
                                 } else {
                                     onShowPremiumPaywall()
                                 }
@@ -620,7 +654,7 @@ fun BudgetCard(
                                 .height(48.dp),
                             shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isPaid) Color(0xFF757575) else Color(0xFF4CAF50)
+                                containerColor = Color(0xFF4CAF50)
                             )
                         ) {
                             Row(
@@ -633,12 +667,12 @@ fun BudgetCard(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Icon(
-                                        imageVector = if (isPaid) FeatherIcons.XCircle else FeatherIcons.CheckCircle,
-                                        contentDescription = if (isPaid) "Mark as Unpaid" else "Mark as Paid",
+                                        imageVector = FeatherIcons.CheckCircle,
+                                        contentDescription = "Mark as Paid",
                                         tint = Color.White
                                     )
                                     Text(
-                                        text = if (isPaid) "Mark as Unpaid" else "Mark as Paid",
+                                        text = "Mark as Paid",
                                         color = Color.White,
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Medium
