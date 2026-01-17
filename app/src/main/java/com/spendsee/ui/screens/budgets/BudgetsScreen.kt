@@ -31,6 +31,8 @@ import com.spendsee.R
 import com.spendsee.data.repository.BudgetRepository
 import com.spendsee.data.repository.TransactionRepository
 import com.spendsee.managers.CurrencyManager
+import com.spendsee.managers.PremiumManager
+import com.spendsee.ui.screens.premium.PremiumPaywallScreen
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -52,6 +54,8 @@ fun BudgetsScreen(
     val context = LocalContext.current
     val currencyManager = remember { CurrencyManager.getInstance(context) }
     val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
+    val premiumManager = remember { PremiumManager.getInstance(context) }
+    val isPremium by premiumManager.isPremium.collectAsState()
     var showAddBudget by remember { mutableStateOf(false) }
     var showEditBudget by remember { mutableStateOf(false) }
     var budgetToEdit by remember { mutableStateOf<BudgetWithDetails?>(null) }
@@ -59,6 +63,7 @@ fun BudgetsScreen(
     var showEditBudgetItem by remember { mutableStateOf(false) }
     var budgetItemToEdit by remember { mutableStateOf<com.spendsee.data.local.entities.BudgetItem?>(null) }
     var selectedBudgetId by remember { mutableStateOf<String?>(null) }
+    var showPremiumPaywall by remember { mutableStateOf(false) }
 
     Scaffold(
         floatingActionButton = {
@@ -166,7 +171,9 @@ fun BudgetsScreen(
                         onMarkAsPaid = { budget, isPaid ->
                             viewModel.markBudgetAsPaid(budget, isPaid)
                         },
-                        currencySymbol = selectedCurrency.symbol
+                        currencySymbol = selectedCurrency.symbol,
+                        isPremium = isPremium,
+                        onShowPremiumPaywall = { showPremiumPaywall = true }
                     )
                 }
             }
@@ -266,6 +273,17 @@ fun BudgetsScreen(
                 }
                 showEditBudgetItem = false
                 budgetItemToEdit = null
+            }
+        )
+    }
+
+    // Premium Paywall
+    if (showPremiumPaywall) {
+        PremiumPaywallScreen(
+            onDismiss = { showPremiumPaywall = false },
+            onPurchaseSuccess = {
+                showPremiumPaywall = false
+                // Premium status will be updated automatically via StateFlow
             }
         )
     }
@@ -418,7 +436,9 @@ fun BudgetsList(
     onEditBudgetItem: (com.spendsee.data.local.entities.BudgetItem) -> Unit,
     onDeleteBudgetItem: (com.spendsee.data.local.entities.BudgetItem) -> Unit,
     onMarkAsPaid: (com.spendsee.data.local.entities.Budget, Boolean) -> Unit,
-    currencySymbol: String
+    currencySymbol: String,
+    isPremium: Boolean,
+    onShowPremiumPaywall: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -433,7 +453,9 @@ fun BudgetsList(
                 onEditItem = onEditBudgetItem,
                 onDeleteItem = onDeleteBudgetItem,
                 onMarkAsPaid = { isPaid -> onMarkAsPaid(budgetWithDetails.budget, isPaid) },
-                currencySymbol = currencySymbol
+                currencySymbol = currencySymbol,
+                isPremium = isPremium,
+                onShowPremiumPaywall = onShowPremiumPaywall
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -450,7 +472,9 @@ fun BudgetCard(
     onEditItem: (com.spendsee.data.local.entities.BudgetItem) -> Unit,
     onDeleteItem: (com.spendsee.data.local.entities.BudgetItem) -> Unit,
     onMarkAsPaid: (Boolean) -> Unit,
-    currencySymbol: String
+    currencySymbol: String,
+    isPremium: Boolean,
+    onShowPremiumPaywall: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
@@ -702,10 +726,29 @@ fun BudgetCard(
                 )
                 if (budgetWithDetails.budget.dueDate != null) {
                     DropdownMenuItem(
-                        text = { Text(if (budgetWithDetails.budget.isPaid) "Mark as Unpaid" else "Mark as Paid") },
+                        text = {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(if (budgetWithDetails.budget.isPaid) "Mark as Unpaid" else "Mark as Paid")
+                                if (!isPremium) {
+                                    Icon(
+                                        imageVector = FeatherIcons.Award,
+                                        contentDescription = "Premium",
+                                        modifier = Modifier.size(16.dp),
+                                        tint = Color(0xFFFFD700)
+                                    )
+                                }
+                            }
+                        },
                         onClick = {
                             showMenu = false
-                            onMarkAsPaid(!budgetWithDetails.budget.isPaid)
+                            if (isPremium) {
+                                onMarkAsPaid(!budgetWithDetails.budget.isPaid)
+                            } else {
+                                onShowPremiumPaywall()
+                            }
                         },
                         leadingIcon = {
                             Icon(
