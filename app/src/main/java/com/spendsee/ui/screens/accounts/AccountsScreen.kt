@@ -77,7 +77,8 @@ fun AccountsScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .statusBarsPadding()  // Add padding for status bar
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
             ) {
                 // Unified Header Section (iOS style)
                 UnifiedAccountsHeaderSection(

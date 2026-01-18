@@ -199,6 +199,7 @@ fun RecordsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding()
+                    .navigationBarsPadding()
             ) {
             // Unified Header Section (iOS style)
             UnifiedHeaderSection(
