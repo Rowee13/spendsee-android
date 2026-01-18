@@ -39,7 +39,7 @@ fun MainNavigation() {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 16.dp),
+                    .padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 24.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Surface(

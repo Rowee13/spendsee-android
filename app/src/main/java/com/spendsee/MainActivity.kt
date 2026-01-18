@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    color = androidx.compose.ui.graphics.Color(0xFFEFFFFF)
                 ) {
                     if (isLocked) {
                         PasscodeLockScreen(
