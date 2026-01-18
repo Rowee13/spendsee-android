@@ -5,7 +5,7 @@ import java.util.UUID
 
 object DefaultCategories {
 
-    // Income Categories (7)
+    // Income Categories (7) - Matching iOS
     val incomeCategories = listOf(
         Category(
             id = UUID.randomUUID().toString(),
@@ -14,115 +14,106 @@ object DefaultCategories {
             colorHex = "#34C759",
             type = "income",
             isDefault = true,
-            sortOrder = 0
-        ),
-        Category(
-            id = UUID.randomUUID().toString(),
-            name = "Business",
-            icon = "trending_up",
-            colorHex = "#32ADE6",
-            type = "income",
-            isDefault = true,
             sortOrder = 1
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Investment",
-            icon = "dollar_sign",
-            colorHex = "#FFD60A",
+            name = "Lottery",
+            icon = "award",
+            colorHex = "#FF9500",
             type = "income",
             isDefault = true,
             sortOrder = 2
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Gifts",
-            icon = "gift",
-            colorHex = "#FF375F",
+            name = "Refunds",
+            icon = "rotate_ccw",
+            colorHex = "#5AC8FA",
             type = "income",
             isDefault = true,
             sortOrder = 3
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Refunds",
-            icon = "refresh_cw",
-            colorHex = "#FF9F0A",
+            name = "Grants",
+            icon = "gift",
+            colorHex = "#AF52DE",
             type = "income",
             isDefault = true,
             sortOrder = 4
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Rental",
-            icon = "home",
-            colorHex = "#BF5AF2",
+            name = "Bank Interest",
+            icon = "dollar_sign",
+            colorHex = "#FFD60A",
             type = "income",
             isDefault = true,
             sortOrder = 5
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Other Income",
-            icon = "plus_circle",
-            colorHex = "#64D2FF",
+            name = "Investment",
+            icon = "trending_up",
+            colorHex = "#007AFF",
             type = "income",
             isDefault = true,
             sortOrder = 6
-        )
-    )
-
-    // Expense Categories (19)
-    val expenseCategories = listOf(
-        Category(
-            id = UUID.randomUUID().toString(),
-            name = "Food & Dining",
-            icon = "coffee",
-            colorHex = "#FF9500",
-            type = "expense",
-            isDefault = true,
-            sortOrder = 0
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Transport",
-            icon = "truck",
-            colorHex = "#007AFF",
+            name = "Business",
+            icon = "briefcase",
+            colorHex = "#FF2D55",
+            type = "income",
+            isDefault = true,
+            sortOrder = 7
+        )
+    )
+
+    // Expense Categories (19) - Matching iOS
+    val expenseCategories = listOf(
+        Category(
+            id = UUID.randomUUID().toString(),
+            name = "Bills",
+            icon = "file_text",
+            colorHex = "#5AC8FA",
             type = "expense",
             isDefault = true,
             sortOrder = 1
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Shopping",
-            icon = "shopping_bag",
-            colorHex = "#AF52DE",
+            name = "Business",
+            icon = "briefcase",
+            colorHex = "#FF2D55",
             type = "expense",
             isDefault = true,
             sortOrder = 2
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Entertainment",
-            icon = "film",
-            colorHex = "#FF2D55",
+            name = "Car",
+            icon = "truck",
+            colorHex = "#007AFF",
             type = "expense",
             isDefault = true,
             sortOrder = 3
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Bills & Utilities",
-            icon = "file_text",
-            colorHex = "#FF3B30",
+            name = "Clothing",
+            icon = "shopping_bag",
+            colorHex = "#FF9500",
             type = "expense",
             isDefault = true,
             sortOrder = 4
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Healthcare",
-            icon = "heart",
+            name = "Education",
+            icon = "book",
             colorHex = "#34C759",
             type = "expense",
             isDefault = true,
@@ -130,35 +121,35 @@ object DefaultCategories {
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Education",
-            icon = "book",
-            colorHex = "#5856D6",
+            name = "Gadgets",
+            icon = "monitor",
+            colorHex = "#8E8E93",
             type = "expense",
             isDefault = true,
             sortOrder = 6
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Travel",
-            icon = "map",
-            colorHex = "#32ADE6",
+            name = "Entertainment",
+            icon = "tv",
+            colorHex = "#AF52DE",
             type = "expense",
             isDefault = true,
             sortOrder = 7
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Housing",
-            icon = "home",
-            colorHex = "#8E8E93",
+            name = "Food",
+            icon = "coffee",
+            colorHex = "#FF3B30",
             type = "expense",
             isDefault = true,
             sortOrder = 8
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Personal Care",
-            icon = "user",
+            name = "Loan Repayment",
+            icon = "credit_card",
             colorHex = "#FF6482",
             type = "expense",
             isDefault = true,
@@ -166,71 +157,71 @@ object DefaultCategories {
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Insurance",
-            icon = "shield",
-            colorHex = "#30B0C7",
+            name = "Grocery",
+            icon = "shopping_cart",
+            colorHex = "#34C759",
             type = "expense",
             isDefault = true,
             sortOrder = 10
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Subscriptions",
-            icon = "repeat",
-            colorHex = "#AC8E68",
+            name = "House Rent",
+            icon = "home",
+            colorHex = "#FF9500",
             type = "expense",
             isDefault = true,
             sortOrder = 11
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Gifts & Donations",
-            icon = "gift",
-            colorHex = "#FF375F",
+            name = "Insurance",
+            icon = "shield",
+            colorHex = "#5AC8FA",
             type = "expense",
             isDefault = true,
             sortOrder = 12
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Pet Care",
-            icon = "heart",
-            colorHex = "#FFD60A",
+            name = "Shopping",
+            icon = "shopping_bag",
+            colorHex = "#FF2D55",
             type = "expense",
             isDefault = true,
             sortOrder = 13
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Fitness",
+            name = "Sport",
             icon = "activity",
-            colorHex = "#FF453A",
+            colorHex = "#32D74B",
             type = "expense",
             isDefault = true,
             sortOrder = 14
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Maintenance",
-            icon = "tool",
-            colorHex = "#64D2FF",
+            name = "Tax",
+            icon = "percent",
+            colorHex = "#8E8E93",
             type = "expense",
             isDefault = true,
             sortOrder = 15
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Taxes",
-            icon = "percent",
-            colorHex = "#BF5AF2",
+            name = "Telephone",
+            icon = "phone",
+            colorHex = "#007AFF",
             type = "expense",
             isDefault = true,
             sortOrder = 16
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Investments",
-            icon = "trending_up",
+            name = "Transportation",
+            icon = "truck",
             colorHex = "#FFD60A",
             type = "expense",
             isDefault = true,
@@ -238,12 +229,21 @@ object DefaultCategories {
         ),
         Category(
             id = UUID.randomUUID().toString(),
-            name = "Other Expenses",
-            icon = "more_horizontal",
-            colorHex = "#8E8E93",
+            name = "Travel",
+            icon = "map",
+            colorHex = "#5AC8FA",
             type = "expense",
             isDefault = true,
             sortOrder = 18
+        ),
+        Category(
+            id = UUID.randomUUID().toString(),
+            name = "Gift",
+            icon = "gift",
+            colorHex = "#FF2D55",
+            type = "expense",
+            isDefault = true,
+            sortOrder = 19
         )
     )
 
