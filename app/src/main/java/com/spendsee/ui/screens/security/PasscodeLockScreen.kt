@@ -117,7 +117,7 @@ fun PasscodeLockScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = Color(0xFFEFFFFF)
     ) {
         Column(
             modifier = Modifier
