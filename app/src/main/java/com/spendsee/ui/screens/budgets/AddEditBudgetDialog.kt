@@ -378,7 +378,10 @@ fun AddEditBudgetDialog(
                                     }
                                 }
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF418E8C)
+                            )
                         ) {
                             Text(if (isEdit) "Save" else "Add")
                         }

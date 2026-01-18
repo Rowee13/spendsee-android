@@ -280,8 +280,8 @@ fun AddEditAccountDialog(
                 // Bottom Buttons
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.surface,
-                    shadowElevation = 8.dp
+                    color = Color(0xFFDAF4F3),
+                    shadowElevation = 0.dp
                 ) {
                     Row(
                         modifier = Modifier
@@ -327,7 +327,10 @@ fun AddEditAccountDialog(
                                     )
                                 }
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF418E8C)
+                            )
                         ) {
                             Text(if (isEdit) "Save" else "Add")
                         }
