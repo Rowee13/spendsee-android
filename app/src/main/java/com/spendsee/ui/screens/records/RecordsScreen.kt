@@ -190,12 +190,16 @@ fun RecordsScreen(
             )
         )
 
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(gradientBrush)
-                .statusBarsPadding()  // Add padding for status bar
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+            ) {
             // Unified Header Section (iOS style)
             UnifiedHeaderSection(
                 selectedMonth = uiState.selectedMonth,
@@ -242,6 +246,7 @@ fun RecordsScreen(
                 ) {
                     Text(error)
                 }
+            }
             }
         }
     }
