@@ -824,45 +824,57 @@ fun BudgetCard(
                         )
                     } else {
                         budgetWithDetails.items.forEach { item ->
-                            Row(
+                            Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable {
-                                        selectedItem = item
-                                        showItemMenu = true
-                                    }
-                                    .padding(vertical = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                    .padding(vertical = 4.dp)
+                                    .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(8.dp)),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(0xFFEFFFFF)
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = item.name,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                    if (item.note.isNotEmpty()) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            selectedItem = item
+                                            showItemMenu = true
+                                        }
+                                        .padding(12.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = item.note,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            text = item.name,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium
                                         )
+                                        if (item.note.isNotEmpty()) {
+                                            Text(
+                                                text = item.note,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
                                     }
-                                }
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = formatCurrency(item.amount, currencySymbol),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                    if (item.type == "Unplanned") {
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Icon(
-                                            FeatherIcons.AlertCircle,
-                                            contentDescription = "Unplanned",
-                                            tint = Color(0xFFFF9500),
-                                            modifier = Modifier.size(16.dp)
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = formatCurrency(item.amount, currencySymbol),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium
                                         )
+                                        if (item.type == "Unplanned") {
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Icon(
+                                                FeatherIcons.AlertCircle,
+                                                contentDescription = "Unplanned",
+                                                tint = Color(0xFFFF9500),
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
                                     }
                                 }
                             }
