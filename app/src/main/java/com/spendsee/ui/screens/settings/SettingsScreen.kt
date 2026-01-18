@@ -54,8 +54,7 @@ fun SettingsScreen() {
     val passcodeManager = remember { PasscodeManager.getInstance(context) }
     val isPremium by premiumManager.isPremium.collectAsState()
     val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
-    val isDarkMode by themeManager.isDarkMode.collectAsState()
-    val selectedTheme by themeManager.selectedTheme.collectAsState()
+    val currentTheme by themeManager.currentTheme.collectAsState()
     var isDeveloperMode by remember { mutableStateOf(premiumManager.isDeveloperModeEnabled()) }
     var showDeveloperMode by remember { mutableStateOf(premiumManager.isDeveloperModeEnabled()) }
     var showPremiumPaywall by remember { mutableStateOf(false) }
@@ -168,11 +167,70 @@ fun SettingsScreen() {
                 SettingsSection(title = "Preferences")
             }
 
+            // TEST: New Theme Color System (Ocean vs Rose)
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                        .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFDAF4F3)
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "🎨 Theme Test (Records Tab Only)",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Ocean Button
+                            Button(
+                                onClick = { themeManager.setTheme("ocean") },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (currentTheme.id == "ocean")
+                                        Color(0xFF418E8C) else Color(0xFFAAD4D3)
+                                )
+                            ) {
+                                Text("Ocean")
+                            }
+                            // Rose Button
+                            Button(
+                                onClick = { themeManager.setTheme("rose") },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (currentTheme.id == "rose")
+                                        Color(0xFFC84B7B) else Color(0xFFE8B4CD)
+                                )
+                            ) {
+                                Text("Rose")
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Current: ${currentTheme.name}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF676767)
+                        )
+                    }
+                }
+            }
+
             item {
                 SettingsItem(
                     icon = FeatherIcons.Droplet,
-                    title = "Theme",
-                    subtitle = AppColorSchemes.themeById(selectedTheme).name,
+                    title = "Theme (Old System)",
+                    subtitle = "Legacy theme selector",
                     onClick = { showThemeSelector = true }
                 )
             }
