@@ -272,7 +272,7 @@ fun UnifiedAccountsHeaderSection(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            HorizontalDivider(
+            Divider(
                 modifier = Modifier.padding(top = 16.dp, bottom = 12.dp),
                 thickness = 1.dp,
                 color = Color(0xFFAAD4D3)
