@@ -168,124 +168,11 @@ fun SettingsScreen() {
                 SettingsSection(title = "Preferences")
             }
 
-            // TEST: New Theme Color System (Ocean vs Rose)
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                        .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFDAF4F3)
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = "🎨 Theme Test (All 8 Themes)",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Row 1: Ocean, Rose, Sunset, Forest
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            ThemeButton(
-                                themeId = "ocean",
-                                themeName = "Ocean",
-                                themeColor = Color(0xFF418E8C),
-                                isSelected = currentTheme.id == "ocean",
-                                onThemeSelected = { themeManager.setTheme("ocean") },
-                                modifier = Modifier.weight(1f)
-                            )
-                            ThemeButton(
-                                themeId = "rose",
-                                themeName = "Rose",
-                                themeColor = Color(0xFFC84B7B),
-                                isSelected = currentTheme.id == "rose",
-                                onThemeSelected = { themeManager.setTheme("rose") },
-                                modifier = Modifier.weight(1f)
-                            )
-                            ThemeButton(
-                                themeId = "sunset",
-                                themeName = "Sunset",
-                                themeColor = Color(0xFFE85D3A),
-                                isSelected = currentTheme.id == "sunset",
-                                onThemeSelected = { themeManager.setTheme("sunset") },
-                                modifier = Modifier.weight(1f)
-                            )
-                            ThemeButton(
-                                themeId = "forest",
-                                themeName = "Forest",
-                                themeColor = Color(0xFF2D7A3E),
-                                isSelected = currentTheme.id == "forest",
-                                onThemeSelected = { themeManager.setTheme("forest") },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Row 2: Lavender, Mint, Monochrome, Default
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            ThemeButton(
-                                themeId = "lavender",
-                                themeName = "Lavender",
-                                themeColor = Color(0xFF7E3FAF),
-                                isSelected = currentTheme.id == "lavender",
-                                onThemeSelected = { themeManager.setTheme("lavender") },
-                                modifier = Modifier.weight(1f)
-                            )
-                            ThemeButton(
-                                themeId = "mint",
-                                themeName = "Mint",
-                                themeColor = Color(0xFF2D8F6E),
-                                isSelected = currentTheme.id == "mint",
-                                onThemeSelected = { themeManager.setTheme("mint") },
-                                modifier = Modifier.weight(1f)
-                            )
-                            ThemeButton(
-                                themeId = "monochrome",
-                                themeName = "Mono",
-                                themeColor = Color(0xFF404040),
-                                isSelected = currentTheme.id == "monochrome",
-                                onThemeSelected = { themeManager.setTheme("monochrome") },
-                                modifier = Modifier.weight(1f)
-                            )
-                            ThemeButton(
-                                themeId = "default",
-                                themeName = "Default",
-                                themeColor = Color(0xFF2563EB),
-                                isSelected = currentTheme.id == "default",
-                                onThemeSelected = { themeManager.setTheme("default") },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Current: ${currentTheme.name}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF676767)
-                        )
-                    }
-                }
-            }
-
             item {
                 SettingsItem(
                     icon = FeatherIcons.Droplet,
-                    title = "Theme (Old System)",
-                    subtitle = "Legacy theme selector",
+                    title = "Theme",
+                    subtitle = currentTheme.name,
                     onClick = { showThemeSelector = true }
                 )
             }
@@ -1515,31 +1402,4 @@ private fun PasscodeOptionsDialog(
             }
         }
     )
-}
-
-@Composable
-fun ThemeButton(
-    themeId: String,
-    themeName: String,
-    themeColor: Color,
-    isSelected: Boolean,
-    onThemeSelected: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Button(
-        onClick = onThemeSelected,
-        modifier = modifier.height(40.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) themeColor else themeColor.copy(alpha = 0.3f),
-            contentColor = Color.White
-        ),
-        shape = RoundedCornerShape(8.dp),
-        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
-    ) {
-        Text(
-            text = themeName,
-            fontSize = 11.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-        )
-    }
 }
