@@ -645,14 +645,14 @@ fun TransactionList(
 
 @Composable
 fun DateHeader(date: Long) {
-    val dateFormat = SimpleDateFormat("EEEE, MMMM d", Locale.getDefault())
+    val dateFormat = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault())
     val dateText = dateFormat.format(Date(date))
 
     Text(
         text = dateText,
-        style = MaterialTheme.typography.titleSmall,
-        fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.bodyMedium,
+        fontWeight = FontWeight.Medium,
+        color = Color(0xFF676767),
         modifier = Modifier.padding(vertical = 8.dp)
     )
 }
@@ -671,12 +671,13 @@ fun TransactionRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
+            .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp))
             .clickable { showMenu = true },
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Color.White
         ),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -714,23 +715,33 @@ fun TransactionRow(
                         text = transaction.title,
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = Color(0xFF1A1A1A)
                     )
                     Text(
                         text = transaction.category,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color(0xFF676767)
                     )
                 }
             }
 
-            // Right side: Amount
-            Text(
-                text = formatCurrency(transaction.amount, currencySymbol),
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                color = getTransactionColor(transaction.type)
-            )
+            // Right side: Amount and smile icon
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = formatCurrency(transaction.amount, currencySymbol),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = getTransactionColor(transaction.type)
+                )
+                Text(
+                    text = "☺",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color(0xFF676767).copy(alpha = 0.3f)
+                )
+            }
         }
 
         // Dropdown menu for edit/delete
