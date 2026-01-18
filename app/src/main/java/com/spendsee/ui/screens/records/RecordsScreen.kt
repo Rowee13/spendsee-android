@@ -558,13 +558,13 @@ fun UnifiedHeaderSection(
                         text = "$currencySymbol${String.format("%.2f", net)}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (net >= 0) Color(0xFF34C759) else Color(0xFFFF3B30)
+                        color = if (net >= 0) Color(0xFF1E7E34) else Color(0xFFFF3B30)
                     )
                     if (net >= 0) {
                         Icon(
                             FeatherIcons.TrendingUp,
                             contentDescription = "Positive earnings",
-                            tint = Color(0xFF34C759),
+                            tint = Color(0xFF1E7E34),
                             modifier = Modifier.size(20.dp)
                         )
                     }
