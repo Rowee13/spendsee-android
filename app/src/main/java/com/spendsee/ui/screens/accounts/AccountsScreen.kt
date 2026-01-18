@@ -2,6 +2,7 @@ package com.spendsee.ui.screens.accounts
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -191,7 +192,9 @@ fun UnifiedAccountsHeaderSection(
             text = "All accounts",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
         )
 
         // Total Balance (large display)
@@ -210,10 +213,12 @@ fun UnifiedAccountsHeaderSection(
         ) {
             // Expenses Card
             Surface(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
                 shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 2.dp
+                color = Color(0xFFDAF4F3),
+                shadowElevation = 0.dp
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -222,7 +227,7 @@ fun UnifiedAccountsHeaderSection(
                     Text(
                         text = "Expenses",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        color = Color(0xFF676767)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -236,10 +241,12 @@ fun UnifiedAccountsHeaderSection(
 
             // Income Card
             Surface(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
                 shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 2.dp
+                color = Color(0xFFDAF4F3),
+                shadowElevation = 0.dp
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -248,7 +255,7 @@ fun UnifiedAccountsHeaderSection(
                     Text(
                         text = "Income",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        color = Color(0xFF676767)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -261,14 +268,22 @@ fun UnifiedAccountsHeaderSection(
             }
         }
 
-        // "Accounts" section header
-        Text(
-            text = "Accounts",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(top = 8.dp)
-        )
+        // "Accounts" section header with divider
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            HorizontalDivider(
+                modifier = Modifier.padding(top = 16.dp, bottom = 12.dp),
+                thickness = 1.dp,
+                color = Color(0xFFAAD4D3)
+            )
+            Text(
+                text = "Accounts",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
     }
 }
 
