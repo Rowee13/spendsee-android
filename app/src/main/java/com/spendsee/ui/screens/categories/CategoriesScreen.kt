@@ -1,5 +1,6 @@
 package com.spendsee.ui.screens.categories
 
+import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,8 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.*
@@ -33,8 +36,26 @@ fun CategoriesScreen(
 ) {
     val viewModel: CategoriesViewModel = viewModel()
     val context = LocalContext.current
+    val view = LocalView.current
     val premiumManager = remember { PremiumManager.getInstance(context) }
     val isPremium by premiumManager.isPremium.collectAsState()
+
+    // Set status bar color to match header
+    SideEffect {
+        val window = (view.context as? Activity)?.window
+        window?.statusBarColor = android.graphics.Color.parseColor("#DAF4F3")
+        window?.let {
+            WindowCompat.getInsetsController(it, view).isAppearanceLightStatusBars = true
+        }
+    }
+
+    // Reset status bar color when leaving this screen
+    DisposableEffect(Unit) {
+        onDispose {
+            val window = (view.context as? Activity)?.window
+            window?.statusBarColor = android.graphics.Color.parseColor("#EFFFFF")
+        }
+    }
 
     val incomeCategories by viewModel.incomeCategories.collectAsState()
     val expenseCategories by viewModel.expenseCategories.collectAsState()
@@ -62,7 +83,8 @@ fun CategoriesScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFFDAF4F3)
-                )
+                ),
+                windowInsets = WindowInsets(0, 0, 0, 0)
             )
         },
         floatingActionButton = {
