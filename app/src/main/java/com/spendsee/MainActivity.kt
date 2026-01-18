@@ -35,10 +35,10 @@ class MainActivity : ComponentActivity() {
             }
 
             SpendSeeTheme {
-                // Set status bar and navigation bar colors
+                // Set status bar and navigation bar colors dynamically based on theme
                 SideEffect {
-                    window.statusBarColor = android.graphics.Color.parseColor("#EFFFFF")
-                    window.navigationBarColor = android.graphics.Color.parseColor("#EFFFFF")
+                    window.statusBarColor = currentTheme.background.toArgb()
+                    window.navigationBarColor = currentTheme.background.toArgb()
 
                     // Light status bar icons (dark icons on light background)
                     WindowCompat.getInsetsController(window, window.decorView).apply {
@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity() {
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = androidx.compose.ui.graphics.Color(0xFFEFFFFF)
+                    color = currentTheme.background
                 ) {
                     if (isLocked) {
                         PasscodeLockScreen(

@@ -6,11 +6,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -20,6 +23,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.spendsee.managers.ThemeManager
 import com.spendsee.ui.screens.accounts.AccountsScreen
 import com.spendsee.ui.screens.analysis.AnalysisScreen
 import com.spendsee.ui.screens.budgets.BudgetsScreen
@@ -29,12 +33,16 @@ import com.spendsee.ui.screens.settings.SettingsScreen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainNavigation() {
+    val context = LocalContext.current
+    val themeManager = remember { ThemeManager.getInstance(context) }
+    val currentTheme by themeManager.currentTheme.collectAsState()
+
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
     Scaffold(
-        containerColor = Color(0xFFEFFFFF),
+        containerColor = currentTheme.background,
         bottomBar = {
             // Custom floating bottom navigation bar
             Box(
@@ -48,7 +56,7 @@ fun MainNavigation() {
                         .fillMaxWidth()
                         .height(64.dp),
                     shape = RoundedCornerShape(32.dp),  // Fully rounded ends
-                    color = Color(0xFFDAF4F3),  // Background color from mockup
+                    color = currentTheme.surface,
                     shadowElevation = 4.dp
                 ) {
                     Row(
@@ -82,13 +90,13 @@ fun MainNavigation() {
                                 Icon(
                                     imageVector = screen.icon,
                                     contentDescription = screen.title,
-                                    tint = if (isSelected) Color(0xFF418E8C) else Color(0xFF676767),
+                                    tint = if (isSelected) currentTheme.accent else currentTheme.inactive,
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = screen.title,
-                                    color = if (isSelected) Color(0xFF418E8C) else Color(0xFF676767),
+                                    color = if (isSelected) currentTheme.accent else currentTheme.inactive,
                                     fontSize = 11.sp,
                                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                                 )
