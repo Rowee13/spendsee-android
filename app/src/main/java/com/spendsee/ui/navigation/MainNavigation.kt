@@ -34,6 +34,7 @@ fun MainNavigation() {
     val currentDestination = navBackStackEntry?.destination
 
     Scaffold(
+        containerColor = Color(0xFFEFFFFF),
         bottomBar = {
             // Custom floating bottom navigation bar
             Box(
