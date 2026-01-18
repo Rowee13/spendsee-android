@@ -46,6 +46,7 @@ import com.spendsee.managers.ReceiptParser
 import com.spendsee.managers.ThemeManager
 import com.spendsee.ui.screens.camera.CameraScreen
 import com.spendsee.ui.screens.premium.PremiumPaywallScreen
+import com.spendsee.ui.theme.ThemeColors
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -203,7 +204,8 @@ fun RecordsScreen(
                 expenses = uiState.totalExpenses,
                 income = uiState.totalIncome,
                 net = uiState.netTotal,
-                currencySymbol = selectedCurrency.symbol
+                currencySymbol = selectedCurrency.symbol,
+                currentTheme = currentTheme
             )
 
             // Transaction List
@@ -370,7 +372,8 @@ fun UnifiedHeaderSection(
     expenses: Double,
     income: Double,
     net: Double,
-    currencySymbol: String
+    currencySymbol: String,
+    currentTheme: ThemeColors
 ) {
     val calendar = Calendar.getInstance().apply {
         set(Calendar.MONTH, selectedMonth - 1)
