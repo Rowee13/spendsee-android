@@ -51,6 +51,7 @@ fun CategoriesScreen(
     val currentType = if (selectedTabIndex == 0) "expense" else "income"
 
     Scaffold(
+        containerColor = Color(0xFFEFFFFF),
         topBar = {
             TopAppBar(
                 title = { Text("Categories") },
@@ -73,9 +74,9 @@ fun CategoriesScreen(
                         showPremiumPaywall = true
                     }
                 },
-                containerColor = MaterialTheme.colorScheme.primary
+                containerColor = Color(0xFF418E8C)
             ) {
-                Icon(FeatherIcons.Plus, contentDescription = "Add Category")
+                Icon(FeatherIcons.Plus, contentDescription = "Add Category", tint = Color.White)
             }
         }
     ) { paddingValues ->
@@ -88,8 +89,8 @@ fun CategoriesScreen(
             // Tabs
             TabRow(
                 selectedTabIndex = selectedTabIndex,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.primary
+                containerColor = Color(0xFFDAF4F3),
+                contentColor = Color(0xFF418E8C)
             ) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
