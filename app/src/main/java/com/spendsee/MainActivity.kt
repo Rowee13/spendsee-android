@@ -27,19 +27,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             val themeManager = remember { ThemeManager.getInstance(this) }
             val passcodeManager = remember { PasscodeManager.getInstance(this) }
-            val isDarkMode by themeManager.isDarkMode.collectAsState()
-            val selectedThemeId by themeManager.selectedTheme.collectAsState()
-            val selectedScheme = AppColorSchemes.themeById(selectedThemeId)
+            val currentTheme by themeManager.currentTheme.collectAsState()
 
             // Track if app is locked
             var isLocked by remember {
                 mutableStateOf(passcodeManager.isPasscodeEnabled())
             }
 
-            SpendSeeTheme(
-                darkTheme = isDarkMode,
-                selectedScheme = selectedScheme
-            ) {
+            SpendSeeTheme {
                 // Set status bar and navigation bar colors
                 SideEffect {
                     window.statusBarColor = android.graphics.Color.parseColor("#EFFFFF")

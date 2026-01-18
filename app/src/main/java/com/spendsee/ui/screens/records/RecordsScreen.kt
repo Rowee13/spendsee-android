@@ -226,7 +226,8 @@ fun RecordsScreen(
                         showAddTransaction = true
                     },
                     onDeleteTransaction = { viewModel.deleteTransaction(it) },
-                    currencySymbol = selectedCurrency.symbol
+                    currencySymbol = selectedCurrency.symbol,
+                    currentTheme = currentTheme
                 )
             }
 
@@ -617,7 +618,8 @@ fun TransactionList(
     groupedTransactions: Map<Long, List<Transaction>>,
     onEditTransaction: (Transaction) -> Unit,
     onDeleteTransaction: (Transaction) -> Unit,
-    currencySymbol: String
+    currencySymbol: String,
+    currentTheme: ThemeColors
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -625,7 +627,10 @@ fun TransactionList(
     ) {
         groupedTransactions.forEach { (date, transactions) ->
             item {
-                DateHeader(date = date)
+                DateHeader(
+                    date = date,
+                    currentTheme = currentTheme
+                )
             }
 
             items(transactions) { transaction ->
@@ -633,7 +638,8 @@ fun TransactionList(
                     transaction = transaction,
                     onEdit = { onEditTransaction(transaction) },
                     onDelete = { onDeleteTransaction(transaction) },
-                    currencySymbol = currencySymbol
+                    currencySymbol = currencySymbol,
+                    currentTheme = currentTheme
                 )
             }
 
@@ -645,7 +651,10 @@ fun TransactionList(
 }
 
 @Composable
-fun DateHeader(date: Long) {
+fun DateHeader(
+    date: Long,
+    currentTheme: ThemeColors
+) {
     val dateFormat = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault())
     val dateText = dateFormat.format(Date(date))
 
@@ -664,7 +673,8 @@ fun TransactionRow(
     transaction: Transaction,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    currencySymbol: String
+    currencySymbol: String,
+    currentTheme: ThemeColors
 ) {
     var showMenu by remember { mutableStateOf(false) }
 

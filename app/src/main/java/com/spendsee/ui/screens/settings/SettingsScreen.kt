@@ -245,16 +245,6 @@ fun SettingsScreen() {
             }
 
             item {
-                SettingsSwitchItem(
-                    icon = FeatherIcons.Moon,
-                    title = "Dark Mode",
-                    subtitle = if (isDarkMode) "Enabled" else "Disabled",
-                    checked = isDarkMode,
-                    onCheckedChange = { themeManager.setDarkMode(it) }
-                )
-            }
-
-            item {
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
@@ -589,7 +579,7 @@ fun SettingsScreen() {
     // Show Theme Selector
     if (showThemeSelector) {
         ThemeSelectorDialog(
-            currentTheme = selectedTheme,
+            currentTheme = currentTheme.id,
             isPremium = isPremium,
             onThemeSelected = { theme ->
                 if (!theme.isPremium || isPremium) {
@@ -967,7 +957,7 @@ fun CurrencySelectorDialog(
 fun ThemeSelectorDialog(
     currentTheme: String,
     isPremium: Boolean,
-    onThemeSelected: (AppColorScheme) -> Unit,
+    onThemeSelected: (com.spendsee.ui.theme.ThemeColors) -> Unit,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
@@ -983,8 +973,8 @@ fun ThemeSelectorDialog(
             LazyColumn(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                items(AppColorSchemes.allThemes.size) { index ->
-                    val theme = AppColorSchemes.allThemes[index]
+                items(com.spendsee.ui.theme.ThemeColorSchemes.allThemes.size) { index ->
+                    val theme = com.spendsee.ui.theme.ThemeColorSchemes.allThemes[index]
                     val isSelected = theme.id == currentTheme
                     val isLocked = theme.isPremium && !isPremium
 
@@ -1005,14 +995,14 @@ fun ThemeSelectorDialog(
                                 modifier = Modifier
                                     .size(40.dp)
                                     .clip(CircleShape)
-                                    .background(theme.primaryLight)
+                                    .background(theme.surface)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Box(
                                 modifier = Modifier
                                     .size(40.dp)
                                     .clip(CircleShape)
-                                    .background(theme.accentLight)
+                                    .background(theme.accent)
                             )
                             Spacer(modifier = Modifier.width(16.dp))
 
@@ -1052,7 +1042,7 @@ fun ThemeSelectorDialog(
                         }
                     }
 
-                    if (index < AppColorSchemes.allThemes.size - 1) {
+                    if (index < com.spendsee.ui.theme.ThemeColorSchemes.allThemes.size - 1) {
                         Divider(
                             modifier = Modifier.padding(vertical = 4.dp),
                             color = MaterialTheme.colorScheme.outlineVariant
