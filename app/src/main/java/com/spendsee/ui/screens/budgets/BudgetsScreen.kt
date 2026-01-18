@@ -612,12 +612,14 @@ fun BudgetCard(
     val isOverBudget = budgetWithDetails.spent > budgetWithDetails.planned
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Color(0xFFDAF4F3)
         ),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
