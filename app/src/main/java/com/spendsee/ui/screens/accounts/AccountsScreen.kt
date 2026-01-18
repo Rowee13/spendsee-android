@@ -54,7 +54,7 @@ fun AccountsScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddAccount = true },
-                containerColor = Color(0xFF5A9E9E),  // Sage/teal green from mockup
+                containerColor = Color(0xFF418E8C),  // Exact color from mockup
                 contentColor = Color.White
             ) {
                 Icon(FeatherIcons.Plus, contentDescription = "Add Account")

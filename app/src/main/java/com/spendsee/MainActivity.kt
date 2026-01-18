@@ -40,16 +40,15 @@ class MainActivity : ComponentActivity() {
                 darkTheme = isDarkMode,
                 selectedScheme = selectedScheme
             ) {
-                // Set status bar color to match the surface color (header background)
-                val surfaceColor = MaterialTheme.colorScheme.surface
+                // Set status bar and navigation bar to transparent for gradient
                 SideEffect {
-                    window.statusBarColor = surfaceColor.toArgb()
-                    window.navigationBarColor = surfaceColor.toArgb()
+                    window.statusBarColor = android.graphics.Color.TRANSPARENT
+                    window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
-                    // Adjust status bar icon colors based on theme
+                    // Light status bar icons (dark icons on light background)
                     WindowCompat.getInsetsController(window, window.decorView).apply {
-                        isAppearanceLightStatusBars = !isDarkMode
-                        isAppearanceLightNavigationBars = !isDarkMode
+                        isAppearanceLightStatusBars = true  // Dark icons for light gradient
+                        isAppearanceLightNavigationBars = true  // Dark icons for light nav bar
                     }
                 }
 

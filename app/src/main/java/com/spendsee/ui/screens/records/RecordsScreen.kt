@@ -22,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
@@ -166,10 +167,10 @@ fun RecordsScreen(
                     }
                 }
 
-                // Main FAB (always visible) - Sage/teal green matching mockup
+                // Main FAB (always visible) - Updated color from mockup
                 FloatingActionButton(
                     onClick = { fabExpanded = !fabExpanded },
-                    containerColor = Color(0xFF5A9E9E),  // Sage/teal green from mockup
+                    containerColor = Color(0xFF418E8C),  // Exact color from mockup
                     contentColor = Color.White
                 ) {
                     Icon(
@@ -180,10 +181,18 @@ fun RecordsScreen(
             }
         }
     ) { paddingValues ->
+        // Gradient background (top to bottom)
+        val gradientBrush = Brush.verticalGradient(
+            colors = listOf(
+                Color(0xFF73CDD6),  // Top color
+                Color(0xFFEFFFFF)   // Bottom color
+            )
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(gradientBrush)
         ) {
             // Unified Header Section (iOS style)
             UnifiedHeaderSection(
@@ -505,16 +514,24 @@ fun UnifiedHeaderSection(
             }
         }
 
-        // Monthly Earnings Card (Net)
+        // Monthly Earnings Card (Net) - with gradient background
+        val earningsGradient = Brush.horizontalGradient(
+            colors = listOf(
+                Color(0xFFB9DAA3),  // Start color (left)
+                Color(0xFF72CCD5)   // End color (right)
+            )
+        )
+
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            color = MaterialTheme.colorScheme.primaryContainer,
-            shadowElevation = 2.dp
+            shadowElevation = 2.dp,
+            color = Color.Transparent
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .background(earningsGradient)
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -523,7 +540,7 @@ fun UnifiedHeaderSection(
                     text = "$monthText Earnings",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = Color(0xFF1A1A1A)  // Dark text on gradient
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
