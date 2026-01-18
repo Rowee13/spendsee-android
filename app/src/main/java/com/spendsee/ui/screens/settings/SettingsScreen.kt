@@ -152,7 +152,7 @@ fun SettingsScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(androidx.compose.ui.graphics.Color(0xFFEFFFFF))
     ) {
         // Header
         SettingsHeader()
@@ -632,31 +632,25 @@ fun SettingsScreen() {
 
 @Composable
 fun SettingsHeader() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 2.dp
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 24.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.app_logo),
-                contentDescription = "Settings",
-                modifier = Modifier.size(32.dp),
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = "Settings",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
+        Image(
+            painter = painterResource(id = R.drawable.app_logo),
+            contentDescription = "SpendSee Logo",
+            modifier = Modifier.size(28.dp),
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "SpendSee",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
     }
 }
 

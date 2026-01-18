@@ -2,6 +2,8 @@ package com.spendsee.ui.screens.analysis
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
@@ -50,7 +53,7 @@ fun AnalysisScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color(0xFFEFFFFF))
     ) {
         // Unified Header Section (iOS style)
         UnifiedHeaderSection(
@@ -135,101 +138,193 @@ fun UnifiedHeaderSection(
         set(Calendar.YEAR, selectedYear)
     }
     val monthYearText = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(calendar.time)
+    val monthText = SimpleDateFormat("MMMM", Locale.getDefault()).format(calendar.time)
 
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 4.dp
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Column(
+        // App Logo and Title
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface)
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // App Logo and Title
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 20.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.app_logo),
-                    contentDescription = "SpendSee Logo",
-                    modifier = Modifier.size(32.dp),
-                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "SpendSee",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
+            Image(
+                painter = painterResource(id = R.drawable.app_logo),
+                contentDescription = "SpendSee Logo",
+                modifier = Modifier.size(28.dp),
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "SpendSee",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
 
-            // Month Navigation
+        // Month Navigation Pill
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+                .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(25.dp)),
+            shape = RoundedCornerShape(25.dp),
+            color = Color(0xFFDAF4F3),
+            shadowElevation = 0.dp
+        ) {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .fillMaxSize()
+                    .padding(horizontal = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onPreviousMonth) {
+                // Previous month button with background
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFB7DFDE))
+                        .clickable { onPreviousMonth() },
+                    contentAlignment = Alignment.Center
+                ) {
                     Icon(
                         FeatherIcons.ChevronLeft,
                         contentDescription = "Previous Month",
-                        tint = MaterialTheme.colorScheme.onSurface
+                        tint = Color(0xFF1A1A1A),
+                        modifier = Modifier.size(20.dp)
                     )
                 }
 
                 Text(
                     text = monthYearText,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF1A1A1A)
                 )
 
-                IconButton(onClick = onNextMonth) {
+                // Next month button with background
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFB7DFDE))
+                        .clickable { onNextMonth() },
+                    contentAlignment = Alignment.Center
+                ) {
                     Icon(
                         FeatherIcons.ChevronRight,
                         contentDescription = "Next Month",
-                        tint = MaterialTheme.colorScheme.onSurface
+                        tint = Color(0xFF1A1A1A),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+
+        // Stats Cards (2 columns: Expenses | Income)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Expenses Card
+            Surface(
+                modifier = Modifier
+                    .weight(1f)
+                    .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFFDAF4F3),
+                shadowElevation = 0.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Expenses",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF676767)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "$currencySymbol${String.format("%.2f", expenses)}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFF3B30)
                     )
                 }
             }
 
-            // Stats Section
+            // Income Card
+            Surface(
+                modifier = Modifier
+                    .weight(1f)
+                    .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFFDAF4F3),
+                shadowElevation = 0.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Income",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF676767)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "$currencySymbol${String.format("%.2f", income)}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF34C759)
+                    )
+                }
+            }
+        }
+
+        // Total Net Card - with gradient background
+        val netGradient = Brush.horizontalGradient(
+            colors = listOf(
+                Color(0xFF72CCD5),  // Start color (left)
+                Color(0xFFB9DAA3)   // End color (right)
+            )
+        )
+
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            shadowElevation = 2.dp,
+            color = Color.Transparent
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                    .background(netGradient)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                StatColumn(
-                    label = "Expenses",
-                    amount = expenses,
-                    color = Color(0xFFEF5350),
-                    currencySymbol = currencySymbol
+                Text(
+                    text = "$monthText Net",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF1A1A1A)
                 )
-
-                StatColumn(
-                    label = "Income",
-                    amount = income,
-                    color = Color(0xFF66BB6A),
-                    currencySymbol = currencySymbol
-                )
-
-                StatColumn(
-                    label = "Net",
-                    amount = net,
-                    color = if (net >= 0) Color(0xFF66BB6A) else Color(0xFFEF5350),
-                    currencySymbol = currencySymbol
+                Text(
+                    text = "$currencySymbol${String.format("%.2f", net)}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (net >= 0) Color(0xFF1E7E34) else Color(0xFFFF3B30)
                 )
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
