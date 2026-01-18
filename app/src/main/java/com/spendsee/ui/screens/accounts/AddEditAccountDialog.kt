@@ -67,7 +67,7 @@ fun AddEditAccountDialog(
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
+            color = Color(0xFFEFFFFF)
         ) {
             Column(
                 modifier = Modifier
@@ -89,7 +89,7 @@ fun AddEditAccountDialog(
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+                        containerColor = Color(0xFFDAF4F3)
                     )
                 )
 

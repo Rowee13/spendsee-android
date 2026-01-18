@@ -63,7 +63,7 @@ fun PaymentConfirmationDialog(
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
+            color = Color(0xFFEFFFFF)
         ) {
             Column(
                 modifier = Modifier
@@ -73,8 +73,8 @@ fun PaymentConfirmationDialog(
                 // Top Bar
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.surface,
-                    shadowElevation = 1.dp
+                    color = Color(0xFFDAF4F3),
+                    shadowElevation = 0.dp
                 ) {
                     Row(
                         modifier = Modifier
