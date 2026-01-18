@@ -54,8 +54,8 @@ fun AccountsScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddAccount = true },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+                containerColor = Color(0xFF5A9E9E),  // Sage/teal green from mockup
+                contentColor = Color.White
             ) {
                 Icon(FeatherIcons.Plus, contentDescription = "Add Account")
             }
@@ -158,85 +158,117 @@ fun UnifiedAccountsHeaderSection(
     totalIncome: Double,
     currencySymbol: String
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 4.dp
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Column(
+        // App Logo and Title
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface)
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // App Logo and Title
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 20.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.app_logo),
-                    contentDescription = "SpendSee Logo",
-                    modifier = Modifier.size(32.dp),
-                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "SpendSee",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            // All Accounts subtitle
-            Text(
-                text = "All Accounts",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            Image(
+                painter = painterResource(id = R.drawable.app_logo),
+                contentDescription = "SpendSee Logo",
+                modifier = Modifier.size(28.dp),
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
             )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "SpendSee",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
 
-            // Total Balance (large display)
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+        // All Accounts subtitle
+        Text(
+            text = "All accounts",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+        )
+
+        // Total Balance (large display)
+        Text(
+            text = formatCurrency(totalBalance, currencySymbol),
+            style = MaterialTheme.typography.displayLarge.copy(fontSize = 42.sp),
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+
+        // Expenses and Income Stats (2-column cards)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Expenses Card
+            Surface(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 2.dp
             ) {
-                Text(
-                    text = formatCurrency(totalBalance, currencySymbol),
-                    style = MaterialTheme.typography.displayMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Expenses and Income Stats
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    BalanceStatColumn(
-                        label = "Expenses",
-                        amount = totalExpenses,
-                        color = Color(0xFFEF5350),
-                        currencySymbol = currencySymbol
+                    Text(
+                        text = "Expenses",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
-                    BalanceStatColumn(
-                        label = "Income",
-                        amount = totalIncome,
-                        color = Color(0xFF66BB6A),
-                        currencySymbol = currencySymbol
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "$currencySymbol${String.format("%.2f", totalExpenses)}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFF3B30)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            // Income Card
+            Surface(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 2.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Income",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "$currencySymbol${String.format("%.2f", totalIncome)}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF34C759)
+                    )
+                }
+            }
         }
+
+        // "Accounts" section header
+        Text(
+            text = "Accounts",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(top = 8.dp)
+        )
     }
 }
 
@@ -346,13 +378,23 @@ fun AccountCard(
                 }
             }
 
-            // Right side: Balance
-            Text(
-                text = formatCurrency(account.balance, currencySymbol),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = if (account.balance >= 0) MaterialTheme.colorScheme.onSurface else Color(0xFFEF5350)
-            )
+            // Right side: Balance and smile icon
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = formatCurrency(account.balance, currencySymbol),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = if (account.balance >= 0) MaterialTheme.colorScheme.onSurface else Color(0xFFEF5350)
+                )
+                Text(
+                    text = "☺",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                )
+            }
         }
 
         // Dropdown Menu

@@ -166,11 +166,11 @@ fun RecordsScreen(
                     }
                 }
 
-                // Main FAB (always visible)
+                // Main FAB (always visible) - Sage/teal green matching mockup
                 FloatingActionButton(
                     onClick = { fabExpanded = !fabExpanded },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = Color(0xFF5A9E9E),  // Sage/teal green from mockup
+                    contentColor = Color.White
                 ) {
                     Icon(
                         imageVector = if (fabExpanded) FeatherIcons.X else Icons.Default.Add,
@@ -368,101 +368,183 @@ fun UnifiedHeaderSection(
         set(Calendar.YEAR, selectedYear)
     }
     val monthYearText = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(calendar.time)
+    val monthText = SimpleDateFormat("MMMM", Locale.getDefault()).format(calendar.time)
 
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 4.dp
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Column(
+        // App Logo and Title
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface)
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // App Logo and Title
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 20.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.app_logo),
-                    contentDescription = "SpendSee Logo",
-                    modifier = Modifier.size(32.dp),
-                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "SpendSee",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
+            Image(
+                painter = painterResource(id = R.drawable.app_logo),
+                contentDescription = "SpendSee Logo",
+                modifier = Modifier.size(28.dp),
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "SpendSee",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
 
-            // Month Navigation
+        // Month Navigation Pill
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = RoundedCornerShape(25.dp),
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 2.dp
+        ) {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onPreviousMonth) {
+                IconButton(
+                    onClick = onPreviousMonth,
+                    modifier = Modifier.size(36.dp)
+                ) {
                     Icon(
                         FeatherIcons.ChevronLeft,
                         contentDescription = "Previous Month",
-                        tint = MaterialTheme.colorScheme.onSurface
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
 
                 Text(
                     text = monthYearText,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                IconButton(onClick = onNextMonth) {
+                IconButton(
+                    onClick = onNextMonth,
+                    modifier = Modifier.size(36.dp)
+                ) {
                     Icon(
                         FeatherIcons.ChevronRight,
                         contentDescription = "Next Month",
-                        tint = MaterialTheme.colorScheme.onSurface
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+
+        // Stats Cards (2 columns: Expenses | Income)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Expenses Card
+            Surface(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 2.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Expenses",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "$currencySymbol${String.format("%.2f", expenses)}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFF3B30)
                     )
                 }
             }
 
-            // Stats Section
+            // Income Card
+            Surface(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 2.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Income",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "$currencySymbol${String.format("%.2f", income)}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF34C759)
+                    )
+                }
+            }
+        }
+
+        // Monthly Earnings Card (Net)
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.primaryContainer,
+            shadowElevation = 2.dp
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp, ),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                StatColumn(
-                    label = "Expenses",
-                    amount = expenses,
-                    color = Color(0xFFEF5350),
-                    currencySymbol = currencySymbol
+                Text(
+                    text = "$monthText Earnings",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
-
-                StatColumn(
-                    label = "Income",
-                    amount = income,
-                    color = Color(0xFF66BB6A),
-                    currencySymbol = currencySymbol
-                )
-
-                StatColumn(
-                    label = "Net",
-                    amount = net,
-                    color = if (net >= 0) Color(0xFF66BB6A) else Color(0xFFEF5350),
-                    currencySymbol = currencySymbol
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "$currencySymbol${String.format("%.2f", net)}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (net >= 0) Color(0xFF34C759) else Color(0xFFFF3B30)
+                    )
+                    if (net >= 0) {
+                        Icon(
+                            FeatherIcons.TrendingUp,
+                            contentDescription = "Positive earnings",
+                            tint = Color(0xFF34C759),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }

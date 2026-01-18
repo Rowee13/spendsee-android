@@ -59,7 +59,7 @@ fun SpendSeeTheme(
             primary = selectedScheme.primaryDark,
             secondary = selectedScheme.accentDark,
             tertiary = TransferBlue,
-            background = DarkContentBackground,
+            background = selectedScheme.backgroundDark,  // Use theme background
             surface = selectedScheme.cardBackgroundDark,
             onPrimary = SystemBackgroundDark,  // Dark text on light primary colors
             onSecondary = SystemBackgroundDark, // Dark text on light secondary colors
@@ -74,7 +74,7 @@ fun SpendSeeTheme(
             primary = selectedScheme.primaryLight,
             secondary = selectedScheme.accentLight,
             tertiary = TransferBlue,
-            background = SystemBackgroundLight,
+            background = selectedScheme.backgroundLight,  // Use theme background
             surface = selectedScheme.cardBackgroundLight,
             onPrimary = SystemBackgroundLight, // White text on dark primary
             onSecondary = SystemBackgroundDark,
