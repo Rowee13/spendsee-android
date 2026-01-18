@@ -1,12 +1,19 @@
 package com.spendsee.ui.navigation
 
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -28,39 +35,65 @@ fun MainNavigation() {
 
     Scaffold(
         bottomBar = {
-            NavigationBar(
-                containerColor = Color(0xFFEFFFFF),  // Light background matching gradient bottom
-                tonalElevation = 0.dp  // Remove shadow
+            // Custom floating bottom navigation bar
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),  // Margin for floating effect
+                contentAlignment = Alignment.Center
             ) {
-                Screen.bottomNavItems.forEach { screen ->
-                    val isSelected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp),
+                    shape = RoundedCornerShape(32.dp),  // Fully rounded ends
+                    color = Color(0xFFDAF4F3),  // Background color from mockup
+                    shadowElevation = 4.dp
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Screen.bottomNavItems.forEach { screen ->
+                            val isSelected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
 
-                    NavigationBarItem(
-                        icon = { Icon(screen.icon, contentDescription = screen.title) },
-                        label = { Text(screen.title) },
-                        selected = isSelected,
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Color(0xFF418E8C),  // Active color from mockup
-                            selectedTextColor = Color(0xFF418E8C),  // Active text color
-                            indicatorColor = Color(0xFF418E8C).copy(alpha = 0.15f),  // Light indicator
-                            unselectedIconColor = Color(0xFF6A9E9E).copy(alpha = 0.6f),  // Inactive color
-                            unselectedTextColor = Color(0xFF6A9E9E).copy(alpha = 0.6f)   // Inactive text
-                        ),
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                // Pop up to the start destination of the graph to
-                                // avoid building up a large stack of destinations
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                // Avoid multiple copies of the same destination when
-                                // reselecting the same item
-                                launchSingleTop = true
-                                // Restore state when reselecting a previously selected item
-                                restoreState = true
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .clickable {
+                                        navController.navigate(screen.route) {
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    }
+                                    .padding(vertical = 8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = screen.icon,
+                                    contentDescription = screen.title,
+                                    tint = if (isSelected) Color(0xFF418E8C) else Color(0xFF676767),
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = screen.title,
+                                    color = if (isSelected) Color(0xFF418E8C) else Color(0xFF676767),
+                                    fontSize = 11.sp,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                                )
                             }
                         }
-                    )
+                    }
                 }
             }
         }

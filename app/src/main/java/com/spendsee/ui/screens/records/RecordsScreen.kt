@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -193,6 +194,7 @@ fun RecordsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(gradientBrush)
+                .statusBarsPadding()  // Add padding for status bar
         ) {
             // Unified Header Section (iOS style)
             UnifiedHeaderSection(
@@ -411,26 +413,32 @@ fun UnifiedHeaderSection(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp),
+                .height(50.dp)
+                .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(25.dp)),
             shape = RoundedCornerShape(25.dp),
-            color = MaterialTheme.colorScheme.surface,
-            shadowElevation = 2.dp
+            color = Color(0xFFDAF4F3),
+            shadowElevation = 0.dp
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(
-                    onClick = onPreviousMonth,
-                    modifier = Modifier.size(36.dp)
+                // Previous month button with background
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFB7DFDE))
+                        .clickable { onPreviousMonth() },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         FeatherIcons.ChevronLeft,
                         contentDescription = "Previous Month",
-                        tint = MaterialTheme.colorScheme.onSurface,
+                        tint = Color(0xFF1A1A1A),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -439,17 +447,22 @@ fun UnifiedHeaderSection(
                     text = monthYearText,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = Color(0xFF1A1A1A)
                 )
 
-                IconButton(
-                    onClick = onNextMonth,
-                    modifier = Modifier.size(36.dp)
+                // Next month button with background
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFB7DFDE))
+                        .clickable { onNextMonth() },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         FeatherIcons.ChevronRight,
                         contentDescription = "Next Month",
-                        tint = MaterialTheme.colorScheme.onSurface,
+                        tint = Color(0xFF1A1A1A),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -463,10 +476,12 @@ fun UnifiedHeaderSection(
         ) {
             // Expenses Card
             Surface(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
                 shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 2.dp
+                color = Color.White,
+                shadowElevation = 0.dp
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -475,7 +490,7 @@ fun UnifiedHeaderSection(
                     Text(
                         text = "Expenses",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        color = Color(0xFF676767)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -489,10 +504,12 @@ fun UnifiedHeaderSection(
 
             // Income Card
             Surface(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
                 shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 2.dp
+                color = Color.White,
+                shadowElevation = 0.dp
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -501,7 +518,7 @@ fun UnifiedHeaderSection(
                     Text(
                         text = "Income",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        color = Color(0xFF676767)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
