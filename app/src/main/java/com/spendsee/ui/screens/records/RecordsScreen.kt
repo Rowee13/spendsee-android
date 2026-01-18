@@ -545,7 +545,7 @@ fun UnifiedHeaderSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "$monthText Earnings",
+                    text = "$monthText Profit",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     color = Color(0xFF1A1A1A)  // Dark text on gradient
