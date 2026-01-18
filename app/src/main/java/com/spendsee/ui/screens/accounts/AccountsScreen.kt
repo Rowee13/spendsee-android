@@ -61,25 +61,11 @@ fun AccountsScreen(
             }
         }
     ) { paddingValues ->
-        // Gradient background (top to bottom)
-        val gradientBrush = androidx.compose.ui.graphics.Brush.verticalGradient(
-            colors = listOf(
-                Color(0xFF73CDD6),  // Top color
-                Color(0xFFEFFFFF)   // Bottom color
-            )
-        )
-
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(gradientBrush)
+                .background(Color(0xFFEFFFFF))
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding()
-                    .navigationBarsPadding()
-            ) {
                 // Unified Header Section (iOS style)
                 UnifiedAccountsHeaderSection(
                 totalBalance = uiState.totalBalance,
@@ -122,7 +108,6 @@ fun AccountsScreen(
                 ) {
                     Text(error)
                 }
-            }
             }
         }
     }

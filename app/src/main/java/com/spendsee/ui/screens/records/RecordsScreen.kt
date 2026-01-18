@@ -182,25 +182,11 @@ fun RecordsScreen(
             }
         }
     ) { paddingValues ->
-        // Gradient background (top to bottom)
-        val gradientBrush = Brush.verticalGradient(
-            colors = listOf(
-                Color(0xFF73CDD6),  // Top color
-                Color(0xFFEFFFFF)   // Bottom color
-            )
-        )
-
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(gradientBrush)
+                .background(Color(0xFFEFFFFF))
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding()
-                    .navigationBarsPadding()
-            ) {
             // Unified Header Section (iOS style)
             UnifiedHeaderSection(
                 selectedMonth = uiState.selectedMonth,
@@ -247,7 +233,6 @@ fun RecordsScreen(
                 ) {
                     Text(error)
                 }
-            }
             }
         }
     }
@@ -486,7 +471,7 @@ fun UnifiedHeaderSection(
                     .weight(1f)
                     .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
                 shape = RoundedCornerShape(12.dp),
-                color = Color.White,
+                color = Color(0xFFDAF4F3),
                 shadowElevation = 0.dp
             ) {
                 Column(
@@ -514,7 +499,7 @@ fun UnifiedHeaderSection(
                     .weight(1f)
                     .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
                 shape = RoundedCornerShape(12.dp),
-                color = Color.White,
+                color = Color(0xFFDAF4F3),
                 shadowElevation = 0.dp
             ) {
                 Column(
@@ -540,8 +525,8 @@ fun UnifiedHeaderSection(
         // Monthly Earnings Card (Net) - with gradient background
         val earningsGradient = Brush.horizontalGradient(
             colors = listOf(
-                Color(0xFFB9DAA3),  // Start color (left)
-                Color(0xFF72CCD5)   // End color (right)
+                Color(0xFF72CCD5),  // Start color (left)
+                Color(0xFFB9DAA3)   // End color (right)
             )
         )
 

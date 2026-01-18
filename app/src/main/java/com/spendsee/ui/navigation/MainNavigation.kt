@@ -39,7 +39,7 @@ fun MainNavigation() {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp),  // Reduced vertical margin to match mockup
+                    .padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 16.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Surface(
