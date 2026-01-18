@@ -43,6 +43,7 @@ import com.spendsee.data.repository.CategoryRepository
 import com.spendsee.managers.CurrencyManager
 import com.spendsee.managers.PremiumManager
 import com.spendsee.managers.ReceiptParser
+import com.spendsee.managers.ThemeManager
 import com.spendsee.ui.screens.camera.CameraScreen
 import com.spendsee.ui.screens.premium.PremiumPaywallScreen
 import kotlinx.coroutines.launch
@@ -62,12 +63,14 @@ fun RecordsScreen(
     val context = LocalContext.current
     val currencyManager = remember { CurrencyManager.getInstance(context) }
     val premiumManager = remember { PremiumManager.getInstance(context) }
+    val themeManager = remember { ThemeManager.getInstance(context) }
     val receiptParser = remember { ReceiptParser() }
     val scope = rememberCoroutineScope()
 
     val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
     val isPremium by premiumManager.isPremium.collectAsState()
+    val currentTheme by themeManager.currentTheme.collectAsState()
 
     var showAddTransaction by remember { mutableStateOf(false) }
     var transactionToEdit by remember { mutableStateOf<Transaction?>(null) }
@@ -106,8 +109,8 @@ fun RecordsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Surface(
-                            modifier = Modifier.border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(8.dp)),
-                            color = Color(0xFFDAF4F3),
+                            modifier = Modifier.border(1.dp, currentTheme.border, RoundedCornerShape(8.dp)),
+                            color = currentTheme.surface,
                             shape = RoundedCornerShape(8.dp),
                             shadowElevation = 0.dp
                         ) {
@@ -128,7 +131,7 @@ fun RecordsScreen(
                                     fabExpanded = false
                                 }
                             },
-                            containerColor = Color(0xFF418E8C),
+                            containerColor = currentTheme.accent,
                             contentColor = Color.White
                         ) {
                             Icon(FeatherIcons.Camera, contentDescription = "Scan Receipt")
@@ -147,8 +150,8 @@ fun RecordsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Surface(
-                            modifier = Modifier.border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(8.dp)),
-                            color = Color(0xFFDAF4F3),
+                            modifier = Modifier.border(1.dp, currentTheme.border, RoundedCornerShape(8.dp)),
+                            color = currentTheme.surface,
                             shape = RoundedCornerShape(8.dp),
                             shadowElevation = 0.dp
                         ) {
@@ -164,7 +167,7 @@ fun RecordsScreen(
                                 showAddTransaction = true
                                 fabExpanded = false
                             },
-                            containerColor = Color(0xFF418E8C),
+                            containerColor = currentTheme.accent,
                             contentColor = Color.White
                         ) {
                             Icon(FeatherIcons.Edit, contentDescription = "Add Manually")
@@ -175,7 +178,7 @@ fun RecordsScreen(
                 // Main FAB (always visible) - Updated color from mockup
                 FloatingActionButton(
                     onClick = { fabExpanded = !fabExpanded },
-                    containerColor = Color(0xFF418E8C),  // Exact color from mockup
+                    containerColor = currentTheme.accent,  // Exact color from mockup
                     contentColor = Color.White
                 ) {
                     Icon(
@@ -189,7 +192,7 @@ fun RecordsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFEFFFFF))
+                .background(currentTheme.background)
         ) {
             // Unified Header Section (iOS style)
             UnifiedHeaderSection(
@@ -409,9 +412,9 @@ fun UnifiedHeaderSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
-                .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(25.dp)),
+                .border(1.dp, currentTheme.border, RoundedCornerShape(25.dp)),
             shape = RoundedCornerShape(25.dp),
-            color = Color(0xFFDAF4F3),
+            color = currentTheme.surface,
             shadowElevation = 0.dp
         ) {
             Row(
@@ -426,7 +429,7 @@ fun UnifiedHeaderSection(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFB7DFDE))
+                        .background(currentTheme.border.copy(alpha = 0.7f))
                         .clickable { onPreviousMonth() },
                     contentAlignment = Alignment.Center
                 ) {
@@ -450,7 +453,7 @@ fun UnifiedHeaderSection(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFB7DFDE))
+                        .background(currentTheme.border.copy(alpha = 0.7f))
                         .clickable { onNextMonth() },
                     contentAlignment = Alignment.Center
                 ) {
@@ -473,9 +476,9 @@ fun UnifiedHeaderSection(
             Surface(
                 modifier = Modifier
                     .weight(1f)
-                    .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
+                    .border(1.dp, currentTheme.border, RoundedCornerShape(12.dp)),
                 shape = RoundedCornerShape(12.dp),
-                color = Color(0xFFDAF4F3),
+                color = currentTheme.surface,
                 shadowElevation = 0.dp
             ) {
                 Column(
@@ -485,7 +488,7 @@ fun UnifiedHeaderSection(
                     Text(
                         text = "Expenses",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF676767)
+                        color = currentTheme.inactive
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -501,9 +504,9 @@ fun UnifiedHeaderSection(
             Surface(
                 modifier = Modifier
                     .weight(1f)
-                    .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
+                    .border(1.dp, currentTheme.border, RoundedCornerShape(12.dp)),
                 shape = RoundedCornerShape(12.dp),
-                color = Color(0xFFDAF4F3),
+                color = currentTheme.surface,
                 shadowElevation = 0.dp
             ) {
                 Column(
@@ -513,7 +516,7 @@ fun UnifiedHeaderSection(
                     Text(
                         text = "Income",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF676767)
+                        color = currentTheme.inactive
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -529,8 +532,8 @@ fun UnifiedHeaderSection(
         // Monthly Earnings Card (Net) - with gradient background
         val earningsGradient = Brush.horizontalGradient(
             colors = listOf(
-                Color(0xFF72CCD5),  // Start color (left)
-                Color(0xFFB9DAA3)   // End color (right)
+                currentTheme.gradientStart,
+                currentTheme.gradientEnd
             )
         )
 
@@ -647,7 +650,7 @@ fun DateHeader(date: Long) {
         text = dateText,
         style = MaterialTheme.typography.bodyMedium,
         fontWeight = FontWeight.Medium,
-        color = Color(0xFF676767),
+        color = currentTheme.inactive,
         modifier = Modifier.padding(vertical = 8.dp)
     )
 }
@@ -666,7 +669,7 @@ fun TransactionRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp))
+            .border(1.dp, currentTheme.border, RoundedCornerShape(12.dp))
             .clickable { showMenu = true },
         colors = CardDefaults.cardColors(
             containerColor = Color.White
@@ -715,7 +718,7 @@ fun TransactionRow(
                     Text(
                         text = transaction.category,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF676767)
+                        color = currentTheme.inactive
                     )
                 }
             }
@@ -734,7 +737,7 @@ fun TransactionRow(
                 Text(
                     text = "☺",
                     style = MaterialTheme.typography.titleMedium,
-                    color = Color(0xFF676767).copy(alpha = 0.3f)
+                    color = currentTheme.inactive.copy(alpha = 0.3f)
                 )
             }
         }
