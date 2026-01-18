@@ -106,14 +106,16 @@ fun RecordsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Surface(
-                            color = MaterialTheme.colorScheme.surface,
+                            modifier = Modifier.border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(8.dp)),
+                            color = Color(0xFFDAF4F3),
                             shape = RoundedCornerShape(8.dp),
-                            shadowElevation = 2.dp
+                            shadowElevation = 0.dp
                         ) {
                             Text(
                                 text = "Scan Receipt",
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                style = MaterialTheme.typography.bodyMedium
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFF1A1A1A)
                             )
                         }
                         SmallFloatingActionButton(
@@ -126,8 +128,8 @@ fun RecordsScreen(
                                     fabExpanded = false
                                 }
                             },
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            containerColor = Color(0xFF418E8C),
+                            contentColor = Color.White
                         ) {
                             Icon(FeatherIcons.Camera, contentDescription = "Scan Receipt")
                         }
@@ -145,14 +147,16 @@ fun RecordsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Surface(
-                            color = MaterialTheme.colorScheme.surface,
+                            modifier = Modifier.border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(8.dp)),
+                            color = Color(0xFFDAF4F3),
                             shape = RoundedCornerShape(8.dp),
-                            shadowElevation = 2.dp
+                            shadowElevation = 0.dp
                         ) {
                             Text(
                                 text = "Add Manually",
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                style = MaterialTheme.typography.bodyMedium
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFF1A1A1A)
                             )
                         }
                         SmallFloatingActionButton(
@@ -160,8 +164,8 @@ fun RecordsScreen(
                                 showAddTransaction = true
                                 fabExpanded = false
                             },
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            containerColor = Color(0xFF418E8C),
+                            contentColor = Color.White
                         ) {
                             Icon(FeatherIcons.Edit, contentDescription = "Add Manually")
                         }

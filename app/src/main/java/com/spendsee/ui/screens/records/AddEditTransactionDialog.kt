@@ -1,6 +1,7 @@
 package com.spendsee.ui.screens.records
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -138,7 +139,7 @@ fun AddEditTransactionDialog(
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
+            color = Color(0xFFEFFFFF)
         ) {
             Column(
                 modifier = Modifier
@@ -147,9 +148,11 @@ fun AddEditTransactionDialog(
             ) {
                 // Top Navigation Bar (iOS style)
                 Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.surface,
-                    shadowElevation = 1.dp
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(0.dp, Color(0xFFAAD4D3)),
+                    color = Color(0xFFDAF4F3),
+                    shadowElevation = 0.dp
                 ) {
                     Row(
                         modifier = Modifier
