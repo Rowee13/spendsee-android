@@ -120,7 +120,7 @@ fun RecordsScreen(
                                 text = "Scan Receipt",
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFF1A1A1A)
+                                color = currentTheme.getText(isDarkMode)
                             )
                         }
                         SmallFloatingActionButton(
@@ -161,7 +161,7 @@ fun RecordsScreen(
                                 text = "Add Manually",
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFF1A1A1A)
+                                color = currentTheme.getText(isDarkMode)
                             )
                         }
                         SmallFloatingActionButton(
@@ -219,7 +219,10 @@ fun RecordsScreen(
                     CircularProgressIndicator()
                 }
             } else if (uiState.transactions.isEmpty()) {
-                EmptyState()
+                EmptyState(
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
+                )
             } else {
                 TransactionList(
                     groupedTransactions = uiState.groupedTransactions,
@@ -404,14 +407,14 @@ fun UnifiedHeaderSection(
                 painter = painterResource(id = R.drawable.app_logo),
                 contentDescription = "SpendSee Logo",
                 modifier = Modifier.size(28.dp),
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
+                colorFilter = ColorFilter.tint(if (isDarkMode) Color.White else Color(0xFF1A1A1A))
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "SpendSee",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                color = if (isDarkMode) Color.White else Color(0xFF1A1A1A)
             )
         }
 
@@ -444,7 +447,7 @@ fun UnifiedHeaderSection(
                     Icon(
                         FeatherIcons.ChevronLeft,
                         contentDescription = "Previous Month",
-                        tint = Color(0xFF1A1A1A),
+                        tint = currentTheme.getText(isDarkMode),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -453,7 +456,7 @@ fun UnifiedHeaderSection(
                     text = monthYearText,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFF1A1A1A)
+                    color = currentTheme.getText(isDarkMode)
                 )
 
                 // Next month button with background
@@ -468,7 +471,7 @@ fun UnifiedHeaderSection(
                     Icon(
                         FeatherIcons.ChevronRight,
                         contentDescription = "Next Month",
-                        tint = Color(0xFF1A1A1A),
+                        tint = currentTheme.getText(isDarkMode),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -694,7 +697,7 @@ fun TransactionRow(
             .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp))
             .clickable { showMenu = true },
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = currentTheme.getSurface(isDarkMode)
         ),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -735,7 +738,7 @@ fun TransactionRow(
                         text = transaction.title,
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFF1A1A1A)
+                        color = currentTheme.getText(isDarkMode)
                     )
                     Text(
                         text = transaction.category,
@@ -794,7 +797,10 @@ fun TransactionRow(
 }
 
 @Composable
-fun EmptyState() {
+fun EmptyState(
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -809,20 +815,20 @@ fun EmptyState() {
                 imageVector = FeatherIcons.FileText,
                 contentDescription = null,
                 modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                tint = currentTheme.getInactive(isDarkMode)
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "No Transactions",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = currentTheme.getText(isDarkMode),
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Tap the + button to add your first transaction",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                color = currentTheme.getInactive(isDarkMode),
                 textAlign = TextAlign.Center
             )
         }
