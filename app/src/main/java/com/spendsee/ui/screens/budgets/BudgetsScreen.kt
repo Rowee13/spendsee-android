@@ -35,7 +35,9 @@ import com.spendsee.data.repository.BudgetRepository
 import com.spendsee.data.repository.TransactionRepository
 import com.spendsee.managers.CurrencyManager
 import com.spendsee.managers.PremiumManager
+import com.spendsee.managers.ThemeManager
 import com.spendsee.ui.screens.premium.PremiumPaywallScreen
+import com.spendsee.ui.theme.ThemeColors
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -60,6 +62,9 @@ fun BudgetsScreen(
     val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
     val premiumManager = remember { PremiumManager.getInstance(context) }
     val isPremium by premiumManager.isPremium.collectAsState()
+    val themeManager = remember { ThemeManager.getInstance(context) }
+    val currentTheme by themeManager.currentTheme.collectAsState()
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     val accountRepository = remember { AccountRepository.getInstance(context) }
     val accounts by accountRepository.getAllAccounts().collectAsState(initial = emptyList())
     var showAddBudget by remember { mutableStateOf(false) }
@@ -77,7 +82,7 @@ fun BudgetsScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddBudget = true },
-                containerColor = Color(0xFF418E8C),
+                containerColor = currentTheme.getAccent(isDarkMode),
                 contentColor = Color.White
             ) {
                 Icon(FeatherIcons.Plus, contentDescription = "Add Budget")
@@ -87,7 +92,7 @@ fun BudgetsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFEFFFFF))
+                .background(currentTheme.getBackground(isDarkMode))
         ) {
             // Unified Header Section (iOS style)
             UnifiedBudgetHeaderSection(
@@ -98,7 +103,9 @@ fun BudgetsScreen(
                 allocated = uiState.totalAllocated,
                 spent = uiState.totalSpent,
                 remaining = uiState.totalRemaining,
-                currencySymbol = selectedCurrency.symbol
+                currencySymbol = selectedCurrency.symbol,
+                currentTheme = currentTheme,
+                isDarkMode = isDarkMode
             )
 
             // Budgets List
@@ -335,7 +342,9 @@ fun UnifiedBudgetHeaderSection(
     allocated: Double,
     spent: Double,
     remaining: Double,
-    currencySymbol: String
+    currencySymbol: String,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
 ) {
     val calendar = Calendar.getInstance().apply {
         set(Calendar.MONTH, selectedMonth - 1)
@@ -361,14 +370,14 @@ fun UnifiedBudgetHeaderSection(
                 painter = painterResource(id = R.drawable.app_logo),
                 contentDescription = "SpendSee Logo",
                 modifier = Modifier.size(28.dp),
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
+                colorFilter = ColorFilter.tint(if (isDarkMode) Color.White else Color(0xFF1A1A1A))
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "SpendSee",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                color = if (isDarkMode) Color.White else Color(0xFF1A1A1A)
             )
         }
 
@@ -377,9 +386,9 @@ fun UnifiedBudgetHeaderSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
-                .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(25.dp)),
+                .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(25.dp)),
             shape = RoundedCornerShape(25.dp),
-            color = Color(0xFFDAF4F3),
+            color = currentTheme.getSurface(isDarkMode),
             shadowElevation = 0.dp
         ) {
             Row(
@@ -394,14 +403,14 @@ fun UnifiedBudgetHeaderSection(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFB7DFDE))
+                        .background(currentTheme.getBorder(isDarkMode).copy(alpha = 0.7f))
                         .clickable { onPreviousMonth() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         FeatherIcons.ChevronLeft,
                         contentDescription = "Previous Month",
-                        tint = Color(0xFF1A1A1A),
+                        tint = currentTheme.getText(isDarkMode),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -410,7 +419,7 @@ fun UnifiedBudgetHeaderSection(
                     text = monthYearText,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFF1A1A1A)
+                    color = currentTheme.getText(isDarkMode)
                 )
 
                 // Next month button with background
@@ -418,14 +427,14 @@ fun UnifiedBudgetHeaderSection(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFB7DFDE))
+                        .background(currentTheme.getBorder(isDarkMode).copy(alpha = 0.7f))
                         .clickable { onNextMonth() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         FeatherIcons.ChevronRight,
                         contentDescription = "Next Month",
-                        tint = Color(0xFF1A1A1A),
+                        tint = currentTheme.getText(isDarkMode),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -441,9 +450,9 @@ fun UnifiedBudgetHeaderSection(
             Surface(
                 modifier = Modifier
                     .weight(1f)
-                    .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
+                    .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp)),
                 shape = RoundedCornerShape(12.dp),
-                color = Color(0xFFDAF4F3),
+                color = currentTheme.getSurface(isDarkMode),
                 shadowElevation = 0.dp
             ) {
                 Column(
@@ -453,14 +462,14 @@ fun UnifiedBudgetHeaderSection(
                     Text(
                         text = "Allocated",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF676767)
+                        color = currentTheme.getInactive(isDarkMode)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "$currencySymbol${String.format("%.2f", allocated)}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF418E8C)
+                        color = currentTheme.getAccent(isDarkMode)
                     )
                 }
             }
@@ -469,9 +478,9 @@ fun UnifiedBudgetHeaderSection(
             Surface(
                 modifier = Modifier
                     .weight(1f)
-                    .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
+                    .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp)),
                 shape = RoundedCornerShape(12.dp),
-                color = Color(0xFFDAF4F3),
+                color = currentTheme.getSurface(isDarkMode),
                 shadowElevation = 0.dp
             ) {
                 Column(
@@ -481,7 +490,7 @@ fun UnifiedBudgetHeaderSection(
                     Text(
                         text = "Remaining",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF676767)
+                        color = currentTheme.getInactive(isDarkMode)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -497,8 +506,8 @@ fun UnifiedBudgetHeaderSection(
         // Monthly Spent Card - with gradient background
         val spentGradient = Brush.horizontalGradient(
             colors = listOf(
-                Color(0xFF72CCD5),  // Start color (left)
-                Color(0xFFB9DAA3)   // End color (right)
+                currentTheme.getGradientStart(isDarkMode),
+                currentTheme.getGradientEnd(isDarkMode)
             )
         )
 
@@ -520,7 +529,7 @@ fun UnifiedBudgetHeaderSection(
                     text = "$monthText Spent",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFF1A1A1A)
+                    color = currentTheme.getText(isDarkMode)
                 )
                 Text(
                     text = "$currencySymbol${String.format("%.2f", spent)}",
