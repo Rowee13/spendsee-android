@@ -34,6 +34,7 @@ import com.spendsee.managers.PremiumManager
 import com.spendsee.managers.CurrencyManager
 import com.spendsee.managers.ThemeManager
 import com.spendsee.managers.PasscodeManager
+import com.spendsee.ui.theme.ThemeColors
 import com.spendsee.utils.Currency
 import com.spendsee.ui.screens.premium.PremiumPaywallScreen
 import com.spendsee.ui.screens.categories.CategoriesScreen
@@ -602,7 +603,9 @@ fun SettingsScreen() {
                 currencyManager.setCurrency(currency)
                 showCurrencySelector = false
             },
-            onDismiss = { showCurrencySelector = false }
+            onDismiss = { showCurrencySelector = false },
+            currentTheme = currentTheme,
+            isDarkMode = isDarkMode
         )
     }
 
@@ -620,7 +623,9 @@ fun SettingsScreen() {
                     showPremiumPaywall = true
                 }
             },
-            onDismiss = { showThemeSelector = false }
+            onDismiss = { showThemeSelector = false },
+            activeTheme = currentTheme,
+            isDarkMode = isDarkMode
         )
     }
 
@@ -919,15 +924,19 @@ fun SettingsSwitchItem(
 fun CurrencySelectorDialog(
     currentCurrency: Currency,
     onCurrencySelected: (Currency) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = currentTheme.getSurface(isDarkMode),
         title = {
             Text(
                 text = "Select Currency",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = currentTheme.getText(isDarkMode)
             )
         },
         text = {
@@ -954,17 +963,19 @@ fun CurrencySelectorDialog(
                                 text = currency.symbol,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.width(40.dp)
+                                modifier = Modifier.width(40.dp),
+                                color = currentTheme.getText(isDarkMode)
                             )
                             Column {
                                 Text(
                                     text = currency.name,
-                                    style = MaterialTheme.typography.bodyLarge
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = currentTheme.getText(isDarkMode)
                                 )
                                 Text(
                                     text = currency.code,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = currentTheme.getInactive(isDarkMode)
                                 )
                             }
                         }
@@ -973,7 +984,7 @@ fun CurrencySelectorDialog(
                             Icon(
                                 imageVector = FeatherIcons.Check,
                                 contentDescription = "Selected",
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = currentTheme.getAccent(isDarkMode),
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -982,7 +993,7 @@ fun CurrencySelectorDialog(
                     if (index < Currency.ALL_CURRENCIES.size - 1) {
                         Divider(
                             modifier = Modifier.padding(vertical = 4.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant
+                            color = currentTheme.getBorder(isDarkMode)
                         )
                     }
                 }
@@ -990,7 +1001,7 @@ fun CurrencySelectorDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close")
+                Text("Close", color = currentTheme.getAccent(isDarkMode))
             }
         }
     )
@@ -1001,15 +1012,19 @@ fun ThemeSelectorDialog(
     currentTheme: String,
     isPremium: Boolean,
     onThemeSelected: (com.spendsee.ui.theme.ThemeColors) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    activeTheme: ThemeColors,
+    isDarkMode: Boolean
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = activeTheme.getSurface(isDarkMode),
         title = {
             Text(
                 text = "Select Theme",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = activeTheme.getText(isDarkMode)
             )
         },
         text = {
@@ -1054,14 +1069,14 @@ fun ThemeSelectorDialog(
                                     Text(
                                         text = theme.name,
                                         style = MaterialTheme.typography.bodyLarge,
-                                        color = if (isLocked) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
+                                        color = if (isLocked) activeTheme.getInactive(isDarkMode).copy(alpha = 0.5f) else activeTheme.getText(isDarkMode)
                                     )
                                     if (theme.isPremium) {
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Icon(
                                             imageVector = FeatherIcons.Star,
                                             contentDescription = "Premium",
-                                            tint = if (isLocked) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.primary,
+                                            tint = if (isLocked) activeTheme.getInactive(isDarkMode).copy(alpha = 0.5f) else activeTheme.getAccent(isDarkMode),
                                             modifier = Modifier.size(16.dp)
                                         )
                                     }
@@ -1073,13 +1088,13 @@ fun ThemeSelectorDialog(
                             isLocked -> Icon(
                                 imageVector = FeatherIcons.Lock,
                                 contentDescription = "Locked",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                tint = activeTheme.getInactive(isDarkMode).copy(alpha = 0.5f),
                                 modifier = Modifier.size(24.dp)
                             )
                             isSelected -> Icon(
                                 imageVector = FeatherIcons.Check,
                                 contentDescription = "Selected",
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = activeTheme.getAccent(isDarkMode),
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -1088,7 +1103,7 @@ fun ThemeSelectorDialog(
                     if (index < com.spendsee.ui.theme.ThemeColorSchemes.allThemes.size - 1) {
                         Divider(
                             modifier = Modifier.padding(vertical = 4.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant
+                            color = activeTheme.getBorder(isDarkMode)
                         )
                     }
                 }
@@ -1096,7 +1111,7 @@ fun ThemeSelectorDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close")
+                Text("Close", color = activeTheme.getAccent(isDarkMode))
             }
         }
     )
