@@ -501,7 +501,7 @@ fun UnifiedBudgetHeaderSection(
                         text = "$currencySymbol${String.format("%.2f", remaining)}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (remaining >= 0) Color(0xFF1E7E34) else Color(0xFFFF3B30)
+                        color = if (remaining >= 0) Color(0xFF34C759) else Color(0xFFFF3B30)
                     )
                 }
             }
@@ -529,17 +529,28 @@ fun UnifiedBudgetHeaderSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val isMonochrome = currentTheme.id == "monochrome"
+                val isMonochromeDark = isMonochrome && isDarkMode
+
                 Text(
                     text = "$monthText Spent",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
-                    color = currentTheme.getText(isDarkMode)
+                    color = when {
+                        isMonochromeDark -> Color(0xFF1A1A1A)  // Black for dark mode gradient
+                        isMonochrome -> Color.White  // White for light mode gradient
+                        else -> Color(0xFF1A1A1A)  // Dark text for colored gradients
+                    }
                 )
                 Text(
                     text = "$currencySymbol${String.format("%.2f", spent)}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFFF3B30)
+                    color = when {
+                        isMonochromeDark -> Color(0xFF2E7D32)  // Darker green for dark mode
+                        isMonochrome -> Color(0xFFB2FF59)  // Bright lime for light mode
+                        else -> Color(0xFFFF3B30)  // Default red
+                    }
                 )
             }
         }

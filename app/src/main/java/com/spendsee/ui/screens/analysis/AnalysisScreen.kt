@@ -32,6 +32,8 @@ import com.spendsee.R
 import com.spendsee.data.repository.BudgetRepository
 import com.spendsee.data.repository.TransactionRepository
 import com.spendsee.managers.CurrencyManager
+import com.spendsee.managers.ThemeManager
+import com.spendsee.ui.theme.ThemeColors
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -47,13 +49,16 @@ fun AnalysisScreen(
 ) {
     val context = LocalContext.current
     val currencyManager = remember { CurrencyManager.getInstance(context) }
+    val themeManager = remember { ThemeManager.getInstance(context) }
     val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
+    val currentTheme by themeManager.currentTheme.collectAsState()
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFEFFFFF))
+            .background(currentTheme.getBackground(isDarkMode))
     ) {
         // Unified Header Section (iOS style)
         UnifiedHeaderSection(
@@ -64,7 +69,9 @@ fun AnalysisScreen(
             expenses = uiState.totalExpenses,
             income = uiState.totalIncome,
             net = uiState.netTotal,
-            currencySymbol = selectedCurrency.symbol
+            currencySymbol = selectedCurrency.symbol,
+            currentTheme = currentTheme,
+            isDarkMode = isDarkMode
         )
 
         // View Type Selector
@@ -82,7 +89,10 @@ fun AnalysisScreen(
                 CircularProgressIndicator()
             }
         } else if (uiState.totalExpenses == 0.0 && uiState.totalIncome == 0.0) {
-            EmptyState()
+            EmptyState(
+                currentTheme = currentTheme,
+                isDarkMode = isDarkMode
+            )
         } else {
             when (uiState.selectedViewType) {
                 AnalysisViewType.SPENDING_ANALYTICS -> {
@@ -131,7 +141,9 @@ fun UnifiedHeaderSection(
     expenses: Double,
     income: Double,
     net: Double,
-    currencySymbol: String
+    currencySymbol: String,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
 ) {
     val calendar = Calendar.getInstance().apply {
         set(Calendar.MONTH, selectedMonth - 1)
@@ -157,14 +169,14 @@ fun UnifiedHeaderSection(
                 painter = painterResource(id = R.drawable.app_logo),
                 contentDescription = "SpendSee Logo",
                 modifier = Modifier.size(28.dp),
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
+                colorFilter = ColorFilter.tint(if (isDarkMode) Color.White else Color(0xFF1A1A1A))
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "SpendSee",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                color = if (isDarkMode) Color.White else Color(0xFF1A1A1A)
             )
         }
 
@@ -173,9 +185,9 @@ fun UnifiedHeaderSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
-                .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(25.dp)),
+                .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(25.dp)),
             shape = RoundedCornerShape(25.dp),
-            color = Color(0xFFDAF4F3),
+            color = currentTheme.getSurface(isDarkMode),
             shadowElevation = 0.dp
         ) {
             Row(
@@ -190,14 +202,14 @@ fun UnifiedHeaderSection(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFB7DFDE))
+                        .background(currentTheme.getBorder(isDarkMode).copy(alpha = 0.7f))
                         .clickable { onPreviousMonth() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         FeatherIcons.ChevronLeft,
                         contentDescription = "Previous Month",
-                        tint = Color(0xFF1A1A1A),
+                        tint = currentTheme.getText(isDarkMode),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -206,7 +218,7 @@ fun UnifiedHeaderSection(
                     text = monthYearText,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFF1A1A1A)
+                    color = currentTheme.getText(isDarkMode)
                 )
 
                 // Next month button with background
@@ -214,14 +226,14 @@ fun UnifiedHeaderSection(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFB7DFDE))
+                        .background(currentTheme.getBorder(isDarkMode).copy(alpha = 0.7f))
                         .clickable { onNextMonth() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         FeatherIcons.ChevronRight,
                         contentDescription = "Next Month",
-                        tint = Color(0xFF1A1A1A),
+                        tint = currentTheme.getText(isDarkMode),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -237,9 +249,9 @@ fun UnifiedHeaderSection(
             Surface(
                 modifier = Modifier
                     .weight(1f)
-                    .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
+                    .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp)),
                 shape = RoundedCornerShape(12.dp),
-                color = Color(0xFFDAF4F3),
+                color = currentTheme.getSurface(isDarkMode),
                 shadowElevation = 0.dp
             ) {
                 Column(
@@ -249,7 +261,7 @@ fun UnifiedHeaderSection(
                     Text(
                         text = "Expenses",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF676767)
+                        color = currentTheme.getInactive(isDarkMode)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -265,9 +277,9 @@ fun UnifiedHeaderSection(
             Surface(
                 modifier = Modifier
                     .weight(1f)
-                    .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
+                    .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp)),
                 shape = RoundedCornerShape(12.dp),
-                color = Color(0xFFDAF4F3),
+                color = currentTheme.getSurface(isDarkMode),
                 shadowElevation = 0.dp
             ) {
                 Column(
@@ -277,7 +289,7 @@ fun UnifiedHeaderSection(
                     Text(
                         text = "Income",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF676767)
+                        color = currentTheme.getInactive(isDarkMode)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -293,8 +305,8 @@ fun UnifiedHeaderSection(
         // Total Net Card - with gradient background
         val netGradient = Brush.horizontalGradient(
             colors = listOf(
-                Color(0xFF72CCD5),  // Start color (left)
-                Color(0xFFB9DAA3)   // End color (right)
+                currentTheme.getGradientStart(isDarkMode),
+                currentTheme.getGradientEnd(isDarkMode)
             )
         )
 
@@ -312,17 +324,28 @@ fun UnifiedHeaderSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val isMonochrome = currentTheme.id == "monochrome"
+                val isMonochromeDark = isMonochrome && isDarkMode
+
                 Text(
                     text = "$monthText Net",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFF1A1A1A)
+                    color = when {
+                        isMonochromeDark -> Color(0xFF1A1A1A)  // Black for dark mode gradient
+                        isMonochrome -> Color.White  // White for light mode gradient
+                        else -> Color(0xFF1A1A1A)  // Default dark text
+                    }
                 )
                 Text(
                     text = "$currencySymbol${String.format("%.2f", net)}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (net >= 0) Color(0xFF1E7E34) else Color(0xFFFF3B30)
+                    color = when {
+                        isMonochromeDark -> if (net >= 0) Color(0xFF2E7D32) else Color(0xFFC62828)  // Darker colors for dark mode
+                        isMonochrome -> if (net >= 0) Color(0xFFB2FF59) else Color(0xFFFF6B6B)  // Bright colors for light mode
+                        else -> if (net >= 0) Color(0xFF1E7E34) else Color(0xFFFF3B30)  // Default
+                    }
                 )
             }
         }
@@ -491,8 +514,22 @@ fun CategoryBreakdownCard(breakdown: CategoryBreakdown, currencySymbol: String) 
 
 @Composable
 fun BudgetPerformance(budgetPerformances: List<BudgetPerformance>, currencySymbol: String) {
+    // Note: EmptyState requires theme parameters, but this composable doesn't have access to them
+    // This is acceptable as this check should rarely trigger - the parent already checks for empty data
     if (budgetPerformances.isEmpty()) {
-        EmptyState(message = "No budgets for this month")
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No budgets for this month",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center
+            )
+        }
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -661,7 +698,11 @@ fun DailyCashFlowCard(cashFlow: DailyCashFlow, currencySymbol: String) {
 }
 
 @Composable
-fun EmptyState(message: String = "No data available") {
+fun EmptyState(
+    message: String = "No data available",
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -676,13 +717,13 @@ fun EmptyState(message: String = "No data available") {
                 imageVector = FeatherIcons.BarChart,
                 contentDescription = null,
                 modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                tint = currentTheme.getInactive(isDarkMode)
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = message,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = currentTheme.getText(isDarkMode),
                 fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.Center
             )

@@ -562,11 +562,18 @@ fun UnifiedHeaderSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val isMonochrome = currentTheme.id == "monochrome"
+                val isMonochromeDark = isMonochrome && isDarkMode
+
                 Text(
                     text = "$monthText Profit",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFF1A1A1A)  // Dark text on gradient
+                    color = when {
+                        isMonochromeDark -> Color(0xFF1A1A1A)  // Black for dark mode gradient
+                        isMonochrome -> Color.White  // White for light mode gradient
+                        else -> Color(0xFF1A1A1A)  // Default dark text
+                    }
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -576,13 +583,21 @@ fun UnifiedHeaderSection(
                         text = "$currencySymbol${String.format("%.2f", net)}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (net >= 0) Color(0xFF1E7E34) else Color(0xFFFF3B30)
+                        color = when {
+                            isMonochromeDark -> if (net >= 0) Color(0xFF2E7D32) else Color(0xFFC62828)  // Darker colors for dark mode
+                            isMonochrome -> if (net >= 0) Color(0xFFB2FF59) else Color(0xFFFF6B6B)  // Bright colors for light mode
+                            else -> if (net >= 0) Color(0xFF1E7E34) else Color(0xFFFF3B30)  // Default
+                        }
                     )
                     if (net >= 0) {
                         Icon(
                             FeatherIcons.TrendingUp,
                             contentDescription = "Positive earnings",
-                            tint = Color(0xFF1E7E34),
+                            tint = when {
+                                isMonochromeDark -> Color(0xFF2E7D32)
+                                isMonochrome -> Color(0xFFB2FF59)
+                                else -> Color(0xFF1E7E34)
+                            },
                             modifier = Modifier.size(20.dp)
                         )
                     }

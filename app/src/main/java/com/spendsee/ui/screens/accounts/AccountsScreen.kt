@@ -32,6 +32,8 @@ import com.spendsee.data.local.entities.Account
 import com.spendsee.data.repository.AccountRepository
 import com.spendsee.data.repository.TransactionRepository
 import com.spendsee.managers.CurrencyManager
+import com.spendsee.managers.ThemeManager
+import com.spendsee.ui.theme.ThemeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,7 +47,10 @@ fun AccountsScreen(
 ) {
     val context = LocalContext.current
     val currencyManager = remember { CurrencyManager.getInstance(context) }
+    val themeManager = remember { ThemeManager.getInstance(context) }
     val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
+    val currentTheme by themeManager.currentTheme.collectAsState()
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
     var showAddAccount by remember { mutableStateOf(false) }
     var showEditAccount by remember { mutableStateOf(false) }
@@ -55,7 +60,7 @@ fun AccountsScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddAccount = true },
-                containerColor = Color(0xFF418E8C),  // Exact color from mockup
+                containerColor = currentTheme.getAccent(isDarkMode),
                 contentColor = Color.White
             ) {
                 Icon(FeatherIcons.Plus, contentDescription = "Add Account")
@@ -65,14 +70,16 @@ fun AccountsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFEFFFFF))
+                .background(currentTheme.getBackground(isDarkMode))
         ) {
                 // Unified Header Section (iOS style)
                 UnifiedAccountsHeaderSection(
                 totalBalance = uiState.totalBalance,
                 totalExpenses = uiState.totalExpenses,
                 totalIncome = uiState.totalIncome,
-                currencySymbol = selectedCurrency.symbol
+                currencySymbol = selectedCurrency.symbol,
+                currentTheme = currentTheme,
+                isDarkMode = isDarkMode
             )
 
             // Accounts List
@@ -84,7 +91,10 @@ fun AccountsScreen(
                     CircularProgressIndicator()
                 }
             } else if (uiState.accounts.isEmpty()) {
-                EmptyState()
+                EmptyState(
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
+                )
             } else {
                 AccountsList(
                     accounts = uiState.accounts,
@@ -93,7 +103,9 @@ fun AccountsScreen(
                         showEditAccount = true
                     },
                     onDeleteAccount = { viewModel.deleteAccount(it) },
-                    currencySymbol = selectedCurrency.symbol
+                    currencySymbol = selectedCurrency.symbol,
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
                 )
             }
 
@@ -157,7 +169,9 @@ fun UnifiedAccountsHeaderSection(
     totalBalance: Double,
     totalExpenses: Double,
     totalIncome: Double,
-    currencySymbol: String
+    currencySymbol: String,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
 ) {
     Column(
         modifier = Modifier
@@ -176,14 +190,14 @@ fun UnifiedAccountsHeaderSection(
                 painter = painterResource(id = R.drawable.app_logo),
                 contentDescription = "SpendSee Logo",
                 modifier = Modifier.size(28.dp),
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
+                colorFilter = ColorFilter.tint(if (isDarkMode) Color.White else Color(0xFF1A1A1A))
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "SpendSee",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                color = if (isDarkMode) Color.White else Color(0xFF1A1A1A)
             )
         }
 
@@ -192,7 +206,7 @@ fun UnifiedAccountsHeaderSection(
             text = "All accounts",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+            color = currentTheme.getText(isDarkMode).copy(alpha = 0.7f),
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center
         )
@@ -202,7 +216,7 @@ fun UnifiedAccountsHeaderSection(
             text = formatCurrency(totalBalance, currencySymbol),
             style = MaterialTheme.typography.displayLarge.copy(fontSize = 42.sp),
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = currentTheme.getText(isDarkMode),
             modifier = Modifier.padding(vertical = 8.dp)
         )
 
@@ -215,9 +229,9 @@ fun UnifiedAccountsHeaderSection(
             Surface(
                 modifier = Modifier
                     .weight(1f)
-                    .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
+                    .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp)),
                 shape = RoundedCornerShape(12.dp),
-                color = Color(0xFFDAF4F3),
+                color = currentTheme.getSurface(isDarkMode),
                 shadowElevation = 0.dp
             ) {
                 Column(
@@ -227,7 +241,7 @@ fun UnifiedAccountsHeaderSection(
                     Text(
                         text = "Expenses",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF676767)
+                        color = currentTheme.getInactive(isDarkMode)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -243,9 +257,9 @@ fun UnifiedAccountsHeaderSection(
             Surface(
                 modifier = Modifier
                     .weight(1f)
-                    .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
+                    .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp)),
                 shape = RoundedCornerShape(12.dp),
-                color = Color(0xFFDAF4F3),
+                color = currentTheme.getSurface(isDarkMode),
                 shadowElevation = 0.dp
             ) {
                 Column(
@@ -255,7 +269,7 @@ fun UnifiedAccountsHeaderSection(
                     Text(
                         text = "Income",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF676767)
+                        color = currentTheme.getInactive(isDarkMode)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -275,13 +289,13 @@ fun UnifiedAccountsHeaderSection(
             Divider(
                 modifier = Modifier.padding(top = 16.dp, bottom = 12.dp),
                 thickness = 1.dp,
-                color = Color(0xFFAAD4D3)
+                color = currentTheme.getBorder(isDarkMode)
             )
             Text(
                 text = "Accounts",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onBackground
+                color = currentTheme.getText(isDarkMode)
             )
         }
     }
@@ -311,7 +325,9 @@ fun AccountsList(
     accounts: List<Account>,
     onEditAccount: (Account) -> Unit,
     onDeleteAccount: (Account) -> Unit,
-    currencySymbol: String
+    currencySymbol: String,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -322,7 +338,9 @@ fun AccountsList(
                 account = account,
                 onEdit = { onEditAccount(account) },
                 onDelete = { onDeleteAccount(account) },
-                currencySymbol = currencySymbol
+                currencySymbol = currencySymbol,
+                currentTheme = currentTheme,
+                isDarkMode = isDarkMode
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -335,19 +353,22 @@ fun AccountCard(
     account: Account,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    currencySymbol: String
+    currencySymbol: String,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp))
             .clickable { showMenu = true },
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = currentTheme.getSurface(isDarkMode)
         ),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -383,12 +404,13 @@ fun AccountCard(
                     Text(
                         text = account.name,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        color = currentTheme.getText(isDarkMode)
                     )
                     Text(
                         text = account.type,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = currentTheme.getInactive(isDarkMode)
                     )
                 }
             }
@@ -402,12 +424,12 @@ fun AccountCard(
                     text = formatCurrency(account.balance, currencySymbol),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = if (account.balance >= 0) MaterialTheme.colorScheme.onSurface else Color(0xFFEF5350)
+                    color = if (account.balance >= 0) currentTheme.getText(isDarkMode) else Color(0xFFEF5350)
                 )
                 Text(
                     text = "☺",
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                    color = currentTheme.getInactive(isDarkMode).copy(alpha = 0.3f)
                 )
             }
         }
@@ -442,7 +464,10 @@ fun AccountCard(
 }
 
 @Composable
-fun EmptyState() {
+fun EmptyState(
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -457,20 +482,20 @@ fun EmptyState() {
                 imageVector = FeatherIcons.CreditCard,
                 contentDescription = null,
                 modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                tint = currentTheme.getInactive(isDarkMode)
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "No Accounts",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = currentTheme.getText(isDarkMode),
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Tap the + button to create your first account",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                color = currentTheme.getInactive(isDarkMode),
                 textAlign = TextAlign.Center
             )
         }

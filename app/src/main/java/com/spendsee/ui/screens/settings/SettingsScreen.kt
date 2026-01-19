@@ -155,10 +155,13 @@ fun SettingsScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(androidx.compose.ui.graphics.Color(0xFFEFFFFF))
+            .background(currentTheme.getBackground(isDarkMode))
     ) {
         // Header
-        SettingsHeader()
+        SettingsHeader(
+            currentTheme = currentTheme,
+            isDarkMode = isDarkMode
+        )
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -166,7 +169,11 @@ fun SettingsScreen() {
         ) {
             // Preferences Section
             item {
-                SettingsSection(title = "Preferences")
+                SettingsSection(
+                    title = "Preferences",
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
+                )
             }
 
             item {
@@ -174,7 +181,9 @@ fun SettingsScreen() {
                     icon = FeatherIcons.Droplet,
                     title = "Theme",
                     subtitle = currentTheme.name,
-                    onClick = { showThemeSelector = true }
+                    onClick = { showThemeSelector = true },
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
                 )
             }
 
@@ -184,7 +193,9 @@ fun SettingsScreen() {
                     title = "Dark Mode",
                     subtitle = if (isDarkMode) "Enabled" else "Disabled",
                     checked = isDarkMode,
-                    onCheckedChange = { themeManager.setDarkMode(it) }
+                    onCheckedChange = { themeManager.setDarkMode(it) },
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
                 )
             }
 
@@ -193,7 +204,9 @@ fun SettingsScreen() {
                     icon = FeatherIcons.DollarSign,
                     title = "Currency",
                     subtitle = "${selectedCurrency.name} (${selectedCurrency.symbol})",
-                    onClick = { showCurrencySelector = true }
+                    onClick = { showCurrencySelector = true },
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
                 )
             }
 
@@ -203,7 +216,11 @@ fun SettingsScreen() {
 
             // Data Management Section
             item {
-                SettingsSection(title = "Data Management")
+                SettingsSection(
+                    title = "Data Management",
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
+                )
             }
 
             item {
@@ -218,7 +235,9 @@ fun SettingsScreen() {
                                 exportLauncher.launch(filename)
                             }
                         }
-                    }
+                    },
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
                 )
             }
 
@@ -231,7 +250,9 @@ fun SettingsScreen() {
                         if (!isImporting) {
                             importLauncher.launch(arrayOf("application/json"))
                         }
-                    }
+                    },
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
                 )
             }
 
@@ -241,7 +262,11 @@ fun SettingsScreen() {
 
             // App Section
             item {
-                SettingsSection(title = "App")
+                SettingsSection(
+                    title = "App",
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
+                )
             }
 
             item {
@@ -249,7 +274,9 @@ fun SettingsScreen() {
                     icon = FeatherIcons.Grid,
                     title = "Categories",
                     subtitle = "Manage your categories",
-                    onClick = { showCategoriesScreen = true }
+                    onClick = { showCategoriesScreen = true },
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
                 )
             }
 
@@ -258,7 +285,9 @@ fun SettingsScreen() {
                     icon = FeatherIcons.HelpCircle,
                     title = "Help & Support",
                     subtitle = "Get help and documentation",
-                    onClick = { /* TODO: Implement help */ }
+                    onClick = { /* TODO: Implement help */ },
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
                 )
             }
 
@@ -268,7 +297,11 @@ fun SettingsScreen() {
 
             // Premium Section
             item {
-                SettingsSection(title = "Premium")
+                SettingsSection(
+                    title = "Premium",
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
+                )
             }
 
             item {
@@ -278,14 +311,18 @@ fun SettingsScreen() {
                         title = "Unlock Premium",
                         subtitle = "Get all features",
                         onClick = { showPremiumPaywall = true },
-                        isPremiumFeature = true
+                        isPremiumFeature = true,
+                        currentTheme = currentTheme,
+                        isDarkMode = isDarkMode
                     )
                 } else {
                     SettingsItem(
                         icon = FeatherIcons.CheckCircle,
                         title = "Premium Active",
                         subtitle = "Tap to view purchase details",
-                        onClick = { showPurchaseDetails = true }
+                        onClick = { showPurchaseDetails = true },
+                        currentTheme = currentTheme,
+                        isDarkMode = isDarkMode
                     )
                 }
             }
@@ -296,7 +333,11 @@ fun SettingsScreen() {
 
             // Security Section (Premium)
             item {
-                SettingsSection(title = "Security")
+                SettingsSection(
+                    title = "Security",
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
+                )
             }
 
             item {
@@ -306,21 +347,27 @@ fun SettingsScreen() {
                         title = "Passcode Protection",
                         subtitle = "Protect your data with a passcode",
                         onClick = { showPremiumPaywall = true },
-                        isPremiumFeature = true
+                        isPremiumFeature = true,
+                        currentTheme = currentTheme,
+                        isDarkMode = isDarkMode
                     )
                 } else if (!passcodeEnabled) {
                     SettingsItem(
                         icon = FeatherIcons.Lock,
                         title = "Passcode Protection",
                         subtitle = "Not enabled",
-                        onClick = { showPasscodeSetup = true }
+                        onClick = { showPasscodeSetup = true },
+                        currentTheme = currentTheme,
+                        isDarkMode = isDarkMode
                     )
                 } else {
                     SettingsItem(
                         icon = FeatherIcons.Lock,
                         title = "Passcode Protection",
                         subtitle = "Enabled",
-                        onClick = { showPasscodeOptions = true }
+                        onClick = { showPasscodeOptions = true },
+                        currentTheme = currentTheme,
+                        isDarkMode = isDarkMode
                     )
                 }
             }
@@ -336,7 +383,9 @@ fun SettingsScreen() {
                         onCheckedChange = {
                             biometricEnabled = it
                             passcodeManager.setBiometricEnabled(it)
-                        }
+                        },
+                        currentTheme = currentTheme,
+                        isDarkMode = isDarkMode
                     )
                 }
             }
@@ -347,7 +396,11 @@ fun SettingsScreen() {
 
             // Notifications Section (Premium)
             item {
-                SettingsSection(title = "Notifications")
+                SettingsSection(
+                    title = "Notifications",
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
+                )
             }
 
             item {
@@ -357,7 +410,9 @@ fun SettingsScreen() {
                         title = "Budget Reminders",
                         subtitle = "Get notified about upcoming payments",
                         onClick = { showPremiumPaywall = true },
-                        isPremiumFeature = true
+                        isPremiumFeature = true,
+                        currentTheme = currentTheme,
+                        isDarkMode = isDarkMode
                     )
                 } else {
                     SettingsSwitchItem(
@@ -365,6 +420,8 @@ fun SettingsScreen() {
                         title = "Budget Reminders",
                         subtitle = if (notificationsEnabled) "Enabled" else "Disabled",
                         checked = notificationsEnabled,
+                        currentTheme = currentTheme,
+                        isDarkMode = isDarkMode,
                         onCheckedChange = { enabled ->
                             if (enabled) {
                                 // Check if we need to request permission (Android 13+)
@@ -407,7 +464,9 @@ fun SettingsScreen() {
                         icon = FeatherIcons.Calendar,
                         title = "Days Before Due Date",
                         subtitle = "${notificationManager.getDaysBeforeDueDate()} days",
-                        onClick = { showDaysBeforeDialog = true }
+                        onClick = { showDaysBeforeDialog = true },
+                        currentTheme = currentTheme,
+                        isDarkMode = isDarkMode
                     )
                 }
 
@@ -419,7 +478,9 @@ fun SettingsScreen() {
                         icon = FeatherIcons.Clock,
                         title = "Notification Time",
                         subtitle = String.format("%d:00 %s", displayHour, amPm),
-                        onClick = { showNotificationTimeDialog = true }
+                        onClick = { showNotificationTimeDialog = true },
+                        currentTheme = currentTheme,
+                        isDarkMode = isDarkMode
                     )
                 }
             }
@@ -430,7 +491,11 @@ fun SettingsScreen() {
 
             // About Section
             item {
-                SettingsSection(title = "About")
+                SettingsSection(
+                    title = "About",
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
+                )
             }
 
             item {
@@ -446,7 +511,9 @@ fun SettingsScreen() {
                                 Toast.makeText(context, "Developer mode unlocked!", Toast.LENGTH_SHORT).show()
                             }
                         }
-                    }
+                    },
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
                 )
             }
 
@@ -455,7 +522,9 @@ fun SettingsScreen() {
                     icon = FeatherIcons.Mail,
                     title = "Support",
                     subtitle = "Contact us",
-                    onClick = { /* TODO: Open email */ }
+                    onClick = { /* TODO: Open email */ },
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
                 )
             }
 
@@ -464,7 +533,9 @@ fun SettingsScreen() {
                     icon = FeatherIcons.FileText,
                     title = "Privacy Policy",
                     subtitle = "View our privacy policy",
-                    onClick = { /* TODO: Open privacy policy */ }
+                    onClick = { /* TODO: Open privacy policy */ },
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
                 )
             }
 
@@ -475,7 +546,11 @@ fun SettingsScreen() {
                 }
 
                 item {
-                    SettingsSection(title = "Developer")
+                    SettingsSection(
+                        title = "Developer",
+                        currentTheme = currentTheme,
+                        isDarkMode = isDarkMode
+                    )
                 }
 
                 item {
@@ -492,7 +567,9 @@ fun SettingsScreen() {
                                 if (enabled) "Premium features unlocked" else "Premium features locked",
                                 Toast.LENGTH_SHORT
                             ).show()
-                        }
+                        },
+                        currentTheme = currentTheme,
+                        isDarkMode = isDarkMode
                     )
                 }
             }
@@ -634,7 +711,10 @@ fun SettingsScreen() {
 }
 
 @Composable
-fun SettingsHeader() {
+fun SettingsHeader(
+    currentTheme: com.spendsee.ui.theme.ThemeColors,
+    isDarkMode: Boolean
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -645,25 +725,29 @@ fun SettingsHeader() {
             painter = painterResource(id = R.drawable.app_logo),
             contentDescription = "SpendSee Logo",
             modifier = Modifier.size(28.dp),
-            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
+            colorFilter = ColorFilter.tint(if (isDarkMode) Color.White else Color(0xFF1A1A1A))
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = "SpendSee",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
+            color = if (isDarkMode) Color.White else Color(0xFF1A1A1A)
         )
     }
 }
 
 @Composable
-fun SettingsSection(title: String) {
+fun SettingsSection(
+    title: String,
+    currentTheme: com.spendsee.ui.theme.ThemeColors,
+    isDarkMode: Boolean
+) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleSmall,
         fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.primary,
+        color = currentTheme.getAccent(isDarkMode),
         modifier = Modifier.padding(vertical = 8.dp)
     )
 }
@@ -675,16 +759,18 @@ fun SettingsItem(
     title: String,
     subtitle: String,
     onClick: () -> Unit,
-    isPremiumFeature: Boolean = false
+    isPremiumFeature: Boolean = false,
+    currentTheme: com.spendsee.ui.theme.ThemeColors,
+    isDarkMode: Boolean
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp))
+            .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp))
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFDAF4F3)
+            containerColor = currentTheme.getSurface(isDarkMode)
         ),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -704,13 +790,13 @@ fun SettingsItem(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
+                        .background(currentTheme.getAccent(isDarkMode).copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        tint = currentTheme.getAccent(isDarkMode),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -722,14 +808,15 @@ fun SettingsItem(
                         Text(
                             text = title,
                             style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            color = currentTheme.getText(isDarkMode)
                         )
                         if (isPremiumFeature) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
                                 imageVector = FeatherIcons.Star,
                                 contentDescription = "Premium",
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = currentTheme.getAccent(isDarkMode),
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -737,7 +824,7 @@ fun SettingsItem(
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = currentTheme.getInactive(isDarkMode)
                     )
                 }
             }
@@ -745,7 +832,7 @@ fun SettingsItem(
             Icon(
                 imageVector = FeatherIcons.ChevronRight,
                 contentDescription = "Navigate",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                tint = currentTheme.getInactive(isDarkMode)
             )
         }
     }
@@ -758,15 +845,17 @@ fun SettingsSwitchItem(
     title: String,
     subtitle: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    currentTheme: com.spendsee.ui.theme.ThemeColors,
+    isDarkMode: Boolean
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
+            .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFDAF4F3)
+            containerColor = currentTheme.getSurface(isDarkMode)
         ),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -786,13 +875,13 @@ fun SettingsSwitchItem(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
+                        .background(currentTheme.getAccent(isDarkMode).copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        tint = currentTheme.getAccent(isDarkMode),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -803,12 +892,13 @@ fun SettingsSwitchItem(
                     Text(
                         text = title,
                         style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        color = currentTheme.getText(isDarkMode)
                     )
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = currentTheme.getInactive(isDarkMode)
                     )
                 }
             }
@@ -817,8 +907,8 @@ fun SettingsSwitchItem(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = MaterialTheme.colorScheme.primary,
-                    checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+                    checkedThumbColor = currentTheme.getAccent(isDarkMode),
+                    checkedTrackColor = currentTheme.getAccent(isDarkMode).copy(alpha = 0.5f)
                 )
             )
         }
