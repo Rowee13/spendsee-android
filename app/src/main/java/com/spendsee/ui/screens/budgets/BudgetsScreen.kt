@@ -118,7 +118,9 @@ fun BudgetsScreen(
                 }
             } else if (uiState.budgetsWithDetails.isEmpty()) {
                 EmptyState(
-                    onCopyFromPrevious = { viewModel.copyFromPreviousMonth() }
+                    onCopyFromPrevious = { viewModel.copyFromPreviousMonth() },
+                    currentTheme = currentTheme,
+                    isDarkMode = isDarkMode
                 )
             } else {
                 Column(modifier = Modifier.fillMaxSize()) {
@@ -193,7 +195,9 @@ fun BudgetsScreen(
                         },
                         currencySymbol = selectedCurrency.symbol,
                         isPremium = isPremium,
-                        onShowPremiumPaywall = { showPremiumPaywall = true }
+                        onShowPremiumPaywall = { showPremiumPaywall = true },
+                        currentTheme = currentTheme,
+                        isDarkMode = isDarkMode
                     )
                 }
             }
@@ -576,7 +580,9 @@ fun BudgetsList(
     onMarkAsPaid: (BudgetWithDetails) -> Unit,
     currencySymbol: String,
     isPremium: Boolean,
-    onShowPremiumPaywall: () -> Unit
+    onShowPremiumPaywall: () -> Unit,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -593,7 +599,9 @@ fun BudgetsList(
                 onMarkAsPaid = { onMarkAsPaid(budgetWithDetails) },
                 currencySymbol = currencySymbol,
                 isPremium = isPremium,
-                onShowPremiumPaywall = onShowPremiumPaywall
+                onShowPremiumPaywall = onShowPremiumPaywall,
+                currentTheme = currentTheme,
+                isDarkMode = isDarkMode
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -612,7 +620,9 @@ fun BudgetCard(
     onMarkAsPaid: () -> Unit,
     currencySymbol: String,
     isPremium: Boolean,
-    onShowPremiumPaywall: () -> Unit
+    onShowPremiumPaywall: () -> Unit,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
 ) {
     var expanded by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
@@ -623,9 +633,9 @@ fun BudgetCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
+            .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFDAF4F3)
+            containerColor = currentTheme.getSurface(isDarkMode)
         ),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -951,7 +961,9 @@ fun BudgetCard(
 
 @Composable
 fun EmptyState(
-    onCopyFromPrevious: () -> Unit
+    onCopyFromPrevious: () -> Unit,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
 ) {
     Box(
         modifier = Modifier
@@ -967,20 +979,20 @@ fun EmptyState(
                 imageVector = FeatherIcons.DollarSign,
                 contentDescription = null,
                 modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                tint = currentTheme.getInactive(isDarkMode)
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "No Budgets",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = currentTheme.getText(isDarkMode),
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Tap the + button to create your first budget",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                color = currentTheme.getInactive(isDarkMode),
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(24.dp))
