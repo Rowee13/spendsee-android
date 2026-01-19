@@ -18,6 +18,8 @@ import compose.icons.FeatherIcons
 import compose.icons.feathericons.*
 import com.spendsee.data.local.entities.BudgetItem
 import com.spendsee.managers.CurrencyManager
+import com.spendsee.managers.ThemeManager
+import com.spendsee.ui.theme.ThemeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +31,9 @@ fun AddEditBudgetItemDialog(
     val context = LocalContext.current
     val currencyManager = remember { CurrencyManager.getInstance(context) }
     val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
+    val themeManager = remember { ThemeManager.getInstance(context) }
+    val currentTheme by themeManager.currentTheme.collectAsState()
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
 
     var name by remember { mutableStateOf(budgetItem?.name ?: "") }
     var amount by remember { mutableStateOf(budgetItem?.amount?.toString() ?: "") }
@@ -52,7 +57,7 @@ fun AddEditBudgetItemDialog(
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = Color(0xFFEFFFFF)
+            color = currentTheme.getBackground(isDarkMode)
         ) {
             Column(
                 modifier = Modifier
@@ -65,16 +70,17 @@ fun AddEditBudgetItemDialog(
                         Text(
                             text = if (isEdit) "Edit Budget Item" else "Add Budget Item",
                             style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = currentTheme.getText(isDarkMode)
                         )
                     },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(FeatherIcons.X, contentDescription = "Close")
+                            Icon(FeatherIcons.X, contentDescription = "Close", tint = currentTheme.getText(isDarkMode))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFFDAF4F3)
+                        containerColor = currentTheme.getSurface(isDarkMode)
                     )
                 )
 
@@ -179,7 +185,7 @@ fun AddEditBudgetItemDialog(
                 // Bottom Buttons
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFFDAF4F3),
+                    color = currentTheme.getSurface(isDarkMode),
                     shadowElevation = 0.dp
                 ) {
                     Row(
@@ -190,7 +196,10 @@ fun AddEditBudgetItemDialog(
                     ) {
                         OutlinedButton(
                             onClick = onDismiss,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = currentTheme.getText(isDarkMode)
+                            )
                         ) {
                             Text("Cancel")
                         }
@@ -227,7 +236,8 @@ fun AddEditBudgetItemDialog(
                             },
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF418E8C)
+                                containerColor = currentTheme.getAccent(isDarkMode),
+                                contentColor = Color.White
                             )
                         ) {
                             Text(if (isEdit) "Save" else "Add")

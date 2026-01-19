@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -23,6 +24,8 @@ import androidx.compose.ui.window.DialogProperties
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.*
 import com.spendsee.data.local.entities.Category
+import com.spendsee.managers.ThemeManager
+import com.spendsee.ui.theme.ThemeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,6 +35,11 @@ fun AddEditCategoryDialog(
     onDismiss: () -> Unit,
     onSave: (name: String, icon: String, color: String) -> Unit
 ) {
+    val context = LocalContext.current
+    val themeManager = remember { ThemeManager.getInstance(context) }
+    val currentTheme by themeManager.currentTheme.collectAsState()
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
+
     var name by remember { mutableStateOf(category?.name ?: "") }
     var selectedIcon by remember { mutableStateOf(category?.icon ?: "grid") }
     var selectedColor by remember { mutableStateOf(category?.colorHex ?: "#007AFF") }
@@ -48,7 +56,7 @@ fun AddEditCategoryDialog(
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = Color(0xFFEFFFFF)
+            color = currentTheme.getBackground(isDarkMode)
         ) {
             Column(
                 modifier = Modifier
@@ -61,16 +69,17 @@ fun AddEditCategoryDialog(
                         Text(
                             text = if (isEdit) "Edit Category" else "Add Category",
                             style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = currentTheme.getText(isDarkMode)
                         )
                     },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(FeatherIcons.X, contentDescription = "Close")
+                            Icon(FeatherIcons.X, contentDescription = "Close", tint = currentTheme.getText(isDarkMode))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFFDAF4F3)
+                        containerColor = currentTheme.getSurface(isDarkMode)
                     )
                 )
 
@@ -100,7 +109,20 @@ fun AddEditCategoryDialog(
                         if (nameError != null) {
                             Text(nameError!!, color = MaterialTheme.colorScheme.error)
                         }
-                    }
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = currentTheme.getText(isDarkMode),
+                        unfocusedTextColor = currentTheme.getText(isDarkMode),
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedBorderColor = currentTheme.getAccent(isDarkMode),
+                        unfocusedBorderColor = currentTheme.getBorder(isDarkMode),
+                        focusedLabelColor = currentTheme.getAccent(isDarkMode),
+                        unfocusedLabelColor = currentTheme.getInactive(isDarkMode),
+                        cursorColor = currentTheme.getAccent(isDarkMode),
+                        focusedPlaceholderColor = currentTheme.getInactive(isDarkMode),
+                        unfocusedPlaceholderColor = currentTheme.getInactive(isDarkMode)
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -200,7 +222,7 @@ fun AddEditCategoryDialog(
                 // Bottom Buttons
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFFDAF4F3),
+                    color = currentTheme.getSurface(isDarkMode),
                     shadowElevation = 0.dp
                 ) {
                     Row(
@@ -211,7 +233,10 @@ fun AddEditCategoryDialog(
                     ) {
                         OutlinedButton(
                             onClick = onDismiss,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = currentTheme.getText(isDarkMode)
+                            )
                         ) {
                             Text("Cancel")
                         }
@@ -229,7 +254,8 @@ fun AddEditCategoryDialog(
                             },
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF418E8C)
+                                containerColor = currentTheme.getAccent(isDarkMode),
+                                contentColor = Color.White
                             )
                         ) {
                             Text(if (isEdit) "Save" else "Add")

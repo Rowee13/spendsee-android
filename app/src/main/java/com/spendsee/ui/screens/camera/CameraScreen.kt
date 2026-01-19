@@ -26,6 +26,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.*
+import com.spendsee.managers.ThemeManager
+import com.spendsee.ui.theme.ThemeColors
 import java.io.File
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
@@ -38,12 +40,17 @@ fun CameraScreen(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val themeManager = remember { ThemeManager.getInstance(context) }
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
 
     var flashEnabled by remember { mutableStateOf(false) }
     var imageCapture: ImageCapture? by remember { mutableStateOf(null) }
     var camera: Camera? by remember { mutableStateOf(null) }
 
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
+
+    // Use different overlay opacity based on theme
+    val overlayColor = if (isDarkMode) Color.Black.copy(alpha = 0.6f) else Color.Black.copy(alpha = 0.5f)
 
     // Gallery picker launcher
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -124,7 +131,7 @@ fun CameraScreen(
             IconButton(
                 onClick = onDismiss,
                 modifier = Modifier
-                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                    .background(overlayColor, CircleShape)
             ) {
                 Icon(
                     imageVector = FeatherIcons.X,
@@ -141,7 +148,7 @@ fun CameraScreen(
                         camera?.cameraControl?.enableTorch(flashEnabled)
                     },
                     modifier = Modifier
-                        .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                        .background(overlayColor, CircleShape)
                 ) {
                     Icon(
                         imageVector = if (flashEnabled) FeatherIcons.Zap else FeatherIcons.ZapOff,
@@ -166,7 +173,7 @@ fun CameraScreen(
                 onClick = { galleryLauncher.launch("image/*") },
                 modifier = Modifier
                     .size(56.dp)
-                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                    .background(overlayColor, CircleShape)
             ) {
                 Icon(
                     imageVector = FeatherIcons.Image,

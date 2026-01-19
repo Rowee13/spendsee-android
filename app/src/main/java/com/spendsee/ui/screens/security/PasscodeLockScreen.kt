@@ -20,6 +20,8 @@ import androidx.fragment.app.FragmentActivity
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.Delete
 import com.spendsee.managers.PasscodeManager
+import com.spendsee.managers.ThemeManager
+import com.spendsee.ui.theme.ThemeColors
 
 @Composable
 fun PasscodeLockScreen(
@@ -28,6 +30,9 @@ fun PasscodeLockScreen(
     onDismiss: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
+    val themeManager = remember { ThemeManager.getInstance(context) }
+    val currentTheme by themeManager.currentTheme.collectAsState()
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     val passcodeManager = remember { PasscodeManager.getInstance(context) }
 
     var passcode by remember { mutableStateOf("") }
@@ -117,7 +122,7 @@ fun PasscodeLockScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = Color(0xFFEFFFFF)
+        color = currentTheme.getBackground(isDarkMode)
     ) {
         Column(
             modifier = Modifier
@@ -137,7 +142,8 @@ fun PasscodeLockScreen(
                     else -> "Confirm New Passcode"
                 },
                 style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = currentTheme.getText(isDarkMode)
             )
 
             Spacer(modifier = Modifier.height(48.dp))
@@ -147,7 +153,11 @@ fun PasscodeLockScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 repeat(6) { index ->
-                    PasscodeDot(filled = index < passcode.length)
+                    PasscodeDot(
+                        filled = index < passcode.length,
+                        currentTheme = currentTheme,
+                        isDarkMode = isDarkMode
+                    )
                 }
             }
 
@@ -176,7 +186,9 @@ fun PasscodeLockScreen(
                         passcode = passcode.dropLast(1)
                         errorMessage = null
                     }
-                }
+                },
+                currentTheme = currentTheme,
+                isDarkMode = isDarkMode
             )
 
             // Biometric button (only for ENTER mode)
@@ -198,7 +210,7 @@ fun PasscodeLockScreen(
                         imageVector = Icons.Default.Fingerprint,
                         contentDescription = "Use Biometric Authentication",
                         modifier = Modifier.size(32.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = currentTheme.getAccent(isDarkMode)
                     )
                 }
             }
@@ -207,7 +219,10 @@ fun PasscodeLockScreen(
             if (onDismiss != null) {
                 Spacer(modifier = Modifier.height(16.dp))
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel")
+                    Text(
+                        "Cancel",
+                        color = currentTheme.getAccent(isDarkMode)
+                    )
                 }
             }
         }
@@ -215,14 +230,18 @@ fun PasscodeLockScreen(
 }
 
 @Composable
-private fun PasscodeDot(filled: Boolean) {
+private fun PasscodeDot(
+    filled: Boolean,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
+) {
     Box(
         modifier = Modifier
             .size(16.dp)
             .clip(CircleShape)
             .background(
-                if (filled) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.surfaceVariant
+                if (filled) currentTheme.getAccent(isDarkMode)
+                else currentTheme.getBorder(isDarkMode)
             )
     )
 }
@@ -230,7 +249,9 @@ private fun PasscodeDot(filled: Boolean) {
 @Composable
 private fun NumberPad(
     onNumberClick: (String) -> Unit,
-    onBackspace: () -> Unit
+    onBackspace: () -> Unit,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
 ) {
     val numbers = listOf(
         listOf("1", "2", "3"),
@@ -257,7 +278,9 @@ private fun NumberPad(
                                 } else {
                                     onNumberClick(key)
                                 }
-                            }
+                            },
+                            currentTheme = currentTheme,
+                            isDarkMode = isDarkMode
                         )
                     } else {
                         // Empty space
@@ -272,13 +295,15 @@ private fun NumberPad(
 @Composable
 private fun NumberKey(
     value: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
 ) {
     Box(
         modifier = Modifier
             .size(72.dp)
             .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .background(currentTheme.getSurface(isDarkMode))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -286,7 +311,7 @@ private fun NumberKey(
             Icon(
                 imageVector = FeatherIcons.Delete,
                 contentDescription = "Backspace",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = currentTheme.getText(isDarkMode),
                 modifier = Modifier.size(24.dp)
             )
         } else {
@@ -294,7 +319,7 @@ private fun NumberKey(
                 text = value,
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = currentTheme.getText(isDarkMode)
             )
         }
     }

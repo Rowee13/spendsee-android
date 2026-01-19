@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -27,6 +28,8 @@ import compose.icons.feathericons.*
 import com.spendsee.data.local.entities.Transaction
 import com.spendsee.data.local.entities.Account
 import com.spendsee.data.local.entities.Category
+import com.spendsee.managers.ThemeManager
+import com.spendsee.ui.theme.ThemeColors
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -48,6 +51,11 @@ fun AddEditTransactionDialog(
         toAccountId: String?
     ) -> Unit
 ) {
+    val context = LocalContext.current
+    val themeManager = remember { ThemeManager.getInstance(context) }
+    val currentTheme by themeManager.currentTheme.collectAsState()
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
+
     var selectedType by remember { mutableStateOf(transaction?.type ?: "expense") }
     var calculatorDisplay by remember {
         mutableStateOf(
@@ -139,7 +147,7 @@ fun AddEditTransactionDialog(
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = Color(0xFFEFFFFF)
+            color = currentTheme.getBackground(isDarkMode)
         ) {
             Column(
                 modifier = Modifier
@@ -150,8 +158,8 @@ fun AddEditTransactionDialog(
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(0.dp, Color(0xFFAAD4D3)),
-                    color = Color(0xFFDAF4F3),
+                        .border(0.dp, currentTheme.getBorder(isDarkMode)),
+                    color = currentTheme.getSurface(isDarkMode),
                     shadowElevation = 0.dp
                 ) {
                     Row(
@@ -162,13 +170,14 @@ fun AddEditTransactionDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         TextButton(onClick = onDismiss) {
-                            Text("Cancel", fontSize = 17.sp)
+                            Text("Cancel", fontSize = 17.sp, color = currentTheme.getAccent(isDarkMode))
                         }
 
                         Text(
                             text = if (isEdit) "Edit Record" else "Add Record",
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            color = currentTheme.getText(isDarkMode)
                         )
 
                         TextButton(
@@ -197,7 +206,7 @@ fun AddEditTransactionDialog(
                                 }
                             }
                         ) {
-                            Text("Save", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                            Text("Save", fontSize = 17.sp, fontWeight = FontWeight.SemiBold, color = currentTheme.getAccent(isDarkMode))
                         }
                     }
                 }
@@ -218,17 +227,20 @@ fun AddEditTransactionDialog(
                         TypeButton(
                             text = "Income",
                             isSelected = selectedType == "income",
-                            onClick = { selectedType = "income" }
+                            onClick = { selectedType = "income" },
+                            textColor = currentTheme.getText(isDarkMode)
                         )
                         TypeButton(
                             text = "Expense",
                             isSelected = selectedType == "expense",
-                            onClick = { selectedType = "expense" }
+                            onClick = { selectedType = "expense" },
+                            textColor = currentTheme.getText(isDarkMode)
                         )
                         TypeButton(
                             text = "Transfer",
                             isSelected = selectedType == "transfer",
-                            onClick = { selectedType = "transfer" }
+                            onClick = { selectedType = "transfer" },
+                            textColor = currentTheme.getText(isDarkMode)
                         )
                     }
 
@@ -242,7 +254,7 @@ fun AddEditTransactionDialog(
                             Text(
                                 text = if (selectedType == "transfer") "From Account" else "Account",
                                 fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = currentTheme.getInactive(isDarkMode),
                                 modifier = Modifier.padding(bottom = 4.dp)
                             )
                             OutlinedButton(
@@ -250,16 +262,17 @@ fun AddEditTransactionDialog(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(8.dp),
                                 colors = ButtonDefaults.outlinedButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.surface
+                                    containerColor = currentTheme.getSurface(isDarkMode),
+                                    contentColor = currentTheme.getText(isDarkMode)
                                 )
                             ) {
                                 Text(
                                     text = accounts.find { it.id == selectedAccountId }?.name ?: "Select Account",
                                     fontSize = 15.sp,
                                     color = if (selectedAccountId == null)
-                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                        currentTheme.getInactive(isDarkMode)
                                     else
-                                        MaterialTheme.colorScheme.onSurface
+                                        currentTheme.getText(isDarkMode)
                                 )
                             }
                         }
@@ -270,7 +283,7 @@ fun AddEditTransactionDialog(
                                 Text(
                                     text = "Category",
                                     fontSize = 13.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = currentTheme.getInactive(isDarkMode),
                                     modifier = Modifier.padding(bottom = 4.dp)
                                 )
                                 OutlinedButton(
@@ -278,16 +291,17 @@ fun AddEditTransactionDialog(
                                     modifier = Modifier.fillMaxWidth(),
                                     shape = RoundedCornerShape(8.dp),
                                     colors = ButtonDefaults.outlinedButtonColors(
-                                        containerColor = MaterialTheme.colorScheme.surface
+                                        containerColor = currentTheme.getSurface(isDarkMode),
+                                        contentColor = currentTheme.getText(isDarkMode)
                                     )
                                 ) {
                                     Text(
                                         text = if (selectedCategory.isEmpty()) "Select Category" else selectedCategory,
                                         fontSize = 15.sp,
                                         color = if (selectedCategory.isEmpty())
-                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                            currentTheme.getInactive(isDarkMode)
                                         else
-                                            MaterialTheme.colorScheme.onSurface,
+                                            currentTheme.getText(isDarkMode),
                                         maxLines = 1
                                     )
                                 }
@@ -298,7 +312,7 @@ fun AddEditTransactionDialog(
                                 Text(
                                     text = "To Account",
                                     fontSize = 13.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = currentTheme.getInactive(isDarkMode),
                                     modifier = Modifier.padding(bottom = 4.dp)
                                 )
                                 OutlinedButton(
@@ -306,16 +320,17 @@ fun AddEditTransactionDialog(
                                     modifier = Modifier.fillMaxWidth(),
                                     shape = RoundedCornerShape(8.dp),
                                     colors = ButtonDefaults.outlinedButtonColors(
-                                        containerColor = MaterialTheme.colorScheme.surface
+                                        containerColor = currentTheme.getSurface(isDarkMode),
+                                        contentColor = currentTheme.getText(isDarkMode)
                                     )
                                 ) {
                                     Text(
                                         text = accounts.find { it.id == selectedToAccountId }?.name ?: "Select Account",
                                         fontSize = 15.sp,
                                         color = if (selectedToAccountId == null)
-                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                            currentTheme.getInactive(isDarkMode)
                                         else
-                                            MaterialTheme.colorScheme.onSurface
+                                            currentTheme.getText(isDarkMode)
                                     )
                                 }
                             }
@@ -326,13 +341,17 @@ fun AddEditTransactionDialog(
                     OutlinedTextField(
                         value = title,
                         onValueChange = { title = it },
-                        placeholder = { Text("Title") },
+                        placeholder = { Text("Title", color = currentTheme.getInactive(isDarkMode)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                            focusedContainerColor = MaterialTheme.colorScheme.surface
+                            unfocusedContainerColor = currentTheme.getSurface(isDarkMode),
+                            focusedContainerColor = currentTheme.getSurface(isDarkMode),
+                            unfocusedTextColor = currentTheme.getText(isDarkMode),
+                            focusedTextColor = currentTheme.getText(isDarkMode),
+                            unfocusedBorderColor = currentTheme.getBorder(isDarkMode),
+                            focusedBorderColor = currentTheme.getAccent(isDarkMode)
                         )
                     )
 
@@ -340,21 +359,28 @@ fun AddEditTransactionDialog(
                     OutlinedTextField(
                         value = notes,
                         onValueChange = { notes = it },
-                        placeholder = { Text("Notes") },
+                        placeholder = { Text("Notes", color = currentTheme.getInactive(isDarkMode)) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(120.dp),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                            focusedContainerColor = MaterialTheme.colorScheme.surface
+                            unfocusedContainerColor = currentTheme.getSurface(isDarkMode),
+                            focusedContainerColor = currentTheme.getSurface(isDarkMode),
+                            unfocusedTextColor = currentTheme.getText(isDarkMode),
+                            focusedTextColor = currentTheme.getText(isDarkMode),
+                            unfocusedBorderColor = currentTheme.getBorder(isDarkMode),
+                            focusedBorderColor = currentTheme.getAccent(isDarkMode)
                         )
                     )
 
                     // Calculator Display
                     OutlinedCard(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.outlinedCardColors(
+                            containerColor = currentTheme.getSurface(isDarkMode)
+                        )
                     ) {
                         Row(
                             modifier = Modifier
@@ -367,7 +393,8 @@ fun AddEditTransactionDialog(
                                 text = calculatorDisplay,
                                 fontSize = 32.sp,
                                 fontWeight = FontWeight.Normal,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                color = currentTheme.getText(isDarkMode)
                             )
                             IconButton(
                                 onClick = { handleCalculatorInput("⌫") },
@@ -376,7 +403,8 @@ fun AddEditTransactionDialog(
                                 Icon(
                                     imageVector = FeatherIcons.X,
                                     contentDescription = "Delete",
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(20.dp),
+                                    tint = currentTheme.getText(isDarkMode)
                                 )
                             }
                         }
@@ -390,22 +418,30 @@ fun AddEditTransactionDialog(
                         // Row 1: +, 7, 8, 9
                         CalculatorRow(
                             buttons = listOf("+", "7", "8", "9"),
-                            onButtonClick = { handleCalculatorInput(it) }
+                            onButtonClick = { handleCalculatorInput(it) },
+                            backgroundColor = currentTheme.getSurface(isDarkMode),
+                            textColor = currentTheme.getText(isDarkMode)
                         )
                         // Row 2: -, 4, 5, 6
                         CalculatorRow(
                             buttons = listOf("-", "4", "5", "6"),
-                            onButtonClick = { handleCalculatorInput(it) }
+                            onButtonClick = { handleCalculatorInput(it) },
+                            backgroundColor = currentTheme.getSurface(isDarkMode),
+                            textColor = currentTheme.getText(isDarkMode)
                         )
                         // Row 3: ×, 1, 2, 3
                         CalculatorRow(
                             buttons = listOf("×", "1", "2", "3"),
-                            onButtonClick = { handleCalculatorInput(it) }
+                            onButtonClick = { handleCalculatorInput(it) },
+                            backgroundColor = currentTheme.getSurface(isDarkMode),
+                            textColor = currentTheme.getText(isDarkMode)
                         )
                         // Row 4: ÷, 0, ., =
                         CalculatorRow(
                             buttons = listOf("÷", "0", ".", "="),
-                            onButtonClick = { handleCalculatorInput(it) }
+                            onButtonClick = { handleCalculatorInput(it) },
+                            backgroundColor = currentTheme.getSurface(isDarkMode),
+                            textColor = currentTheme.getText(isDarkMode)
                         )
                     }
 
@@ -419,7 +455,8 @@ fun AddEditTransactionDialog(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surface
+                                containerColor = currentTheme.getSurface(isDarkMode),
+                                contentColor = currentTheme.getText(isDarkMode)
                             )
                         ) {
                             Text(
@@ -433,7 +470,8 @@ fun AddEditTransactionDialog(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surface
+                                containerColor = currentTheme.getSurface(isDarkMode),
+                                contentColor = currentTheme.getText(isDarkMode)
                             )
                         ) {
                             Text(
@@ -453,7 +491,8 @@ fun AddEditTransactionDialog(
     if (showAccountPicker) {
         AlertDialog(
             onDismissRequest = { showAccountPicker = false },
-            title = { Text(if (selectedType == "transfer") "Select From Account" else "Select Account") },
+            containerColor = currentTheme.getSurface(isDarkMode),
+            title = { Text(if (selectedType == "transfer") "Select From Account" else "Select Account", color = currentTheme.getText(isDarkMode)) },
             text = {
                 Column {
                     accounts.forEach { account ->
@@ -467,10 +506,10 @@ fun AddEditTransactionDialog(
                                 .padding(vertical = 12.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(account.name)
+                            Text(account.name, color = currentTheme.getText(isDarkMode))
                             Text(
                                 text = "$${String.format("%.2f", account.balance)}",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = currentTheme.getInactive(isDarkMode)
                             )
                         }
                     }
@@ -478,7 +517,7 @@ fun AddEditTransactionDialog(
             },
             confirmButton = {
                 TextButton(onClick = { showAccountPicker = false }) {
-                    Text("Close")
+                    Text("Close", color = currentTheme.getAccent(isDarkMode))
                 }
             }
         )
@@ -488,7 +527,8 @@ fun AddEditTransactionDialog(
     if (showToAccountPicker) {
         AlertDialog(
             onDismissRequest = { showToAccountPicker = false },
-            title = { Text("Select To Account") },
+            containerColor = currentTheme.getSurface(isDarkMode),
+            title = { Text("Select To Account", color = currentTheme.getText(isDarkMode)) },
             text = {
                 Column {
                     accounts.filter { it.id != selectedAccountId }.forEach { account ->
@@ -502,10 +542,10 @@ fun AddEditTransactionDialog(
                                 .padding(vertical = 12.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(account.name)
+                            Text(account.name, color = currentTheme.getText(isDarkMode))
                             Text(
                                 text = "$${String.format("%.2f", account.balance)}",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = currentTheme.getInactive(isDarkMode)
                             )
                         }
                     }
@@ -513,7 +553,7 @@ fun AddEditTransactionDialog(
             },
             confirmButton = {
                 TextButton(onClick = { showToAccountPicker = false }) {
-                    Text("Close")
+                    Text("Close", color = currentTheme.getAccent(isDarkMode))
                 }
             }
         )
@@ -523,7 +563,8 @@ fun AddEditTransactionDialog(
     if (showCategoryPicker) {
         AlertDialog(
             onDismissRequest = { showCategoryPicker = false },
-            title = { Text("Select Category") },
+            containerColor = currentTheme.getSurface(isDarkMode),
+            title = { Text("Select Category", color = currentTheme.getText(isDarkMode)) },
             text = {
                 Column {
                     filteredCategories.forEach { category ->
@@ -555,14 +596,14 @@ fun AddEditTransactionDialog(
                                 )
                             }
                             Spacer(modifier = Modifier.width(12.dp))
-                            Text(category.name)
+                            Text(category.name, color = currentTheme.getText(isDarkMode))
                         }
                     }
                 }
             },
             confirmButton = {
                 TextButton(onClick = { showCategoryPicker = false }) {
-                    Text("Close")
+                    Text("Close", color = currentTheme.getAccent(isDarkMode))
                 }
             }
         )
@@ -585,16 +626,37 @@ fun AddEditTransactionDialog(
                         showDatePicker = false
                     }
                 ) {
-                    Text("OK")
+                    Text("OK", color = currentTheme.getAccent(isDarkMode))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancel")
+                    Text("Cancel", color = currentTheme.getAccent(isDarkMode))
                 }
-            }
+            },
+            colors = DatePickerDefaults.colors(
+                containerColor = currentTheme.getSurface(isDarkMode)
+            )
         ) {
-            DatePicker(state = datePickerState)
+            DatePicker(
+                state = datePickerState,
+                colors = DatePickerDefaults.colors(
+                    containerColor = currentTheme.getSurface(isDarkMode),
+                    titleContentColor = currentTheme.getText(isDarkMode),
+                    headlineContentColor = currentTheme.getText(isDarkMode),
+                    weekdayContentColor = currentTheme.getInactive(isDarkMode),
+                    subheadContentColor = currentTheme.getText(isDarkMode),
+                    yearContentColor = currentTheme.getText(isDarkMode),
+                    currentYearContentColor = currentTheme.getAccent(isDarkMode),
+                    selectedYearContentColor = Color.White,
+                    selectedYearContainerColor = currentTheme.getAccent(isDarkMode),
+                    dayContentColor = currentTheme.getText(isDarkMode),
+                    selectedDayContentColor = Color.White,
+                    selectedDayContainerColor = currentTheme.getAccent(isDarkMode),
+                    todayContentColor = currentTheme.getAccent(isDarkMode),
+                    todayDateBorderColor = currentTheme.getAccent(isDarkMode)
+                )
+            )
         }
     }
 
@@ -608,6 +670,7 @@ fun AddEditTransactionDialog(
 
         AlertDialog(
             onDismissRequest = { showTimePicker = false },
+            containerColor = currentTheme.getSurface(isDarkMode),
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -617,16 +680,34 @@ fun AddEditTransactionDialog(
                         showTimePicker = false
                     }
                 ) {
-                    Text("OK")
+                    Text("OK", color = currentTheme.getAccent(isDarkMode))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showTimePicker = false }) {
-                    Text("Cancel")
+                    Text("Cancel", color = currentTheme.getAccent(isDarkMode))
                 }
             },
             text = {
-                TimePicker(state = timePickerState)
+                TimePicker(
+                    state = timePickerState,
+                    colors = TimePickerDefaults.colors(
+                        clockDialColor = currentTheme.getSurface(isDarkMode),
+                        selectorColor = currentTheme.getAccent(isDarkMode),
+                        containerColor = currentTheme.getSurface(isDarkMode),
+                        periodSelectorBorderColor = currentTheme.getBorder(isDarkMode),
+                        clockDialSelectedContentColor = Color.White,
+                        clockDialUnselectedContentColor = currentTheme.getText(isDarkMode),
+                        periodSelectorSelectedContainerColor = currentTheme.getAccent(isDarkMode),
+                        periodSelectorUnselectedContainerColor = Color.Transparent,
+                        periodSelectorSelectedContentColor = Color.White,
+                        periodSelectorUnselectedContentColor = currentTheme.getText(isDarkMode),
+                        timeSelectorSelectedContainerColor = currentTheme.getAccent(isDarkMode),
+                        timeSelectorUnselectedContainerColor = currentTheme.getSurface(isDarkMode),
+                        timeSelectorSelectedContentColor = Color.White,
+                        timeSelectorUnselectedContentColor = currentTheme.getText(isDarkMode)
+                    )
+                )
             }
         )
     }
@@ -636,7 +717,8 @@ fun AddEditTransactionDialog(
 fun TypeButton(
     text: String,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    textColor: Color = Color.Unspecified
 ) {
     Row(
         modifier = Modifier
@@ -650,7 +732,7 @@ fun TypeButton(
                 imageVector = Icons.Default.Check,
                 contentDescription = "Selected",
                 modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.onSurface
+                tint = textColor
             )
             Spacer(modifier = Modifier.width(4.dp))
         }
@@ -658,7 +740,7 @@ fun TypeButton(
             text = text,
             fontSize = 17.sp,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            color = MaterialTheme.colorScheme.onSurface
+            color = textColor
         )
     }
 }
@@ -666,7 +748,9 @@ fun TypeButton(
 @Composable
 fun CalculatorRow(
     buttons: List<String>,
-    onButtonClick: (String) -> Unit
+    onButtonClick: (String) -> Unit,
+    backgroundColor: Color = Color.Unspecified,
+    textColor: Color = Color.Unspecified
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -680,7 +764,8 @@ fun CalculatorRow(
                     .height(60.dp),
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = backgroundColor,
+                    contentColor = textColor
                 )
             ) {
                 Text(

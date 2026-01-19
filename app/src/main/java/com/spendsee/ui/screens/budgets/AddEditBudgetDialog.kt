@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -19,6 +20,8 @@ import androidx.compose.ui.window.DialogProperties
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.*
 import com.spendsee.data.local.entities.Budget
+import com.spendsee.managers.ThemeManager
+import com.spendsee.ui.theme.ThemeColors
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -29,6 +32,11 @@ fun AddEditBudgetDialog(
     onDismiss: () -> Unit,
     onSave: (name: String, category: String, month: Int, year: Int, isRecurring: Boolean, dueDate: Long?, notifyDaysBefore: Int) -> Unit
 ) {
+    val context = LocalContext.current
+    val themeManager = remember { ThemeManager.getInstance(context) }
+    val currentTheme by themeManager.currentTheme.collectAsState()
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
+
     var name by remember { mutableStateOf(budget?.name ?: "") }
     var selectedCategory by remember { mutableStateOf(budget?.category ?: "Bills") }
     var selectedMonth by remember { mutableStateOf(budget?.month ?: Calendar.getInstance().get(Calendar.MONTH) + 1) }
@@ -68,7 +76,7 @@ fun AddEditBudgetDialog(
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = Color(0xFFEFFFFF)
+            color = currentTheme.getBackground(isDarkMode)
         ) {
             Column(
                 modifier = Modifier
@@ -81,16 +89,17 @@ fun AddEditBudgetDialog(
                         Text(
                             text = if (isEdit) "Edit Budget" else "Add Budget",
                             style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = currentTheme.getText(isDarkMode)
                         )
                     },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(FeatherIcons.X, contentDescription = "Close")
+                            Icon(FeatherIcons.X, contentDescription = "Close", tint = currentTheme.getText(isDarkMode))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFFDAF4F3)
+                        containerColor = currentTheme.getSurface(isDarkMode)
                     )
                 )
 
@@ -118,7 +127,20 @@ fun AddEditBudgetDialog(
                             if (nameError != null) {
                                 Text(nameError!!, color = MaterialTheme.colorScheme.error)
                             }
-                        }
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = currentTheme.getText(isDarkMode),
+                            unfocusedTextColor = currentTheme.getText(isDarkMode),
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedBorderColor = currentTheme.getAccent(isDarkMode),
+                            unfocusedBorderColor = currentTheme.getBorder(isDarkMode),
+                            focusedLabelColor = currentTheme.getAccent(isDarkMode),
+                            unfocusedLabelColor = currentTheme.getInactive(isDarkMode),
+                            cursorColor = currentTheme.getAccent(isDarkMode),
+                            focusedPlaceholderColor = currentTheme.getInactive(isDarkMode),
+                            unfocusedPlaceholderColor = currentTheme.getInactive(isDarkMode)
+                        )
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -136,16 +158,28 @@ fun AddEditBudgetDialog(
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCategoryPicker) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor()
+                                .menuAnchor(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = currentTheme.getText(isDarkMode),
+                                unfocusedTextColor = currentTheme.getText(isDarkMode),
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedBorderColor = currentTheme.getAccent(isDarkMode),
+                                unfocusedBorderColor = currentTheme.getBorder(isDarkMode),
+                                focusedLabelColor = currentTheme.getAccent(isDarkMode),
+                                unfocusedLabelColor = currentTheme.getInactive(isDarkMode),
+                                cursorColor = currentTheme.getAccent(isDarkMode)
+                            )
                         )
 
                         ExposedDropdownMenu(
                             expanded = showCategoryPicker,
-                            onDismissRequest = { showCategoryPicker = false }
+                            onDismissRequest = { showCategoryPicker = false },
+                            modifier = Modifier.background(currentTheme.getSurface(isDarkMode))
                         ) {
                             categories.forEach { category ->
                                 DropdownMenuItem(
-                                    text = { Text(category) },
+                                    text = { Text(category, color = currentTheme.getText(isDarkMode)) },
                                     onClick = {
                                         selectedCategory = category
                                         showCategoryPicker = false
@@ -176,16 +210,28 @@ fun AddEditBudgetDialog(
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showMonthPicker) },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .menuAnchor()
+                                    .menuAnchor(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = currentTheme.getText(isDarkMode),
+                                    unfocusedTextColor = currentTheme.getText(isDarkMode),
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent,
+                                    focusedBorderColor = currentTheme.getAccent(isDarkMode),
+                                    unfocusedBorderColor = currentTheme.getBorder(isDarkMode),
+                                    focusedLabelColor = currentTheme.getAccent(isDarkMode),
+                                    unfocusedLabelColor = currentTheme.getInactive(isDarkMode),
+                                    cursorColor = currentTheme.getAccent(isDarkMode)
+                                )
                             )
 
                             ExposedDropdownMenu(
                                 expanded = showMonthPicker,
-                                onDismissRequest = { showMonthPicker = false }
+                                onDismissRequest = { showMonthPicker = false },
+                                modifier = Modifier.background(currentTheme.getSurface(isDarkMode))
                             ) {
                                 months.forEachIndexed { index, month ->
                                     DropdownMenuItem(
-                                        text = { Text(month) },
+                                        text = { Text(month, color = currentTheme.getText(isDarkMode)) },
                                         onClick = {
                                             selectedMonth = index + 1
                                             showMonthPicker = false
@@ -209,17 +255,29 @@ fun AddEditBudgetDialog(
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showYearPicker) },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .menuAnchor()
+                                    .menuAnchor(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = currentTheme.getText(isDarkMode),
+                                    unfocusedTextColor = currentTheme.getText(isDarkMode),
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent,
+                                    focusedBorderColor = currentTheme.getAccent(isDarkMode),
+                                    unfocusedBorderColor = currentTheme.getBorder(isDarkMode),
+                                    focusedLabelColor = currentTheme.getAccent(isDarkMode),
+                                    unfocusedLabelColor = currentTheme.getInactive(isDarkMode),
+                                    cursorColor = currentTheme.getAccent(isDarkMode)
+                                )
                             )
 
                             ExposedDropdownMenu(
                                 expanded = showYearPicker,
-                                onDismissRequest = { showYearPicker = false }
+                                onDismissRequest = { showYearPicker = false },
+                                modifier = Modifier.background(currentTheme.getSurface(isDarkMode))
                             ) {
                                 val currentYear = Calendar.getInstance().get(Calendar.YEAR)
                                 (currentYear - 2..currentYear + 5).forEach { year ->
                                     DropdownMenuItem(
-                                        text = { Text(year.toString()) },
+                                        text = { Text(year.toString(), color = currentTheme.getText(isDarkMode)) },
                                         onClick = {
                                             selectedYear = year
                                             showYearPicker = false
@@ -245,12 +303,13 @@ fun AddEditBudgetDialog(
                             Text(
                                 text = "Recurring Budget",
                                 style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
+                                color = currentTheme.getText(isDarkMode)
                             )
                             Text(
                                 text = "Automatically copy to next month",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = currentTheme.getInactive(isDarkMode)
                             )
                         }
                         Switch(
@@ -274,13 +333,14 @@ fun AddEditBudgetDialog(
                             Text(
                                 text = "Set Due Date",
                                 style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
+                                color = currentTheme.getText(isDarkMode)
                             )
                             if (hasDueDate) {
                                 Text(
                                     text = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date(dueDate)),
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = currentTheme.getAccent(isDarkMode)
                                 )
                             }
                         }
@@ -317,16 +377,28 @@ fun AddEditBudgetDialog(
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showNotifyDaysPicker) },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .menuAnchor()
+                                    .menuAnchor(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = currentTheme.getText(isDarkMode),
+                                    unfocusedTextColor = currentTheme.getText(isDarkMode),
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent,
+                                    focusedBorderColor = currentTheme.getAccent(isDarkMode),
+                                    unfocusedBorderColor = currentTheme.getBorder(isDarkMode),
+                                    focusedLabelColor = currentTheme.getAccent(isDarkMode),
+                                    unfocusedLabelColor = currentTheme.getInactive(isDarkMode),
+                                    cursorColor = currentTheme.getAccent(isDarkMode)
+                                )
                             )
 
                             ExposedDropdownMenu(
                                 expanded = showNotifyDaysPicker,
-                                onDismissRequest = { showNotifyDaysPicker = false }
+                                onDismissRequest = { showNotifyDaysPicker = false },
+                                modifier = Modifier.background(currentTheme.getSurface(isDarkMode))
                             ) {
                                 notifyDaysOptions.forEach { days ->
                                     DropdownMenuItem(
-                                        text = { Text("$days ${if (days == 1) "day" else "days"} before") },
+                                        text = { Text("$days ${if (days == 1) "day" else "days"} before", color = currentTheme.getText(isDarkMode)) },
                                         onClick = {
                                             notifyDaysBefore = days
                                             showNotifyDaysPicker = false
@@ -343,7 +415,7 @@ fun AddEditBudgetDialog(
                 // Bottom Buttons
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFFDAF4F3),
+                    color = currentTheme.getSurface(isDarkMode),
                     shadowElevation = 0.dp
                 ) {
                     Row(
@@ -354,7 +426,10 @@ fun AddEditBudgetDialog(
                     ) {
                         OutlinedButton(
                             onClick = onDismiss,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = currentTheme.getText(isDarkMode)
+                            )
                         ) {
                             Text("Cancel")
                         }
@@ -380,7 +455,8 @@ fun AddEditBudgetDialog(
                             },
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF418E8C)
+                                containerColor = currentTheme.getAccent(isDarkMode),
+                                contentColor = Color.White
                             )
                         ) {
                             Text(if (isEdit) "Save" else "Add")

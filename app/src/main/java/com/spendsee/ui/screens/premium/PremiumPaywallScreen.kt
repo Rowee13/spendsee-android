@@ -23,6 +23,8 @@ import compose.icons.FeatherIcons
 import compose.icons.feathericons.*
 import com.spendsee.managers.Feature
 import com.spendsee.managers.PremiumManager
+import com.spendsee.managers.ThemeManager
+import com.spendsee.ui.theme.ThemeColors
 import kotlinx.coroutines.launch
 
 @Composable
@@ -31,6 +33,9 @@ fun PremiumPaywallScreen(
     onPurchaseSuccess: () -> Unit
 ) {
     val context = LocalContext.current
+    val themeManager = remember { ThemeManager.getInstance(context) }
+    val currentTheme by themeManager.currentTheme.collectAsState()
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     val premiumManager = remember { PremiumManager.getInstance(context) }
     val purchaseState by premiumManager.purchaseState.collectAsState()
     val scope = rememberCoroutineScope()
@@ -61,7 +66,7 @@ fun PremiumPaywallScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = Color(0xFFEFFFFF)
+        color = currentTheme.getBackground(isDarkMode)
     ) {
         Column(
             modifier = Modifier
@@ -79,14 +84,15 @@ fun PremiumPaywallScreen(
                 Text(
                     text = "Unlock Premium",
                     style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = currentTheme.getText(isDarkMode)
                 )
 
                 IconButton(onClick = onDismiss) {
                     Icon(
                         FeatherIcons.X,
                         contentDescription = "Close",
-                        tint = MaterialTheme.colorScheme.onSurface
+                        tint = currentTheme.getText(isDarkMode)
                     )
                 }
             }
@@ -102,13 +108,13 @@ fun PremiumPaywallScreen(
                     modifier = Modifier
                         .size(80.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
+                        .background(currentTheme.getAccent(isDarkMode)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = FeatherIcons.Star,
                         contentDescription = "Premium",
-                        tint = MaterialTheme.colorScheme.onPrimary,
+                        tint = Color.White,
                         modifier = Modifier.size(40.dp)
                     )
                 }
@@ -118,7 +124,7 @@ fun PremiumPaywallScreen(
             Text(
                 text = "Get access to all premium features",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = currentTheme.getInactive(isDarkMode),
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -133,7 +139,11 @@ fun PremiumPaywallScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(Feature.getPremiumFeatures()) { feature ->
-                    PremiumFeatureItem(feature)
+                    PremiumFeatureItem(
+                        feature = feature,
+                        currentTheme = currentTheme,
+                        isDarkMode = isDarkMode
+                    )
                 }
             }
 
@@ -167,20 +177,21 @@ fun PremiumPaywallScreen(
                     .height(56.dp),
                 enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = currentTheme.getAccent(isDarkMode)
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = Color.White
                     )
                 } else {
                     Text(
                         text = "Unlock Premium • $6.99",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
                     )
                 }
             }
@@ -200,7 +211,7 @@ fun PremiumPaywallScreen(
                 Text(
                     text = "Restore Purchases",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = currentTheme.getAccent(isDarkMode)
                 )
             }
 
@@ -215,7 +226,7 @@ fun PremiumPaywallScreen(
                 Text(
                     text = "Maybe Later",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = currentTheme.getInactive(isDarkMode)
                 )
             }
         }
@@ -223,13 +234,17 @@ fun PremiumPaywallScreen(
 }
 
 @Composable
-fun PremiumFeatureItem(feature: Feature) {
+fun PremiumFeatureItem(
+    feature: Feature,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
+            .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFDAF4F3)
+            containerColor = currentTheme.getSurface(isDarkMode)
         ),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -245,13 +260,13 @@ fun PremiumFeatureItem(feature: Feature) {
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                    .background(currentTheme.getAccent(isDarkMode).copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = getFeatureIcon(feature),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    tint = currentTheme.getAccent(isDarkMode),
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -264,12 +279,12 @@ fun PremiumFeatureItem(feature: Feature) {
                     text = feature.displayName,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = currentTheme.getText(isDarkMode)
                 )
                 Text(
                     text = feature.description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = currentTheme.getInactive(isDarkMode),
                     fontSize = 12.sp
                 )
             }

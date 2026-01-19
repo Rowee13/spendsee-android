@@ -26,7 +26,9 @@ import compose.icons.feathericons.*
 import com.spendsee.data.local.entities.Category
 import com.spendsee.managers.Feature
 import com.spendsee.managers.PremiumManager
+import com.spendsee.managers.ThemeManager
 import com.spendsee.ui.screens.premium.PremiumPaywallScreen
+import com.spendsee.ui.theme.ThemeColors
 import com.spendsee.viewmodels.CategoriesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,15 +39,24 @@ fun CategoriesScreen(
     val viewModel: CategoriesViewModel = viewModel()
     val context = LocalContext.current
     val view = LocalView.current
+    val themeManager = remember { ThemeManager.getInstance(context) }
+    val currentTheme by themeManager.currentTheme.collectAsState()
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     val premiumManager = remember { PremiumManager.getInstance(context) }
     val isPremium by premiumManager.isPremium.collectAsState()
 
     // Set status bar color to match header
     SideEffect {
         val window = (view.context as? Activity)?.window
-        window?.statusBarColor = android.graphics.Color.parseColor("#DAF4F3")
+        val headerColor = currentTheme.getSurface(isDarkMode)
+        window?.statusBarColor = android.graphics.Color.argb(
+            (headerColor.alpha * 255).toInt(),
+            (headerColor.red * 255).toInt(),
+            (headerColor.green * 255).toInt(),
+            (headerColor.blue * 255).toInt()
+        )
         window?.let {
-            WindowCompat.getInsetsController(it, view).isAppearanceLightStatusBars = true
+            WindowCompat.getInsetsController(it, view).isAppearanceLightStatusBars = !isDarkMode
         }
     }
 
@@ -53,7 +64,13 @@ fun CategoriesScreen(
     DisposableEffect(Unit) {
         onDispose {
             val window = (view.context as? Activity)?.window
-            window?.statusBarColor = android.graphics.Color.parseColor("#EFFFFF")
+            val bgColor = currentTheme.getBackground(isDarkMode)
+            window?.statusBarColor = android.graphics.Color.argb(
+                (bgColor.alpha * 255).toInt(),
+                (bgColor.red * 255).toInt(),
+                (bgColor.green * 255).toInt(),
+                (bgColor.blue * 255).toInt()
+            )
         }
     }
 
@@ -72,17 +89,26 @@ fun CategoriesScreen(
     val currentType = if (selectedTabIndex == 0) "expense" else "income"
 
     Scaffold(
-        containerColor = Color(0xFFEFFFFF),
+        containerColor = currentTheme.getBackground(isDarkMode),
         topBar = {
             TopAppBar(
-                title = { Text("Categories") },
+                title = {
+                    Text(
+                        "Categories",
+                        color = currentTheme.getText(isDarkMode)
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(FeatherIcons.ArrowLeft, contentDescription = "Back")
+                        Icon(
+                            FeatherIcons.ArrowLeft,
+                            contentDescription = "Back",
+                            tint = currentTheme.getText(isDarkMode)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFDAF4F3)
+                    containerColor = currentTheme.getSurface(isDarkMode)
                 ),
                 windowInsets = WindowInsets(0, 0, 0, 0)
             )
@@ -96,7 +122,7 @@ fun CategoriesScreen(
                         showPremiumPaywall = true
                     }
                 },
-                containerColor = Color(0xFF418E8C)
+                containerColor = currentTheme.getAccent(isDarkMode)
             ) {
                 Icon(FeatherIcons.Plus, contentDescription = "Add Category", tint = Color.White)
             }
@@ -106,13 +132,13 @@ fun CategoriesScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFFEFFFFF))
+                .background(currentTheme.getBackground(isDarkMode))
         ) {
             // Tabs
             TabRow(
                 selectedTabIndex = selectedTabIndex,
-                containerColor = Color(0xFFDAF4F3),
-                contentColor = Color(0xFF418E8C)
+                containerColor = currentTheme.getSurface(isDarkMode),
+                contentColor = currentTheme.getAccent(isDarkMode)
             ) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
@@ -134,7 +160,7 @@ fun CategoriesScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
-                        .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
+                        .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp)),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer
                     ),
@@ -170,9 +196,9 @@ fun CategoriesScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
-                        .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
+                        .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp)),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFDAF4F3)
+                        containerColor = currentTheme.getSurface(isDarkMode)
                     ),
                     shape = RoundedCornerShape(12.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -184,7 +210,7 @@ fun CategoriesScreen(
                         Icon(
                             FeatherIcons.Star,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = currentTheme.getAccent(isDarkMode),
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
@@ -192,12 +218,13 @@ fun CategoriesScreen(
                             Text(
                                 text = "Custom Categories",
                                 style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                color = currentTheme.getText(isDarkMode)
                             )
                             Text(
                                 text = "Unlock premium to create custom categories",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = currentTheme.getInactive(isDarkMode)
                             )
                         }
                     }
@@ -218,7 +245,7 @@ fun CategoriesScreen(
                             text = "Default Categories",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = currentTheme.getAccent(isDarkMode),
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
@@ -226,7 +253,9 @@ fun CategoriesScreen(
                         CategoryItem(
                             category = category,
                             onEdit = null, // Can't edit default categories
-                            onDelete = null // Can't delete default categories
+                            onDelete = null, // Can't delete default categories
+                            currentTheme = currentTheme,
+                            isDarkMode = isDarkMode
                         )
                     }
                 }
@@ -239,7 +268,7 @@ fun CategoriesScreen(
                             text = "Custom Categories",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = currentTheme.getAccent(isDarkMode),
                             modifier = Modifier.padding(vertical = 8.dp, horizontal = 0.dp)
                         )
                     }
@@ -252,7 +281,9 @@ fun CategoriesScreen(
                             },
                             onDelete = {
                                 viewModel.deleteCategory(category)
-                            }
+                            },
+                            currentTheme = currentTheme,
+                            isDarkMode = isDarkMode
                         )
                     }
                 }
@@ -269,7 +300,7 @@ fun CategoriesScreen(
                             Text(
                                 text = "No categories yet",
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = currentTheme.getInactive(isDarkMode)
                             )
                         }
                     }
@@ -331,16 +362,18 @@ fun CategoriesScreen(
 fun CategoryItem(
     category: Category,
     onEdit: (() -> Unit)?,
-    onDelete: (() -> Unit)?
+    onDelete: (() -> Unit)?,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(12.dp)),
+            .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFDAF4F3)
+            containerColor = currentTheme.getSurface(isDarkMode)
         ),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -381,13 +414,14 @@ fun CategoryItem(
                 Text(
                     text = category.name,
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    color = currentTheme.getText(isDarkMode)
                 )
                 if (category.isDefault) {
                     Text(
                         text = "Default",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = currentTheme.getInactive(isDarkMode)
                     )
                 }
             }
@@ -399,7 +433,7 @@ fun CategoryItem(
                         Icon(
                             FeatherIcons.MoreVertical,
                             contentDescription = "More options",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = currentTheme.getInactive(isDarkMode)
                         )
                     }
 

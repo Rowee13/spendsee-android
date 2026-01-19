@@ -25,6 +25,8 @@ import compose.icons.feathericons.*
 import com.spendsee.data.local.entities.Account
 import androidx.compose.ui.platform.LocalContext
 import com.spendsee.managers.CurrencyManager
+import com.spendsee.managers.ThemeManager
+import com.spendsee.ui.theme.ThemeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +38,9 @@ fun AddEditAccountDialog(
     val context = LocalContext.current
     val currencyManager = remember { CurrencyManager.getInstance(context) }
     val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
+    val themeManager = remember { ThemeManager.getInstance(context) }
+    val currentTheme by themeManager.currentTheme.collectAsState()
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
 
     var name by remember { mutableStateOf(account?.name ?: "") }
     var selectedType by remember { mutableStateOf(account?.type ?: "cash") }
@@ -67,7 +72,7 @@ fun AddEditAccountDialog(
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = Color(0xFFEFFFFF)
+            color = currentTheme.getBackground(isDarkMode)
         ) {
             Column(
                 modifier = Modifier
@@ -80,16 +85,17 @@ fun AddEditAccountDialog(
                         Text(
                             text = if (isEdit) "Edit Account" else "Add Account",
                             style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = currentTheme.getText(isDarkMode)
                         )
                     },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(FeatherIcons.X, contentDescription = "Close")
+                            Icon(FeatherIcons.X, contentDescription = "Close", tint = currentTheme.getText(isDarkMode))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFFDAF4F3)
+                        containerColor = currentTheme.getSurface(isDarkMode)
                     )
                 )
 
@@ -117,7 +123,20 @@ fun AddEditAccountDialog(
                             if (nameError != null) {
                                 Text(nameError!!, color = MaterialTheme.colorScheme.error)
                             }
-                        }
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = currentTheme.getText(isDarkMode),
+                            unfocusedTextColor = currentTheme.getText(isDarkMode),
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedBorderColor = currentTheme.getAccent(isDarkMode),
+                            unfocusedBorderColor = currentTheme.getBorder(isDarkMode),
+                            focusedLabelColor = currentTheme.getAccent(isDarkMode),
+                            unfocusedLabelColor = currentTheme.getInactive(isDarkMode),
+                            cursorColor = currentTheme.getAccent(isDarkMode),
+                            focusedPlaceholderColor = currentTheme.getInactive(isDarkMode),
+                            unfocusedPlaceholderColor = currentTheme.getInactive(isDarkMode)
+                        )
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -135,7 +154,18 @@ fun AddEditAccountDialog(
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor()
+                                .menuAnchor(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = currentTheme.getText(isDarkMode),
+                                unfocusedTextColor = currentTheme.getText(isDarkMode),
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedBorderColor = currentTheme.getAccent(isDarkMode),
+                                unfocusedBorderColor = currentTheme.getBorder(isDarkMode),
+                                focusedLabelColor = currentTheme.getAccent(isDarkMode),
+                                unfocusedLabelColor = currentTheme.getInactive(isDarkMode),
+                                cursorColor = currentTheme.getAccent(isDarkMode)
+                            )
                         )
 
                         ExposedDropdownMenu(
@@ -173,7 +203,22 @@ fun AddEditAccountDialog(
                                 Text(balanceError!!, color = MaterialTheme.colorScheme.error)
                             }
                         },
-                        prefix = { Text(selectedCurrency.symbol) }
+                        prefix = { Text(selectedCurrency.symbol) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = currentTheme.getText(isDarkMode),
+                            unfocusedTextColor = currentTheme.getText(isDarkMode),
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedBorderColor = currentTheme.getAccent(isDarkMode),
+                            unfocusedBorderColor = currentTheme.getBorder(isDarkMode),
+                            focusedLabelColor = currentTheme.getAccent(isDarkMode),
+                            unfocusedLabelColor = currentTheme.getInactive(isDarkMode),
+                            cursorColor = currentTheme.getAccent(isDarkMode),
+                            focusedPlaceholderColor = currentTheme.getInactive(isDarkMode),
+                            unfocusedPlaceholderColor = currentTheme.getInactive(isDarkMode),
+                            focusedPrefixColor = currentTheme.getText(isDarkMode),
+                            unfocusedPrefixColor = currentTheme.getInactive(isDarkMode)
+                        )
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -280,7 +325,7 @@ fun AddEditAccountDialog(
                 // Bottom Buttons
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFFDAF4F3),
+                    color = currentTheme.getSurface(isDarkMode),
                     shadowElevation = 0.dp
                 ) {
                     Row(
@@ -291,7 +336,10 @@ fun AddEditAccountDialog(
                     ) {
                         OutlinedButton(
                             onClick = onDismiss,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = currentTheme.getText(isDarkMode)
+                            )
                         ) {
                             Text("Cancel")
                         }
@@ -329,7 +377,8 @@ fun AddEditAccountDialog(
                             },
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF418E8C)
+                                containerColor = currentTheme.getAccent(isDarkMode),
+                                contentColor = Color.White
                             )
                         ) {
                             Text(if (isEdit) "Save" else "Add")

@@ -77,7 +77,9 @@ fun AnalysisScreen(
         // View Type Selector
         ViewTypeSelector(
             selectedViewType = uiState.selectedViewType,
-            onViewTypeSelected = { viewModel.setViewType(it) }
+            onViewTypeSelected = { viewModel.setViewType(it) },
+            currentTheme = currentTheme,
+            isDarkMode = isDarkMode
         )
 
         // Content based on selected view type
@@ -379,7 +381,9 @@ fun StatColumn(label: String, amount: Double, color: Color, currencySymbol: Stri
 @Composable
 fun ViewTypeSelector(
     selectedViewType: AnalysisViewType,
-    onViewTypeSelected: (AnalysisViewType) -> Unit
+    onViewTypeSelected: (AnalysisViewType) -> Unit,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -387,7 +391,7 @@ fun ViewTypeSelector(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        color = MaterialTheme.colorScheme.surface,
+        color = currentTheme.getSurface(isDarkMode),
         shape = RoundedCornerShape(12.dp)
     ) {
         ExposedDropdownMenuBox(
@@ -400,7 +404,16 @@ fun ViewTypeSelector(
                 readOnly = true,
                 label = { Text("View Type") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = currentTheme.getText(isDarkMode),
+                    unfocusedTextColor = currentTheme.getText(isDarkMode),
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedBorderColor = currentTheme.getAccent(isDarkMode),
+                    unfocusedBorderColor = currentTheme.getBorder(isDarkMode),
+                    focusedLabelColor = currentTheme.getAccent(isDarkMode),
+                    unfocusedLabelColor = currentTheme.getInactive(isDarkMode)
+                ),
                 modifier = Modifier
                     .menuAnchor()
                     .fillMaxWidth()
@@ -408,11 +421,12 @@ fun ViewTypeSelector(
 
             ExposedDropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.background(currentTheme.getSurface(isDarkMode))
             ) {
                 AnalysisViewType.values().forEach { viewType ->
                     DropdownMenuItem(
-                        text = { Text(viewType.displayName()) },
+                        text = { Text(viewType.displayName(), color = currentTheme.getText(isDarkMode)) },
                         onClick = {
                             onViewTypeSelected(viewType)
                             expanded = false

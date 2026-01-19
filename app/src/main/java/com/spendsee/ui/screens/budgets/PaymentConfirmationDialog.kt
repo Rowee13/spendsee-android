@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -20,6 +21,8 @@ import compose.icons.feathericons.Check
 import compose.icons.feathericons.ChevronRight
 import com.spendsee.data.local.entities.Account
 import com.spendsee.data.local.entities.Budget
+import com.spendsee.managers.ThemeManager
+import com.spendsee.ui.theme.ThemeColors
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -37,6 +40,11 @@ fun PaymentConfirmationDialog(
         date: Long
     ) -> Unit
 ) {
+    val context = LocalContext.current
+    val themeManager = remember { ThemeManager.getInstance(context) }
+    val currentTheme by themeManager.currentTheme.collectAsState()
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
+
     var actualAmount by remember { mutableStateOf(String.format("%.2f", plannedAmount)) }
     var selectedAccount by remember { mutableStateOf<Account?>(accounts.firstOrNull()) }
     var date by remember { mutableStateOf(budget.dueDate ?: System.currentTimeMillis()) }
@@ -63,7 +71,7 @@ fun PaymentConfirmationDialog(
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = Color(0xFFEFFFFF)
+            color = currentTheme.getBackground(isDarkMode)
         ) {
             Column(
                 modifier = Modifier
@@ -73,7 +81,7 @@ fun PaymentConfirmationDialog(
                 // Top Bar
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFFDAF4F3),
+                    color = currentTheme.getSurface(isDarkMode),
                     shadowElevation = 0.dp
                 ) {
                     Row(
@@ -84,13 +92,14 @@ fun PaymentConfirmationDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         TextButton(onClick = onDismiss) {
-                            Text("Cancel", fontSize = 17.sp)
+                            Text("Cancel", fontSize = 17.sp, color = currentTheme.getAccent(isDarkMode))
                         }
 
                         Text(
                             text = "Confirm Payment",
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            color = currentTheme.getText(isDarkMode)
                         )
 
                         TextButton(
@@ -105,7 +114,8 @@ fun PaymentConfirmationDialog(
                             Text(
                                 "Create Transaction",
                                 fontSize = 17.sp,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (isFormValid) currentTheme.getAccent(isDarkMode) else currentTheme.getInactive(isDarkMode)
                             )
                         }
                     }
@@ -125,12 +135,12 @@ fun PaymentConfirmationDialog(
                             text = "Budget Information",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = currentTheme.getAccent(isDarkMode)
                         )
 
-                        InfoRow("Budget", budget.name)
-                        InfoRow("Category", budget.category)
-                        InfoRow("Budget Amount", "$currencySymbol${String.format("%.2f", plannedAmount)}")
+                        InfoRow("Budget", budget.name, currentTheme.getInactive(isDarkMode), currentTheme.getText(isDarkMode))
+                        InfoRow("Category", budget.category, currentTheme.getInactive(isDarkMode), currentTheme.getText(isDarkMode))
+                        InfoRow("Budget Amount", "$currencySymbol${String.format("%.2f", plannedAmount)}", currentTheme.getInactive(isDarkMode), currentTheme.getText(isDarkMode))
                     }
 
                     Divider()
@@ -140,21 +150,30 @@ fun PaymentConfirmationDialog(
                         Text(
                             text = "Actual Amount",
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            color = currentTheme.getText(isDarkMode)
                         )
                         Text(
                             text = "Edit if the actual payment amount differs from the budget amount",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = currentTheme.getInactive(isDarkMode)
                         )
                         OutlinedTextField(
                             value = actualAmount,
                             onValueChange = { actualAmount = it },
                             modifier = Modifier.fillMaxWidth(),
-                            leadingIcon = { Text(currencySymbol) },
-                            placeholder = { Text("Amount") },
+                            leadingIcon = { Text(currencySymbol, color = currentTheme.getText(isDarkMode)) },
+                            placeholder = { Text("Amount", color = currentTheme.getInactive(isDarkMode)) },
                             singleLine = true,
-                            shape = RoundedCornerShape(8.dp)
+                            shape = RoundedCornerShape(8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedContainerColor = currentTheme.getSurface(isDarkMode),
+                                focusedContainerColor = currentTheme.getSurface(isDarkMode),
+                                unfocusedTextColor = currentTheme.getText(isDarkMode),
+                                focusedTextColor = currentTheme.getText(isDarkMode),
+                                unfocusedBorderColor = currentTheme.getBorder(isDarkMode),
+                                focusedBorderColor = currentTheme.getAccent(isDarkMode)
+                            )
                         )
                     }
 
@@ -165,21 +184,25 @@ fun PaymentConfirmationDialog(
                         Text(
                             text = "Account",
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            color = currentTheme.getText(isDarkMode)
                         )
-                        
+
                         if (accounts.isEmpty()) {
                             Text(
                                 text = "No accounts available",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = currentTheme.getInactive(isDarkMode)
                             )
                         } else {
                             OutlinedCard(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable { showAccountPicker = true },
-                                shape = RoundedCornerShape(8.dp)
+                                shape = RoundedCornerShape(8.dp),
+                                colors = CardDefaults.outlinedCardColors(
+                                    containerColor = currentTheme.getSurface(isDarkMode)
+                                )
                             ) {
                                 Row(
                                     modifier = Modifier
@@ -191,16 +214,16 @@ fun PaymentConfirmationDialog(
                                     Text(
                                         text = selectedAccount?.name ?: "Select Account",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = if (selectedAccount != null) 
-                                            MaterialTheme.colorScheme.onSurface 
-                                        else 
-                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = if (selectedAccount != null)
+                                            currentTheme.getText(isDarkMode)
+                                        else
+                                            currentTheme.getInactive(isDarkMode)
                                     )
                                     Icon(
                                         imageVector = FeatherIcons.ChevronRight,
                                         contentDescription = null,
                                         modifier = Modifier.size(16.dp),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        tint = currentTheme.getInactive(isDarkMode)
                                     )
                                 }
                             }
@@ -214,9 +237,10 @@ fun PaymentConfirmationDialog(
                         Text(
                             text = "Payment Date",
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            color = currentTheme.getText(isDarkMode)
                         )
-                        
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -224,7 +248,11 @@ fun PaymentConfirmationDialog(
                             OutlinedButton(
                                 onClick = { showDatePicker = true },
                                 modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(8.dp)
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = currentTheme.getSurface(isDarkMode),
+                                    contentColor = currentTheme.getText(isDarkMode)
+                                )
                             ) {
                                 Text(
                                     SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(date)),
@@ -235,7 +263,11 @@ fun PaymentConfirmationDialog(
                             OutlinedButton(
                                 onClick = { showTimePicker = true },
                                 modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(8.dp)
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = currentTheme.getSurface(isDarkMode),
+                                    contentColor = currentTheme.getText(isDarkMode)
+                                )
                             ) {
                                 Text(
                                     SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(date)),
@@ -253,10 +285,10 @@ fun PaymentConfirmationDialog(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(8.dp),
                             colors = CardDefaults.outlinedCardColors(
-                                containerColor = if (balanceAfterPayment < 0) 
-                                    Color.Red.copy(alpha = 0.1f) 
-                                else 
-                                    MaterialTheme.colorScheme.surfaceVariant
+                                containerColor = if (balanceAfterPayment < 0)
+                                    Color.Red.copy(alpha = 0.1f)
+                                else
+                                    currentTheme.getSurface(isDarkMode)
                             )
                         ) {
                             Row(
@@ -268,15 +300,16 @@ fun PaymentConfirmationDialog(
                             ) {
                                 Text(
                                     text = "Account Balance After",
-                                    style = MaterialTheme.typography.bodyMedium
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = currentTheme.getText(isDarkMode)
                                 )
                                 Text(
                                     text = "$currencySymbol${String.format("%.2f", balanceAfterPayment)}",
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (balanceAfterPayment >= 0) 
-                                        MaterialTheme.colorScheme.onSurface 
-                                    else 
+                                    color = if (balanceAfterPayment >= 0)
+                                        currentTheme.getText(isDarkMode)
+                                    else
                                         Color.Red
                                 )
                             }
@@ -398,7 +431,7 @@ fun PaymentConfirmationDialog(
 }
 
 @Composable
-private fun InfoRow(label: String, value: String) {
+private fun InfoRow(label: String, value: String, labelColor: Color = Color.Unspecified, valueColor: Color = Color.Unspecified) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
@@ -406,12 +439,13 @@ private fun InfoRow(label: String, value: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = labelColor
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
+            color = valueColor
         )
     }
 }
