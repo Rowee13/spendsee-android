@@ -56,6 +56,7 @@ fun SettingsScreen() {
     val isPremium by premiumManager.isPremium.collectAsState()
     val selectedCurrency by currencyManager.selectedCurrency.collectAsState()
     val currentTheme by themeManager.currentTheme.collectAsState()
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
     var isDeveloperMode by remember { mutableStateOf(premiumManager.isDeveloperModeEnabled()) }
     var showDeveloperMode by remember { mutableStateOf(premiumManager.isDeveloperModeEnabled()) }
     var showPremiumPaywall by remember { mutableStateOf(false) }
@@ -174,6 +175,16 @@ fun SettingsScreen() {
                     title = "Theme",
                     subtitle = currentTheme.name,
                     onClick = { showThemeSelector = true }
+                )
+            }
+
+            item {
+                SettingsSwitchItem(
+                    icon = FeatherIcons.Moon,
+                    title = "Dark Mode",
+                    subtitle = if (isDarkMode) "Enabled" else "Disabled",
+                    checked = isDarkMode,
+                    onCheckedChange = { themeManager.setDarkMode(it) }
                 )
             }
 

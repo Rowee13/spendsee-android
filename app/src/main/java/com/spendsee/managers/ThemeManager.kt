@@ -13,9 +13,16 @@ class ThemeManager private constructor(context: Context) {
     private val _currentTheme = MutableStateFlow(loadTheme())
     val currentTheme: StateFlow<ThemeColors> = _currentTheme.asStateFlow()
 
+    private val _isDarkMode = MutableStateFlow(loadDarkMode())
+    val isDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()
+
     private fun loadTheme(): ThemeColors {
         val themeId = prefs.getString("selected_theme", "ocean") ?: "ocean"
         return ThemeColorSchemes.themeById(themeId)
+    }
+
+    private fun loadDarkMode(): Boolean {
+        return prefs.getBoolean("dark_mode", false)
     }
 
     fun setTheme(themeId: String) {
@@ -27,6 +34,11 @@ class ThemeManager private constructor(context: Context) {
     fun setTheme(theme: ThemeColors) {
         _currentTheme.value = theme
         prefs.edit().putString("selected_theme", theme.id).apply()
+    }
+
+    fun setDarkMode(enabled: Boolean) {
+        _isDarkMode.value = enabled
+        prefs.edit().putBoolean("dark_mode", enabled).apply()
     }
 
     companion object {

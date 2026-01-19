@@ -36,13 +36,14 @@ fun MainNavigation() {
     val context = LocalContext.current
     val themeManager = remember { ThemeManager.getInstance(context) }
     val currentTheme by themeManager.currentTheme.collectAsState()
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
 
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
     Scaffold(
-        containerColor = currentTheme.background,
+        containerColor = currentTheme.getBackground(isDarkMode),
         bottomBar = {
             // Custom floating bottom navigation bar
             Box(
@@ -56,7 +57,7 @@ fun MainNavigation() {
                         .fillMaxWidth()
                         .height(64.dp),
                     shape = RoundedCornerShape(32.dp),  // Fully rounded ends
-                    color = currentTheme.surface,
+                    color = currentTheme.getSurface(isDarkMode),
                     shadowElevation = 4.dp
                 ) {
                     Row(
@@ -90,13 +91,13 @@ fun MainNavigation() {
                                 Icon(
                                     imageVector = screen.icon,
                                     contentDescription = screen.title,
-                                    tint = if (isSelected) currentTheme.accent else currentTheme.inactive,
+                                    tint = if (isSelected) currentTheme.getAccent(isDarkMode) else currentTheme.getInactive(isDarkMode),
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = screen.title,
-                                    color = if (isSelected) currentTheme.accent else currentTheme.inactive,
+                                    color = if (isSelected) currentTheme.getAccent(isDarkMode) else currentTheme.getInactive(isDarkMode),
                                     fontSize = 11.sp,
                                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                                 )

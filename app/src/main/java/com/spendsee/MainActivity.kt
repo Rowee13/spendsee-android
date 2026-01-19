@@ -28,6 +28,7 @@ class MainActivity : ComponentActivity() {
             val themeManager = remember { ThemeManager.getInstance(this) }
             val passcodeManager = remember { PasscodeManager.getInstance(this) }
             val currentTheme by themeManager.currentTheme.collectAsState()
+            val isDarkMode by themeManager.isDarkMode.collectAsState()
 
             // Track if app is locked
             var isLocked by remember {
@@ -35,21 +36,21 @@ class MainActivity : ComponentActivity() {
             }
 
             SpendSeeTheme {
-                // Set status bar and navigation bar colors dynamically based on theme
+                // Set status bar and navigation bar colors dynamically based on theme and dark mode
                 SideEffect {
-                    window.statusBarColor = currentTheme.background.toArgb()
-                    window.navigationBarColor = currentTheme.background.toArgb()
+                    window.statusBarColor = currentTheme.getBackground(isDarkMode).toArgb()
+                    window.navigationBarColor = currentTheme.getBackground(isDarkMode).toArgb()
 
-                    // Light status bar icons (dark icons on light background)
+                    // Light status bar icons for light mode, dark icons for dark mode
                     WindowCompat.getInsetsController(window, window.decorView).apply {
-                        isAppearanceLightStatusBars = true
-                        isAppearanceLightNavigationBars = true
+                        isAppearanceLightStatusBars = !isDarkMode
+                        isAppearanceLightNavigationBars = !isDarkMode
                     }
                 }
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = currentTheme.background
+                    color = currentTheme.getBackground(isDarkMode)
                 ) {
                     if (isLocked) {
                         PasscodeLockScreen(
