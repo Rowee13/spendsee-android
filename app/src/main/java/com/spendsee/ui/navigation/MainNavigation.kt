@@ -55,10 +55,11 @@ fun MainNavigation() {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(64.dp),
-                    shape = RoundedCornerShape(32.dp),  // Fully rounded ends
+                        .height(64.dp)
+                        .clip(RoundedCornerShape(32.dp)),
+                    shape = RoundedCornerShape(32.dp),
                     color = currentTheme.getSurface(isDarkMode),
-                    shadowElevation = 4.dp
+                    shadowElevation = 0.dp
                 ) {
                     Row(
                         modifier = Modifier
