@@ -157,6 +157,25 @@ object ThemeColorSchemes {
         darkGradientEnd = Color(0xFFB8F0DD)
     )
 
+    // Sakura Theme (Soft pink-lavender)
+    val Sakura = ThemeColors(
+        id = "sakura",
+        name = "Sakura",
+        isPremium = true,
+        // Light mode - matching the soft pink/lavender UI
+        background = Color(0xFFFFF0F8),
+        surface = Color(0xFFF5D4E8),
+        border = Color(0xFFE8B4D4),
+        accent = Color(0xFFC77BB8),
+        inactive = Color(0xFF676767),
+        gradientStart = Color(0xFFE8A3D0),
+        gradientEnd = Color(0xFFD4B3E8),
+        // Dark mode
+        darkAccent = Color(0xFFE89BCE),
+        darkGradientStart = Color(0xFFF5BBE0),
+        darkGradientEnd = Color(0xFFE8CCF5)
+    )
+
     // Monochrome Theme
     val Monochrome = ThemeColors(
         id = "monochrome",
@@ -204,6 +223,7 @@ object ThemeColorSchemes {
         Forest,
         Lavender,
         Mint,
+        Sakura,
         Monochrome
     )
 
