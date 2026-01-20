@@ -252,7 +252,10 @@ fun UnifiedAccountsHeaderSection(
             style = MaterialTheme.typography.displayLarge.copy(fontSize = 42.sp),
             fontWeight = FontWeight.Bold,
             color = currentTheme.getText(isDarkMode),
-            modifier = Modifier.padding(vertical = 8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            textAlign = TextAlign.Center
         )
 
         // Expenses and Income Stats (2-column cards)
