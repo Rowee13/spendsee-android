@@ -630,7 +630,7 @@ fun AccountDetailSheet(
                 )
             }
 
-            HorizontalDivider(
+            Divider(
                 thickness = 1.dp,
                 color = currentTheme.getBorder(isDarkMode)
             )
@@ -690,7 +690,7 @@ fun AccountDetailSheet(
                             isDarkMode = isDarkMode
                         )
                         if (transaction != accountTransactions.last()) {
-                            HorizontalDivider(
+                            Divider(
                                 thickness = 1.dp,
                                 color = currentTheme.getBorder(isDarkMode).copy(alpha = 0.3f)
                             )
