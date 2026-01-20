@@ -67,10 +67,10 @@ object ThemeColorSchemes {
         id = "rose",
         name = "Rose",
         isPremium = true,
-        // Light mode
-        background = Color(0xFFFFEFF5),
-        surface = Color(0xFFF8DBE8),
-        border = Color(0xFFE8B4CD),
+        // Light mode - More red tones to differentiate from Sakura
+        background = Color(0xFFFFEBEE),
+        surface = Color(0xFFFFCDD2),
+        border = Color(0xFFEF9A9A),
         accent = Color(0xFFC84B7B),
         inactive = Color(0xFF676767),
         gradientStart = Color(0xFFE88BA8),
