@@ -12,11 +12,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.foundation.layout.WindowInsets
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.*
 import androidx.compose.runtime.*
@@ -80,6 +82,7 @@ fun RecordsScreen(
     var isProcessingReceipt by remember { mutableStateOf(false) }
     var showPremiumPaywall by remember { mutableStateOf(false) }
     var fabExpanded by remember { mutableStateOf(false) }
+    var fabVisible by remember { mutableStateOf(true) }
 
     // Camera permission launcher
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
@@ -95,11 +98,18 @@ fun RecordsScreen(
     val categories by CategoryRepository.getInstance(context).getAllCategories().collectAsState(initial = emptyList())
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            AnimatedVisibility(
+                visible = fabVisible,
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut()
             ) {
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
                 // Scan Receipt FAB (shown when expanded)
                 AnimatedVisibility(
                     visible = fabExpanded,
@@ -177,16 +187,17 @@ fun RecordsScreen(
                     }
                 }
 
-                // Main FAB (always visible) - Updated color from mockup
-                FloatingActionButton(
-                    onClick = { fabExpanded = !fabExpanded },
-                    containerColor = currentTheme.getAccent(isDarkMode),  // Exact color from mockup
-                    contentColor = Color.White
-                ) {
-                    Icon(
-                        imageVector = if (fabExpanded) FeatherIcons.X else Icons.Default.Add,
-                        contentDescription = if (fabExpanded) "Close menu" else "Add transaction"
-                    )
+                    // Main FAB (always visible) - Updated color from mockup
+                    FloatingActionButton(
+                        onClick = { fabExpanded = !fabExpanded },
+                        containerColor = currentTheme.getAccent(isDarkMode),  // Exact color from mockup
+                        contentColor = Color.White
+                    ) {
+                        Icon(
+                            imageVector = if (fabExpanded) FeatherIcons.X else Icons.Default.Add,
+                            contentDescription = if (fabExpanded) "Close menu" else "Add transaction"
+                        )
+                    }
                 }
             }
         }
@@ -233,7 +244,10 @@ fun RecordsScreen(
                     onDeleteTransaction = { viewModel.deleteTransaction(it) },
                     currencySymbol = selectedCurrency.symbol,
                     currentTheme = currentTheme,
-                    isDarkMode = isDarkMode
+                    isDarkMode = isDarkMode,
+                    onScrollChanged = { isScrollingDown ->
+                        fabVisible = !isScrollingDown
+                    }
                 )
             }
 
@@ -642,9 +656,25 @@ fun TransactionList(
     onDeleteTransaction: (Transaction) -> Unit,
     currencySymbol: String,
     currentTheme: ThemeColors,
-    isDarkMode: Boolean
+    isDarkMode: Boolean,
+    onScrollChanged: (Boolean) -> Unit = {}
 ) {
+    val listState = rememberLazyListState()
+    var previousScrollOffset by remember { mutableStateOf(0) }
+
+    // Detect scroll direction
+    LaunchedEffect(listState.firstVisibleItemScrollOffset) {
+        val currentOffset = listState.firstVisibleItemScrollOffset
+        val isScrollingDown = currentOffset > previousScrollOffset
+
+        if (currentOffset != previousScrollOffset) {
+            onScrollChanged(isScrollingDown)
+            previousScrollOffset = currentOffset
+        }
+    }
+
     LazyColumn(
+        state = listState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
     ) {

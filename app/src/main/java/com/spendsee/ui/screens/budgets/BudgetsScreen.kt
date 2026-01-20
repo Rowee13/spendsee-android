@@ -8,11 +8,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.foundation.layout.WindowInsets
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.*
 import androidx.compose.runtime.*
@@ -77,15 +79,27 @@ fun BudgetsScreen(
     var showPremiumPaywall by remember { mutableStateOf(false) }
     var showPaymentConfirmation by remember { mutableStateOf(false) }
     var budgetToPayFor by remember { mutableStateOf<BudgetWithDetails?>(null) }
+    var fabVisible by remember { mutableStateOf(true) }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddBudget = true },
-                containerColor = currentTheme.getAccent(isDarkMode),
-                contentColor = Color.White
+            AnimatedVisibility(
+                visible = fabVisible,
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut()
             ) {
-                Icon(FeatherIcons.Plus, contentDescription = "Add Budget")
+                Box(
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    FloatingActionButton(
+                        onClick = { showAddBudget = true },
+                        containerColor = currentTheme.getAccent(isDarkMode),
+                        contentColor = Color.White
+                    ) {
+                        Icon(FeatherIcons.Plus, contentDescription = "Add Budget")
+                    }
+                }
             }
         }
     ) { paddingValues ->
@@ -197,7 +211,10 @@ fun BudgetsScreen(
                         isPremium = isPremium,
                         onShowPremiumPaywall = { showPremiumPaywall = true },
                         currentTheme = currentTheme,
-                        isDarkMode = isDarkMode
+                        isDarkMode = isDarkMode,
+                        onScrollChanged = { isScrollingDown ->
+                            fabVisible = !isScrollingDown
+                        }
                     )
                 }
             }
@@ -593,9 +610,25 @@ fun BudgetsList(
     isPremium: Boolean,
     onShowPremiumPaywall: () -> Unit,
     currentTheme: ThemeColors,
-    isDarkMode: Boolean
+    isDarkMode: Boolean,
+    onScrollChanged: (Boolean) -> Unit = {}
 ) {
+    val listState = rememberLazyListState()
+    var previousScrollOffset by remember { mutableStateOf(0) }
+
+    // Detect scroll direction
+    LaunchedEffect(listState.firstVisibleItemScrollOffset) {
+        val currentOffset = listState.firstVisibleItemScrollOffset
+        val isScrollingDown = currentOffset > previousScrollOffset
+
+        if (currentOffset != previousScrollOffset) {
+            onScrollChanged(isScrollingDown)
+            previousScrollOffset = currentOffset
+        }
+    }
+
     LazyColumn(
+        state = listState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
     ) {

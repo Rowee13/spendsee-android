@@ -17,6 +17,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -44,12 +50,14 @@ fun MainNavigation() {
 
     Scaffold(
         containerColor = currentTheme.getBackground(isDarkMode),
+        contentWindowInsets = WindowInsets.statusBars,
         bottomBar = {
-            // Custom floating bottom navigation bar
+            // Custom floating bottom navigation bar with proper WindowInsets handling
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 24.dp),
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Surface(
