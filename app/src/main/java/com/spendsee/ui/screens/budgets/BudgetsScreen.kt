@@ -700,12 +700,13 @@ fun BudgetCard(
                     Text(
                         text = budgetWithDetails.budget.name,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        color = currentTheme.getText(isDarkMode)
                     )
                     Text(
                         text = budgetWithDetails.budget.category,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = currentTheme.getInactive(isDarkMode)
                     )
                 }
 
@@ -713,14 +714,14 @@ fun BudgetCard(
                     Icon(
                         imageVector = if (expanded) FeatherIcons.ChevronUp else FeatherIcons.ChevronDown,
                         contentDescription = if (expanded) "Collapse" else "Expand",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = currentTheme.getInactive(isDarkMode)
                     )
 
                     IconButton(onClick = { showMenu = true }) {
                         Icon(
                             FeatherIcons.MoreVertical,
                             contentDescription = "More Options",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = currentTheme.getInactive(isDarkMode)
                         )
                     }
                 }
@@ -750,12 +751,13 @@ fun BudgetCard(
                     Text(
                         text = "Planned",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = currentTheme.getInactive(isDarkMode)
                     )
                     Text(
                         text = formatCurrency(budgetWithDetails.planned, currencySymbol),
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        color = currentTheme.getText(isDarkMode)
                     )
                 }
 
@@ -763,13 +765,13 @@ fun BudgetCard(
                     Text(
                         text = "Spent",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = currentTheme.getInactive(isDarkMode)
                     )
                     Text(
                         text = formatCurrency(budgetWithDetails.spent, currencySymbol),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
-                        color = if (isOverBudget) Color(0xFFEF5350) else MaterialTheme.colorScheme.onSurface
+                        color = if (isOverBudget) Color(0xFFEF5350) else currentTheme.getText(isDarkMode)
                     )
                 }
 
@@ -777,7 +779,7 @@ fun BudgetCard(
                     Text(
                         text = "Remaining",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = currentTheme.getInactive(isDarkMode)
                     )
                     Text(
                         text = formatCurrency(budgetWithDetails.remaining, currencySymbol),
@@ -864,14 +866,15 @@ fun BudgetCard(
                         Text(
                             text = "Budget Items",
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            color = currentTheme.getText(isDarkMode)
                         )
 
                         IconButton(onClick = onAddItem) {
                             Icon(
                                 FeatherIcons.Plus,
                                 contentDescription = "Add Budget Item",
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = currentTheme.getAccent(isDarkMode)
                             )
                         }
                     }
@@ -882,7 +885,7 @@ fun BudgetCard(
                         Text(
                             text = "No budget items yet",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = currentTheme.getInactive(isDarkMode),
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                     } else {
@@ -891,9 +894,9 @@ fun BudgetCard(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 4.dp)
-                                    .border(1.dp, Color(0xFFAAD4D3), RoundedCornerShape(8.dp)),
+                                    .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(8.dp)),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = Color(0xFFEFFFFF)
+                                    containerColor = currentTheme.getBackground(isDarkMode)
                                 ),
                                 shape = RoundedCornerShape(8.dp),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -913,13 +916,14 @@ fun BudgetCard(
                                         Text(
                                             text = item.name,
                                             style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Medium
+                                            fontWeight = FontWeight.Medium,
+                                            color = currentTheme.getText(isDarkMode)
                                         )
                                         if (item.note.isNotEmpty()) {
                                             Text(
                                                 text = item.note,
                                                 style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = currentTheme.getInactive(isDarkMode)
                                             )
                                         }
                                     }
@@ -927,7 +931,8 @@ fun BudgetCard(
                                         Text(
                                             text = formatCurrency(item.amount, currencySymbol),
                                             style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Medium
+                                            fontWeight = FontWeight.Medium,
+                                            color = currentTheme.getText(isDarkMode)
                                         )
                                         if (item.type == "Unplanned") {
                                             Spacer(modifier = Modifier.width(4.dp))
