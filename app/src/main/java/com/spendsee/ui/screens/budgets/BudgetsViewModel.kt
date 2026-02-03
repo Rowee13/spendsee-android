@@ -23,10 +23,16 @@ data class BudgetWithDetails(
     val percentage: Float
 )
 
+enum class BudgetDisplayMode {
+    LIST, CALENDAR
+}
+
 data class BudgetsUiState(
     val selectedMonth: Int = Calendar.getInstance().get(Calendar.MONTH) + 1,
     val selectedYear: Int = Calendar.getInstance().get(Calendar.YEAR),
     val budgetsWithDetails: List<BudgetWithDetails> = emptyList(),
+    val displayMode: BudgetDisplayMode = BudgetDisplayMode.LIST,
+    val selectedCalendarDate: Long? = null,
     val totalAllocated: Double = 0.0,
     val totalSpent: Double = 0.0,
     val totalRemaining: Double = 0.0,
@@ -92,7 +98,22 @@ class BudgetsViewModel(
 
                     _uiState.update {
                         it.copy(
-                            budgetsWithDetails = budgetsWithDetails,
+                            budgetsWithDetails = budgetsWithDetails.sortedWith(
+                                compareBy(
+                                    { budget ->
+                                        // Budgets with null dueDate go to end
+                                        budget.budget.dueDate == null
+                                    },
+                                    { budget ->
+                                        // Sort by dueDate (earliest first)
+                                        budget.budget.dueDate ?: Long.MAX_VALUE
+                                    },
+                                    { budget ->
+                                        // Secondary sort by name (alphabetical)
+                                        budget.budget.name.lowercase()
+                                    }
+                                )
+                            ),
                             totalAllocated = totalAllocated,
                             totalSpent = totalSpent,
                             totalRemaining = totalRemaining,
@@ -121,7 +142,8 @@ class BudgetsViewModel(
         _uiState.update {
             it.copy(
                 selectedMonth = calendar.get(Calendar.MONTH) + 1,
-                selectedYear = calendar.get(Calendar.YEAR)
+                selectedYear = calendar.get(Calendar.YEAR),
+                selectedCalendarDate = null  // Clear filter when changing months
             )
         }
         loadBudgets()
@@ -136,10 +158,42 @@ class BudgetsViewModel(
         _uiState.update {
             it.copy(
                 selectedMonth = calendar.get(Calendar.MONTH) + 1,
-                selectedYear = calendar.get(Calendar.YEAR)
+                selectedYear = calendar.get(Calendar.YEAR),
+                selectedCalendarDate = null  // Clear filter when changing months
             )
         }
         loadBudgets()
+    }
+
+    fun setDisplayMode(mode: BudgetDisplayMode) {
+        _uiState.update {
+            it.copy(
+                displayMode = mode,
+                selectedCalendarDate = null  // Clear filter when switching modes
+            )
+        }
+    }
+
+    fun selectCalendarDate(timestamp: Long?) {
+        _uiState.update { it.copy(selectedCalendarDate = timestamp) }
+    }
+
+    fun getFilteredBudgets(): List<BudgetWithDetails> {
+        val selectedDate = _uiState.value.selectedCalendarDate ?: return _uiState.value.budgetsWithDetails
+
+        return _uiState.value.budgetsWithDetails.filter { budget ->
+            budget.budget.dueDate?.let { dueDate ->
+                isSameDay(dueDate, selectedDate)
+            } ?: false
+        }
+    }
+
+    private fun isSameDay(timestamp1: Long, timestamp2: Long): Boolean {
+        val cal1 = Calendar.getInstance().apply { timeInMillis = timestamp1 }
+        val cal2 = Calendar.getInstance().apply { timeInMillis = timestamp2 }
+
+        return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+               cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
     }
 
     fun addBudget(

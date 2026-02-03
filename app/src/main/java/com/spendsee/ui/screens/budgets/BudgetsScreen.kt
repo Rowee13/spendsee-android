@@ -122,22 +122,78 @@ fun BudgetsScreen(
                 isDarkMode = isDarkMode
             )
 
-            // Budgets List
-            if (uiState.isLoading) {
+            // View Mode TabRow
+            TabRow(
+                selectedTabIndex = if (uiState.displayMode == BudgetDisplayMode.LIST) 0 else 1,
+                containerColor = currentTheme.getSurface(isDarkMode),
+                contentColor = currentTheme.getAccent(isDarkMode),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                indicator = { tabPositions ->
+                    TabRowDefaults.Indicator(
+                        modifier = Modifier,
+                        height = 3.dp,
+                        color = currentTheme.getAccent(isDarkMode)
+                    )
+                }
+            ) {
+                Tab(
+                    selected = uiState.displayMode == BudgetDisplayMode.LIST,
+                    onClick = { viewModel.setDisplayMode(BudgetDisplayMode.LIST) },
+                    text = {
+                        Text(
+                            text = "List",
+                            fontWeight = if (uiState.displayMode == BudgetDisplayMode.LIST) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                )
+                Tab(
+                    selected = uiState.displayMode == BudgetDisplayMode.CALENDAR,
+                    onClick = { viewModel.setDisplayMode(BudgetDisplayMode.CALENDAR) },
+                    text = {
+                        Text(
+                            text = "Calendar",
+                            fontWeight = if (uiState.displayMode == BudgetDisplayMode.CALENDAR) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                )
+            }
+
+            // Content - Switch between List and Calendar
+            when (uiState.displayMode) {
+                BudgetDisplayMode.LIST -> {
+                    // Budgets List
+                    if (uiState.isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
                 }
-            } else if (uiState.budgetsWithDetails.isEmpty()) {
-                EmptyState(
-                    onCopyFromPrevious = { viewModel.copyFromPreviousMonth() },
-                    currentTheme = currentTheme,
-                    isDarkMode = isDarkMode
-                )
-            } else {
-                Column(modifier = Modifier.fillMaxSize()) {
+                    } else {
+                        val filteredBudgets = if (uiState.selectedCalendarDate != null) {
+                            viewModel.getFilteredBudgets()
+                        } else {
+                            uiState.budgetsWithDetails
+                        }
+
+                        if (filteredBudgets.isEmpty() && uiState.selectedCalendarDate != null) {
+                            // Filtered empty state
+                            EmptyFilteredState(
+                                onClearFilter = { viewModel.selectCalendarDate(null) },
+                                currentTheme = currentTheme,
+                                isDarkMode = isDarkMode
+                            )
+                        } else if (uiState.budgetsWithDetails.isEmpty()) {
+                            EmptyState(
+                                onCopyFromPrevious = { viewModel.copyFromPreviousMonth() },
+                                currentTheme = currentTheme,
+                                isDarkMode = isDarkMode
+                            )
+                        } else {
+                            Column(modifier = Modifier.fillMaxSize()) {
                     // Show "Copy Missing Budgets" button if there are missing budgets
                     if (uiState.missingBudgetsCount > 0) {
                         Card(
@@ -183,8 +239,8 @@ fun BudgetsScreen(
                         }
                     }
 
-                    BudgetsList(
-                        budgets = uiState.budgetsWithDetails,
+                                BudgetsList(
+                        budgets = filteredBudgets,
                         onEditBudget = {
                             budgetToEdit = it
                             showEditBudget = true
@@ -215,6 +271,20 @@ fun BudgetsScreen(
                         onScrollChanged = { isScrollingDown ->
                             fabVisible = !isScrollingDown
                         }
+                    )
+                            }
+                        }
+                    }
+                }
+
+                BudgetDisplayMode.CALENDAR -> {
+                    BudgetCalendarView(
+                        selectedDate = Pair(uiState.selectedMonth, uiState.selectedYear),
+                        budgets = uiState.budgetsWithDetails,
+                        selectedCalendarDate = uiState.selectedCalendarDate,
+                        onDateSelected = { viewModel.selectCalendarDate(it) },
+                        currentTheme = currentTheme,
+                        isDarkMode = isDarkMode
                     )
                 }
             }
@@ -1056,6 +1126,55 @@ fun EmptyState(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Copy from Previous Month")
+            }
+        }
+    }
+}
+
+@Composable
+fun EmptyFilteredState(
+    onClearFilter: () -> Unit,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(currentTheme.getBackground(isDarkMode)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Icon(
+                imageVector = FeatherIcons.Calendar,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = currentTheme.getText(isDarkMode).copy(alpha = 0.3f)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "No Budgets Due",
+                style = MaterialTheme.typography.headlineSmall,
+                textAlign = TextAlign.Center,
+                color = currentTheme.getText(isDarkMode)
+            )
+            Text(
+                text = "No budgets are due on this date",
+                style = MaterialTheme.typography.bodyMedium,
+                color = currentTheme.getText(isDarkMode).copy(alpha = 0.6f),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(
+                onClick = onClearFilter,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = currentTheme.getAccent(isDarkMode)
+                )
+            ) {
+                Text("Clear Filter")
             }
         }
     }
