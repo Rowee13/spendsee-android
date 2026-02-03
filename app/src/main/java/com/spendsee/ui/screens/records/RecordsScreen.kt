@@ -42,11 +42,13 @@ import com.spendsee.data.local.entities.Category
 import com.spendsee.data.repository.TransactionRepository
 import com.spendsee.data.repository.AccountRepository
 import com.spendsee.data.repository.CategoryRepository
+import com.spendsee.data.repository.AppNotificationRepository
 import com.spendsee.managers.CurrencyManager
 import com.spendsee.managers.PremiumManager
 import com.spendsee.managers.ReceiptParser
 import com.spendsee.managers.ThemeManager
 import com.spendsee.ui.screens.camera.CameraScreen
+import com.spendsee.ui.screens.notifications.NotificationCenterScreen
 import com.spendsee.ui.screens.premium.PremiumPaywallScreen
 import com.spendsee.ui.theme.ThemeColors
 import kotlinx.coroutines.launch
@@ -83,6 +85,9 @@ fun RecordsScreen(
     var showPremiumPaywall by remember { mutableStateOf(false) }
     var fabExpanded by remember { mutableStateOf(false) }
     var fabVisible by remember { mutableStateOf(true) }
+    var showNotificationCenter by remember { mutableStateOf(false) }
+    var showTransactionDetail by remember { mutableStateOf(false) }
+    var selectedTransaction by remember { mutableStateOf<Transaction?>(null) }
 
     // Camera permission launcher
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
@@ -96,6 +101,9 @@ fun RecordsScreen(
     // Load accounts and categories
     val accounts by AccountRepository.getInstance(context).getAllAccounts().collectAsState(initial = emptyList())
     val categories by CategoryRepository.getInstance(context).getAllCategories().collectAsState(initial = emptyList())
+
+    // Load unread notification count
+    val unreadCount by AppNotificationRepository.getInstance(context).getUnreadCount().collectAsState(initial = 0)
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -218,7 +226,9 @@ fun RecordsScreen(
                 net = uiState.netTotal,
                 currencySymbol = selectedCurrency.symbol,
                 currentTheme = currentTheme,
-                isDarkMode = isDarkMode
+                isDarkMode = isDarkMode,
+                unreadNotificationCount = unreadCount,
+                onNotificationClick = { showNotificationCenter = true }
             )
 
             // Transaction List
@@ -237,6 +247,10 @@ fun RecordsScreen(
             } else {
                 TransactionList(
                     groupedTransactions = uiState.groupedTransactions,
+                    onTransactionClick = { transaction ->
+                        selectedTransaction = transaction
+                        showTransactionDetail = true
+                    },
                     onEditTransaction = { transaction ->
                         transactionToEdit = transaction
                         showAddTransaction = true
@@ -382,6 +396,55 @@ fun RecordsScreen(
             }
         )
     }
+
+    // Notification Center
+    if (showNotificationCenter) {
+        val notificationSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(
+            onDismissRequest = { showNotificationCenter = false },
+            sheetState = notificationSheetState,
+            containerColor = currentTheme.getBackground(isDarkMode)
+        ) {
+            NotificationCenterScreen(
+                onNavigateToBudget = { budgetId ->
+                    showNotificationCenter = false
+                    // TODO: Navigate to budget screen with budgetId
+                },
+                onClose = { showNotificationCenter = false }
+            )
+        }
+    }
+
+    // Transaction Detail Bottom Sheet
+    selectedTransaction?.let { transaction ->
+        if (showTransactionDetail) {
+            val account = accounts.firstOrNull { it.id == transaction.accountId }
+            val toAccount = accounts.firstOrNull { it.id == transaction.toAccountId }
+            val category = categories.firstOrNull { it.name == transaction.category }
+
+            TransactionDetailBottomSheet(
+                transaction = transaction,
+                account = account,
+                toAccount = toAccount,
+                budget = null, // TODO: Fetch budget if needed
+                category = category,
+                onDismiss = {
+                    showTransactionDetail = false
+                    selectedTransaction = null
+                },
+                onEdit = {
+                    showTransactionDetail = false
+                    transactionToEdit = transaction
+                    showAddTransaction = true
+                },
+                onDelete = {
+                    showTransactionDetail = false
+                    selectedTransaction = null
+                    viewModel.deleteTransaction(transaction)
+                }
+            )
+        }
+    }
 }
 
 @Composable
@@ -395,7 +458,9 @@ fun UnifiedHeaderSection(
     net: Double,
     currencySymbol: String,
     currentTheme: ThemeColors,
-    isDarkMode: Boolean
+    isDarkMode: Boolean,
+    unreadNotificationCount: Int = 0,
+    onNotificationClick: () -> Unit = {}
 ) {
     val calendar = Calendar.getInstance().apply {
         set(Calendar.MONTH, selectedMonth - 1)
@@ -415,20 +480,33 @@ fun UnifiedHeaderSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.app_logo),
-                contentDescription = "SpendSee Logo",
-                modifier = Modifier.size(28.dp),
-                colorFilter = ColorFilter.tint(if (isDarkMode) Color.White else Color(0xFF1A1A1A))
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "SpendSee",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = if (isDarkMode) Color.White else Color(0xFF1A1A1A)
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.app_logo),
+                    contentDescription = "SpendSee Logo",
+                    modifier = Modifier.size(28.dp),
+                    colorFilter = ColorFilter.tint(if (isDarkMode) Color.White else Color(0xFF1A1A1A))
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "SpendSee",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isDarkMode) Color.White else Color(0xFF1A1A1A)
+                )
+            }
+
+            // Notification Bell Button
+            NotificationBellButton(
+                unreadCount = unreadNotificationCount,
+                onClick = onNotificationClick,
+                currentTheme = currentTheme,
+                isDarkMode = isDarkMode
             )
         }
 
@@ -652,6 +730,7 @@ fun StatColumn(
 @Composable
 fun TransactionList(
     groupedTransactions: Map<Long, List<Transaction>>,
+    onTransactionClick: (Transaction) -> Unit,
     onEditTransaction: (Transaction) -> Unit,
     onDeleteTransaction: (Transaction) -> Unit,
     currencySymbol: String,
@@ -690,6 +769,7 @@ fun TransactionList(
             items(transactions) { transaction ->
                 TransactionRow(
                     transaction = transaction,
+                    onClick = { onTransactionClick(transaction) },
                     onEdit = { onEditTransaction(transaction) },
                     onDelete = { onDeleteTransaction(transaction) },
                     currencySymbol = currencySymbol,
@@ -727,6 +807,7 @@ fun DateHeader(
 @Composable
 fun TransactionRow(
     transaction: Transaction,
+    onClick: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     currencySymbol: String,
@@ -740,7 +821,7 @@ fun TransactionRow(
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp))
-            .clickable { showMenu = true },
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = currentTheme.getSurface(isDarkMode)
         ),
@@ -901,5 +982,38 @@ private fun getTransactionIcon(type: String): androidx.compose.ui.graphics.vecto
         "expense" -> FeatherIcons.ArrowDownCircle
         "transfer" -> FeatherIcons.RefreshCw
         else -> FeatherIcons.DollarSign
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NotificationBellButton(
+    unreadCount: Int,
+    onClick: () -> Unit,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
+) {
+    IconButton(onClick = onClick) {
+        BadgedBox(
+            badge = {
+                if (unreadCount > 0) {
+                    Badge(
+                        containerColor = Color.Red,
+                        contentColor = Color.White
+                    ) {
+                        Text(
+                            text = if (unreadCount > 9) "9+" else unreadCount.toString(),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+            }
+        ) {
+            Icon(
+                imageVector = Icons.Default.Notifications,
+                contentDescription = "Notifications",
+                tint = currentTheme.getText(isDarkMode)
+            )
+        }
     }
 }

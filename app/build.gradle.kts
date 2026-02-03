@@ -128,6 +128,9 @@ dependencies {
     // WorkManager (for notifications)
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
+    // ShortcutBadger (for app icon badge)
+    implementation("me.leolin:ShortcutBadger:1.1.22")
+
     // Biometric
     implementation("androidx.biometric:biometric:1.2.0-alpha05")
 
