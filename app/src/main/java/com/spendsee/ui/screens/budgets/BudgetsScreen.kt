@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.foundation.layout.WindowInsets
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.*
@@ -122,32 +123,55 @@ fun BudgetsScreen(
                 isDarkMode = isDarkMode
             )
 
-            // View Mode TabRow
-            TabRow(
-                selectedTabIndex = if (uiState.displayMode == BudgetDisplayMode.LIST) 0 else 1,
-                containerColor = currentTheme.getSurface(isDarkMode),
-                contentColor = currentTheme.getAccent(isDarkMode)
+            // View Mode TabRow - Centered and Compact
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.Center
             ) {
-                Tab(
-                    selected = uiState.displayMode == BudgetDisplayMode.LIST,
-                    onClick = { viewModel.setDisplayMode(BudgetDisplayMode.LIST) },
-                    text = {
-                        Text(
-                            text = "List",
-                            fontWeight = if (uiState.displayMode == BudgetDisplayMode.LIST) FontWeight.Bold else FontWeight.Normal
+                TabRow(
+                    selectedTabIndex = if (uiState.displayMode == BudgetDisplayMode.LIST) 0 else 1,
+                    containerColor = currentTheme.getSurface(isDarkMode),
+                    contentColor = currentTheme.getAccent(isDarkMode),
+                    modifier = Modifier
+                        .width(280.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .border(
+                            width = 1.dp,
+                            color = currentTheme.getBorder(isDarkMode),
+                            shape = RoundedCornerShape(12.dp)
+                        ),
+                    indicator = { tabPositions ->
+                        TabRowDefaults.Indicator(
+                            modifier = Modifier.tabIndicatorOffset(tabPositions[if (uiState.displayMode == BudgetDisplayMode.LIST) 0 else 1]),
+                            height = 3.dp,
+                            color = currentTheme.getAccent(isDarkMode)
                         )
-                    }
-                )
-                Tab(
-                    selected = uiState.displayMode == BudgetDisplayMode.CALENDAR,
-                    onClick = { viewModel.setDisplayMode(BudgetDisplayMode.CALENDAR) },
-                    text = {
-                        Text(
-                            text = "Calendar",
-                            fontWeight = if (uiState.displayMode == BudgetDisplayMode.CALENDAR) FontWeight.Bold else FontWeight.Normal
-                        )
-                    }
-                )
+                    },
+                    divider = {}
+                ) {
+                    Tab(
+                        selected = uiState.displayMode == BudgetDisplayMode.LIST,
+                        onClick = { viewModel.setDisplayMode(BudgetDisplayMode.LIST) },
+                        text = {
+                            Text(
+                                text = "List",
+                                fontWeight = if (uiState.displayMode == BudgetDisplayMode.LIST) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    )
+                    Tab(
+                        selected = uiState.displayMode == BudgetDisplayMode.CALENDAR,
+                        onClick = { viewModel.setDisplayMode(BudgetDisplayMode.CALENDAR) },
+                        text = {
+                            Text(
+                                text = "Calendar",
+                                fontWeight = if (uiState.displayMode == BudgetDisplayMode.CALENDAR) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    )
+                }
             }
 
             // Content - Switch between List and Calendar
