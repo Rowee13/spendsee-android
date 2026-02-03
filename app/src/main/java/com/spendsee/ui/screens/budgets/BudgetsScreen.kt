@@ -151,11 +151,7 @@ fun BudgetsScreen(
                         Text(
                             text = "List",
                             fontWeight = if (uiState.displayMode == BudgetDisplayMode.LIST) FontWeight.Bold else FontWeight.Normal,
-                            color = if (uiState.displayMode == BudgetDisplayMode.LIST) {
-                                currentTheme.getAccent(isDarkMode)
-                            } else {
-                                currentTheme.getText(isDarkMode).copy(alpha = 0.6f)
-                            }
+                            color = Color.White
                         )
                     }
                 )
@@ -166,11 +162,7 @@ fun BudgetsScreen(
                         Text(
                             text = "Calendar",
                             fontWeight = if (uiState.displayMode == BudgetDisplayMode.CALENDAR) FontWeight.Bold else FontWeight.Normal,
-                            color = if (uiState.displayMode == BudgetDisplayMode.CALENDAR) {
-                                currentTheme.getAccent(isDarkMode)
-                            } else {
-                                currentTheme.getText(isDarkMode).copy(alpha = 0.6f)
-                            }
+                            color = Color.White
                         )
                     }
                 )
