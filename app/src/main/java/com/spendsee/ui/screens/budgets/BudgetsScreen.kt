@@ -125,17 +125,22 @@ fun BudgetsScreen(
             // View Mode TabRow
             TabRow(
                 selectedTabIndex = if (uiState.displayMode == BudgetDisplayMode.LIST) 0 else 1,
-                containerColor = currentTheme.getAccent(isDarkMode),
-                contentColor = Color.White,
+                containerColor = currentTheme.getSurface(isDarkMode),
+                contentColor = currentTheme.getText(isDarkMode),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 12.dp)
-                    .clip(RoundedCornerShape(8.dp)),
+                    .clip(RoundedCornerShape(8.dp))
+                    .border(
+                        width = 1.dp,
+                        color = currentTheme.getBorder(isDarkMode),
+                        shape = RoundedCornerShape(8.dp)
+                    ),
                 indicator = { tabPositions ->
                     TabRowDefaults.Indicator(
                         modifier = Modifier,
                         height = 3.dp,
-                        color = Color.White.copy(alpha = 0.8f)
+                        color = currentTheme.getAccent(isDarkMode)
                     )
                 },
                 divider = {}
@@ -146,7 +151,8 @@ fun BudgetsScreen(
                     text = {
                         Text(
                             text = "List",
-                            fontWeight = if (uiState.displayMode == BudgetDisplayMode.LIST) FontWeight.Bold else FontWeight.Normal
+                            fontWeight = if (uiState.displayMode == BudgetDisplayMode.LIST) FontWeight.Bold else FontWeight.Normal,
+                            color = currentTheme.getText(isDarkMode)
                         )
                     }
                 )
@@ -156,7 +162,8 @@ fun BudgetsScreen(
                     text = {
                         Text(
                             text = "Calendar",
-                            fontWeight = if (uiState.displayMode == BudgetDisplayMode.CALENDAR) FontWeight.Bold else FontWeight.Normal
+                            fontWeight = if (uiState.displayMode == BudgetDisplayMode.CALENDAR) FontWeight.Bold else FontWeight.Normal,
+                            color = currentTheme.getText(isDarkMode)
                         )
                     }
                 )
