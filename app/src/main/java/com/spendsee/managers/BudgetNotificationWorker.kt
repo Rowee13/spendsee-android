@@ -50,21 +50,27 @@ class BudgetNotificationWorker(
         systemNotificationManager.notify(budgetId.hashCode(), notification)
 
         // Save notification to database for in-app notification center
-        val repository = AppNotificationRepository.getInstance(context)
-        val appNotification = AppNotification(
-            title = "Budget Payment Due",
-            message = "Your budget '$budgetName' is due on $dueDateText",
-            type = "budgetReminder-$budgetId",
-            actionType = "navigateToBudget",
-            relatedBudgetId = budgetId
-        )
+        try {
+            val repository = AppNotificationRepository.getInstance(context)
+            val appNotification = AppNotification(
+                title = "Budget Payment Due",
+                message = "Your budget '$budgetName' is due on $dueDateText",
+                type = "budgetReminder-$budgetId",
+                actionType = "navigateToBudget",
+                relatedBudgetId = budgetId
+            )
 
-        // Check if notification already exists (avoid duplicates)
-        val existingNotifications = repository.getAllNotifications().first()
-        val isDuplicate = existingNotifications.any { it.type == appNotification.type }
+            // Check if notification already exists (avoid duplicates)
+            val existingNotifications = repository.getAllNotifications().first()
+            val isDuplicate = existingNotifications.any { it.type == appNotification.type }
 
-        if (!isDuplicate) {
-            repository.insertNotification(appNotification)
+            if (!isDuplicate) {
+                repository.insertNotification(appNotification)
+            }
+        } catch (e: Exception) {
+            // If notification saving fails (e.g., database migration pending),
+            // continue anyway - the system notification was still shown
+            android.util.Log.e("BudgetNotificationWorker", "Failed to save notification to database", e)
         }
 
         return Result.success()

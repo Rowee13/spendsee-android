@@ -102,8 +102,15 @@ fun RecordsScreen(
     val accounts by AccountRepository.getInstance(context).getAllAccounts().collectAsState(initial = emptyList())
     val categories by CategoryRepository.getInstance(context).getAllCategories().collectAsState(initial = emptyList())
 
-    // Load unread notification count
-    val unreadCount by AppNotificationRepository.getInstance(context).getUnreadCount().collectAsState(initial = 0)
+    // Load unread notification count with error handling
+    val unreadCount by remember {
+        try {
+            AppNotificationRepository.getInstance(context).getUnreadCount()
+        } catch (e: Exception) {
+            // If notification table doesn't exist yet (migration pending), return empty flow
+            kotlinx.coroutines.flow.flowOf(0)
+        }
+    }.collectAsState(initial = 0)
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),

@@ -78,19 +78,31 @@ class NotificationCenterViewModel(
 
     fun markAsRead(notificationId: String) {
         viewModelScope.launch {
-            repository.markAsRead(notificationId)
+            try {
+                repository.markAsRead(notificationId)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Failed to mark notification as read: ${e.message}") }
+            }
         }
     }
 
     fun markAllAsRead() {
         viewModelScope.launch {
-            repository.markAllAsRead()
+            try {
+                repository.markAllAsRead()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Failed to mark all as read: ${e.message}") }
+            }
         }
     }
 
     fun deleteNotification(notification: AppNotification) {
         viewModelScope.launch {
-            repository.deleteNotification(notification)
+            try {
+                repository.deleteNotification(notification)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Failed to delete notification: ${e.message}") }
+            }
         }
     }
 }

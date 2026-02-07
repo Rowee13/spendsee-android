@@ -75,6 +75,8 @@ abstract class SpendSeeDatabase : RoomDatabase() {
                 )
                     .addCallback(DatabaseCallback())
                     .addMigrations(MIGRATION_1_2)
+                    // Fallback: If ANY migration fails (not just 1->2), recreate database
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance
