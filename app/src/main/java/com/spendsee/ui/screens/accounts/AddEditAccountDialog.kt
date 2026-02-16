@@ -20,8 +20,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import compose.icons.FeatherIcons
-import compose.icons.feathericons.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.*
 import com.spendsee.data.local.entities.Account
 import androidx.compose.ui.platform.LocalContext
 import com.spendsee.managers.CurrencyManager
@@ -45,7 +45,7 @@ fun AddEditAccountDialog(
     var name by remember { mutableStateOf(account?.name ?: "") }
     var selectedType by remember { mutableStateOf(account?.type ?: "cash") }
     var balance by remember { mutableStateOf(account?.balance?.toString() ?: "") }
-    var selectedIcon by remember { mutableStateOf(account?.icon ?: "dollarsign") }
+    var selectedIcon by remember { mutableStateOf(account?.icon ?: "payments") }
     var selectedColor by remember { mutableStateOf(account?.colorHex ?: "#007AFF") }
     var expanded by remember { mutableStateOf(false) }
     var nameError by remember { mutableStateOf<String?>(null) }
@@ -91,7 +91,7 @@ fun AddEditAccountDialog(
                     },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(FeatherIcons.X, contentDescription = "Close", tint = currentTheme.getText(isDarkMode))
+                            Icon(Icons.Outlined.Close, contentDescription = "Close", tint = currentTheme.getText(isDarkMode))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -397,22 +397,33 @@ fun AccountIconPicker(
     onIconSelected: (String) -> Unit
 ) {
     val icons = listOf(
-        "dollarsign" to FeatherIcons.DollarSign,
-        "creditcard" to FeatherIcons.CreditCard,
-        "briefcase" to FeatherIcons.Briefcase,
-        "home" to FeatherIcons.Home,
-        "smartphone" to FeatherIcons.Smartphone,
-        "shield" to FeatherIcons.Shield,
-        "trendingup" to FeatherIcons.TrendingUp,
-        "package" to FeatherIcons.Package,
-        "gift" to FeatherIcons.Gift,
-        "star" to FeatherIcons.Star,
-        "heart" to FeatherIcons.Heart,
-        "droplet" to FeatherIcons.Droplet,
-        "truck" to FeatherIcons.Truck,
-        "shoppingcart" to FeatherIcons.ShoppingCart,
-        "coffee" to FeatherIcons.Coffee,
-        "camera" to FeatherIcons.Camera
+        // Financial Icons (Most relevant for accounts)
+        "accountbalance" to Icons.Outlined.AccountBalance,        // Bank
+        "creditcard" to Icons.Outlined.CreditCard,                // Credit Card
+        "payments" to Icons.Outlined.Payments,                    // Cash/Payments
+        "accountbalancewallet" to Icons.Outlined.AccountBalanceWallet, // Wallet/E-Wallet
+        "savings" to Icons.Outlined.Savings,                      // Savings
+        "trendingup" to Icons.Outlined.TrendingUp,                // Investment
+        "showchart" to Icons.Outlined.ShowChart,                  // Investment/Stocks
+        "paid" to Icons.Outlined.Paid,                            // Money/Cash
+        "localatm" to Icons.Outlined.LocalAtm,                    // ATM/Cash
+        "currencyexchange" to Icons.Outlined.CurrencyExchange,    // Currency/Exchange
+        "account" to Icons.Outlined.AccountCircle,                // General Account
+        "monetizationon" to Icons.Outlined.MonetizationOn,        // Money
+
+        // Lifestyle & General
+        "home" to Icons.Outlined.Home,                            // Home
+        "work" to Icons.Outlined.Work,                            // Work/Business
+        "shoppingbag" to Icons.Outlined.ShoppingBag,              // Shopping
+        "cardgiftcard" to Icons.Outlined.CardGiftcard,            // Gift Card
+        "star" to Icons.Outlined.Star,                            // Favorite
+        "favorite" to Icons.Outlined.Favorite,                    // Heart/Favorite
+        "school" to Icons.Outlined.School,                        // Education
+        "localhospital" to Icons.Outlined.LocalHospital,          // Health
+        "flight" to Icons.Outlined.Flight,                        // Travel
+        "directionscar" to Icons.Outlined.DirectionsCar,          // Car/Transport
+        "restaurant" to Icons.Outlined.Restaurant,                // Food
+        "lock" to Icons.Outlined.Lock                             // Security/Locked
     )
 
     // Use FlowRow for better wrapping and distribution
@@ -496,7 +507,7 @@ fun AccountColorPicker(
             ) {
                 if (selectedColor == colorHex) {
                     Icon(
-                        imageVector = FeatherIcons.Check,
+                        imageVector = Icons.Outlined.Check,
                         contentDescription = "Selected",
                         tint = Color.White,
                         modifier = Modifier.size(26.dp)
@@ -509,22 +520,48 @@ fun AccountColorPicker(
 
 private fun getAccountIcon(iconName: String): androidx.compose.ui.graphics.vector.ImageVector {
     return when (iconName.lowercase()) {
-        "dollarsign" -> FeatherIcons.DollarSign
-        "creditcard" -> FeatherIcons.CreditCard
-        "briefcase" -> FeatherIcons.Briefcase
-        "home" -> FeatherIcons.Home
-        "smartphone" -> FeatherIcons.Smartphone
-        "shield" -> FeatherIcons.Shield
-        "trendingup" -> FeatherIcons.TrendingUp
-        "package" -> FeatherIcons.Package
-        "gift" -> FeatherIcons.Gift
-        "star" -> FeatherIcons.Star
-        "heart" -> FeatherIcons.Heart
-        "droplet" -> FeatherIcons.Droplet
-        "truck" -> FeatherIcons.Truck
-        "shoppingcart" -> FeatherIcons.ShoppingCart
-        "coffee" -> FeatherIcons.Coffee
-        "camera" -> FeatherIcons.Camera
-        else -> FeatherIcons.DollarSign
+        // Financial Icons
+        "accountbalance" -> Icons.Outlined.AccountBalance
+        "creditcard" -> Icons.Outlined.CreditCard
+        "payments" -> Icons.Outlined.Payments
+        "accountbalancewallet" -> Icons.Outlined.AccountBalanceWallet
+        "savings" -> Icons.Outlined.Savings
+        "trendingup" -> Icons.Outlined.TrendingUp
+        "showchart" -> Icons.Outlined.ShowChart
+        "paid" -> Icons.Outlined.Paid
+        "localatm" -> Icons.Outlined.LocalAtm
+        "currencyexchange" -> Icons.Outlined.CurrencyExchange
+        "account" -> Icons.Outlined.AccountCircle
+        "monetizationon" -> Icons.Outlined.MonetizationOn
+
+        // Lifestyle & General
+        "home" -> Icons.Outlined.Home
+        "work" -> Icons.Outlined.Work
+        "shoppingbag" -> Icons.Outlined.ShoppingBag
+        "cardgiftcard" -> Icons.Outlined.CardGiftcard
+        "star" -> Icons.Outlined.Star
+        "favorite" -> Icons.Outlined.Favorite
+        "school" -> Icons.Outlined.School
+        "localhospital" -> Icons.Outlined.LocalHospital
+        "flight" -> Icons.Outlined.Flight
+        "directionscar" -> Icons.Outlined.DirectionsCar
+        "restaurant" -> Icons.Outlined.Restaurant
+        "lock" -> Icons.Outlined.Lock
+
+        // Legacy Feather icon names (for backward compatibility)
+        "dollarsign" -> Icons.Outlined.Payments
+        "briefcase" -> Icons.Outlined.Work
+        "smartphone" -> Icons.Outlined.AccountBalanceWallet
+        "shield" -> Icons.Outlined.Lock
+        "package" -> Icons.Outlined.Inventory
+        "gift" -> Icons.Outlined.CardGiftcard
+        "heart" -> Icons.Outlined.Favorite
+        "droplet" -> Icons.Outlined.WaterDrop
+        "truck" -> Icons.Outlined.LocalShipping
+        "shoppingcart" -> Icons.Outlined.ShoppingCart
+        "coffee" -> Icons.Outlined.LocalCafe
+        "camera" -> Icons.Outlined.CameraAlt
+
+        else -> Icons.Outlined.Payments
     }
 }
