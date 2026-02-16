@@ -573,6 +573,11 @@ fun getCategoryIcon(iconName: String): androidx.compose.ui.graphics.vector.Image
         "star" -> Icons.Outlined.Star
         "morehorizontal" -> Icons.Outlined.MoreHoriz
         "calculate" -> Icons.Outlined.Calculate
+        "description" -> Icons.Outlined.Description
+        "refresh" -> Icons.Outlined.Refresh
+        "style" -> Icons.Outlined.Style
+        "computer" -> Icons.Outlined.Computer
+        "percent" -> Icons.Outlined.Percent
 
         // Legacy Feather icon names (backward compatibility)
         "briefcase" -> Icons.Outlined.Work

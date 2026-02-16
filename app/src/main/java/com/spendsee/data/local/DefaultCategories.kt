@@ -19,7 +19,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Lottery",
-            icon = "emojievents",
+            icon = "star",
             colorHex = "#FF9500",
             type = "income",
             isDefault = true,
@@ -28,7 +28,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Refunds",
-            icon = "assignmentreturn",
+            icon = "refresh",
             colorHex = "#5AC8FA",
             type = "income",
             isDefault = true,
@@ -77,7 +77,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Bills",
-            icon = "receipt",
+            icon = "description",
             colorHex = "#5AC8FA",
             type = "expense",
             isDefault = true,
@@ -104,7 +104,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Clothing",
-            icon = "checkroom",
+            icon = "style",
             colorHex = "#FF9500",
             type = "expense",
             isDefault = true,
@@ -122,7 +122,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Gadgets",
-            icon = "laptop",
+            icon = "computer",
             colorHex = "#8E8E93",
             type = "expense",
             isDefault = true,
@@ -203,7 +203,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Tax",
-            icon = "calculate",
+            icon = "percent",
             colorHex = "#8E8E93",
             type = "expense",
             isDefault = true,
