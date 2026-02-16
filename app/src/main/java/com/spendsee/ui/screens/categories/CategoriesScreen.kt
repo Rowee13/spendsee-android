@@ -513,6 +513,7 @@ fun getCategoryIcon(iconName: String): androidx.compose.ui.graphics.vector.Image
         "cameraalt" -> Icons.Outlined.CameraAlt
 
         // Bills & Utilities
+        "receipt" -> Icons.Outlined.Receipt
         "bolt" -> Icons.Outlined.Bolt
         "waterdrop" -> Icons.Outlined.WaterDrop
         "wifi" -> Icons.Outlined.Wifi
@@ -531,6 +532,7 @@ fun getCategoryIcon(iconName: String): androidx.compose.ui.graphics.vector.Image
         "menubook" -> Icons.Outlined.MenuBook
         "work" -> Icons.Outlined.Work
         "businesscenter" -> Icons.Outlined.BusinessCenter
+        "laptop" -> Icons.Outlined.Laptop
 
         // Travel
         "flight" -> Icons.Outlined.Flight
@@ -557,6 +559,8 @@ fun getCategoryIcon(iconName: String): androidx.compose.ui.graphics.vector.Image
         "redeem" -> Icons.Outlined.Redeem
         "favorite" -> Icons.Outlined.Favorite
         "volunteeractivism" -> Icons.Outlined.VolunteerActivism
+        "emojievents" -> Icons.Outlined.EmojiEvents
+        "assignmentreturn" -> Icons.Outlined.AssignmentReturn
 
         // Insurance & Security
         "shield" -> Icons.Outlined.Shield
@@ -568,6 +572,7 @@ fun getCategoryIcon(iconName: String): androidx.compose.ui.graphics.vector.Image
         "build" -> Icons.Outlined.Build
         "star" -> Icons.Outlined.Star
         "morehorizontal" -> Icons.Outlined.MoreHoriz
+        "calculate" -> Icons.Outlined.Calculate
 
         // Legacy Feather icon names (backward compatibility)
         "briefcase" -> Icons.Outlined.Work

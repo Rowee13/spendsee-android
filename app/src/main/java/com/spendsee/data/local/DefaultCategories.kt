@@ -5,12 +5,12 @@ import java.util.UUID
 
 object DefaultCategories {
 
-    // Income Categories (7) - Matching iOS
+    // Income Categories (7) - Unique Material Icons matching iOS
     val incomeCategories = listOf(
         Category(
             id = UUID.randomUUID().toString(),
             name = "Salary",
-            icon = "briefcase",
+            icon = "work",
             colorHex = "#34C759",
             type = "income",
             isDefault = true,
@@ -19,7 +19,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Lottery",
-            icon = "award",
+            icon = "emojievents",
             colorHex = "#FF9500",
             type = "income",
             isDefault = true,
@@ -28,7 +28,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Refunds",
-            icon = "rotate_ccw",
+            icon = "assignmentreturn",
             colorHex = "#5AC8FA",
             type = "income",
             isDefault = true,
@@ -37,7 +37,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Grants",
-            icon = "gift",
+            icon = "volunteeractivism",
             colorHex = "#AF52DE",
             type = "income",
             isDefault = true,
@@ -46,7 +46,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Bank Interest",
-            icon = "dollar_sign",
+            icon = "accountbalance",
             colorHex = "#FFD60A",
             type = "income",
             isDefault = true,
@@ -55,7 +55,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Investment",
-            icon = "trending_up",
+            icon = "trendingup",
             colorHex = "#007AFF",
             type = "income",
             isDefault = true,
@@ -64,7 +64,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Business",
-            icon = "briefcase",
+            icon = "businesscenter",
             colorHex = "#FF2D55",
             type = "income",
             isDefault = true,
@@ -72,12 +72,12 @@ object DefaultCategories {
         )
     )
 
-    // Expense Categories (19) - Matching iOS
+    // Expense Categories (19) - Unique Material Icons matching iOS
     val expenseCategories = listOf(
         Category(
             id = UUID.randomUUID().toString(),
             name = "Bills",
-            icon = "file_text",
+            icon = "receipt",
             colorHex = "#5AC8FA",
             type = "expense",
             isDefault = true,
@@ -86,7 +86,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Business",
-            icon = "briefcase",
+            icon = "store",
             colorHex = "#FF2D55",
             type = "expense",
             isDefault = true,
@@ -95,7 +95,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Car",
-            icon = "truck",
+            icon = "directionscar",
             colorHex = "#007AFF",
             type = "expense",
             isDefault = true,
@@ -104,7 +104,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Clothing",
-            icon = "shopping_bag",
+            icon = "checkroom",
             colorHex = "#FF9500",
             type = "expense",
             isDefault = true,
@@ -113,7 +113,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Education",
-            icon = "book",
+            icon = "school",
             colorHex = "#34C759",
             type = "expense",
             isDefault = true,
@@ -122,7 +122,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Gadgets",
-            icon = "monitor",
+            icon = "laptop",
             colorHex = "#8E8E93",
             type = "expense",
             isDefault = true,
@@ -131,7 +131,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Entertainment",
-            icon = "tv",
+            icon = "movie",
             colorHex = "#AF52DE",
             type = "expense",
             isDefault = true,
@@ -140,7 +140,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Food",
-            icon = "coffee",
+            icon = "restaurant",
             colorHex = "#FF3B30",
             type = "expense",
             isDefault = true,
@@ -149,7 +149,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Loan Repayment",
-            icon = "credit_card",
+            icon = "creditcard",
             colorHex = "#FF6482",
             type = "expense",
             isDefault = true,
@@ -158,7 +158,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Grocery",
-            icon = "shopping_cart",
+            icon = "shoppingcart",
             colorHex = "#34C759",
             type = "expense",
             isDefault = true,
@@ -176,7 +176,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Insurance",
-            icon = "shield",
+            icon = "healthandsafety",
             colorHex = "#5AC8FA",
             type = "expense",
             isDefault = true,
@@ -185,7 +185,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Shopping",
-            icon = "shopping_bag",
+            icon = "shoppingbag",
             colorHex = "#FF2D55",
             type = "expense",
             isDefault = true,
@@ -194,7 +194,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Sport",
-            icon = "activity",
+            icon = "fitnesscenter",
             colorHex = "#32D74B",
             type = "expense",
             isDefault = true,
@@ -203,7 +203,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Tax",
-            icon = "percent",
+            icon = "calculate",
             colorHex = "#8E8E93",
             type = "expense",
             isDefault = true,
@@ -221,7 +221,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Transportation",
-            icon = "truck",
+            icon = "directionstransit",
             colorHex = "#FFD60A",
             type = "expense",
             isDefault = true,
@@ -230,7 +230,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Travel",
-            icon = "map",
+            icon = "flight",
             colorHex = "#5AC8FA",
             type = "expense",
             isDefault = true,
@@ -239,7 +239,7 @@ object DefaultCategories {
         Category(
             id = UUID.randomUUID().toString(),
             name = "Gift",
-            icon = "gift",
+            icon = "cardgiftcard",
             colorHex = "#FF2D55",
             type = "expense",
             isDefault = true,
