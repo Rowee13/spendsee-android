@@ -21,8 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import compose.icons.FeatherIcons
-import compose.icons.feathericons.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.*
 import com.spendsee.data.local.entities.Category
 import com.spendsee.managers.Feature
 import com.spendsee.managers.PremiumManager
@@ -101,7 +101,7 @@ fun CategoriesScreen(
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
-                            FeatherIcons.ArrowLeft,
+                            Icons.Outlined.ArrowBack,
                             contentDescription = "Back",
                             tint = currentTheme.getText(isDarkMode)
                         )
@@ -124,7 +124,7 @@ fun CategoriesScreen(
                 },
                 containerColor = currentTheme.getAccent(isDarkMode)
             ) {
-                Icon(FeatherIcons.Plus, contentDescription = "Add Category", tint = Color.White)
+                Icon(Icons.Outlined.Add, contentDescription = "Add Category", tint = Color.White)
             }
         }
     ) { paddingValues ->
@@ -181,7 +181,7 @@ fun CategoriesScreen(
                         )
                         IconButton(onClick = { viewModel.clearError() }) {
                             Icon(
-                                FeatherIcons.X,
+                                Icons.Outlined.Close,
                                 contentDescription = "Dismiss",
                                 tint = MaterialTheme.colorScheme.onErrorContainer
                             )
@@ -208,7 +208,7 @@ fun CategoriesScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            FeatherIcons.Star,
+                            Icons.Outlined.Star,
                             contentDescription = null,
                             tint = currentTheme.getAccent(isDarkMode),
                             modifier = Modifier.size(24.dp)
@@ -431,7 +431,7 @@ fun CategoryItem(
                 Box {
                     IconButton(onClick = { showMenu = true }) {
                         Icon(
-                            FeatherIcons.MoreVertical,
+                            Icons.Outlined.MoreVert,
                             contentDescription = "More options",
                             tint = currentTheme.getInactive(isDarkMode)
                         )
@@ -449,7 +449,7 @@ fun CategoryItem(
                                     onEdit()
                                 },
                                 leadingIcon = {
-                                    Icon(FeatherIcons.Edit2, contentDescription = null)
+                                    Icon(Icons.Outlined.Edit, contentDescription = null)
                                 }
                             )
                         }
@@ -462,7 +462,7 @@ fun CategoryItem(
                                 },
                                 leadingIcon = {
                                     Icon(
-                                        FeatherIcons.Trash2,
+                                        Icons.Outlined.Delete,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.error
                                     )
@@ -479,32 +479,119 @@ fun CategoryItem(
 // Helper function to get icon by name (same as in other screens)
 fun getCategoryIcon(iconName: String): androidx.compose.ui.graphics.vector.ImageVector {
     return when (iconName.lowercase()) {
-        "briefcase" -> FeatherIcons.Briefcase
-        "trendingup" -> FeatherIcons.TrendingUp
-        "gift" -> FeatherIcons.Gift
-        "rotateccw" -> FeatherIcons.RotateCcw
-        "home" -> FeatherIcons.Home
-        "dollarSign", "dollarsign" -> FeatherIcons.DollarSign
-        "coffee" -> FeatherIcons.Coffee
-        "shoppingcart" -> FeatherIcons.ShoppingCart
-        "film" -> FeatherIcons.Film
-        "creditcard" -> FeatherIcons.CreditCard
-        "heart" -> FeatherIcons.Heart
-        "book" -> FeatherIcons.Book
-        "mappin" -> FeatherIcons.MapPin
-        "smartphone" -> FeatherIcons.Smartphone
-        "shield" -> FeatherIcons.Shield
-        "bell" -> FeatherIcons.Bell
-        "droplet" -> FeatherIcons.Droplet
-        "tag" -> FeatherIcons.Tag
-        "package" -> FeatherIcons.Package
-        "music" -> FeatherIcons.Music
-        "camera" -> FeatherIcons.Camera
-        "car", "truck" -> FeatherIcons.Truck
-        "activity" -> FeatherIcons.Activity
-        "tool" -> FeatherIcons.Tool
-        "file" -> FeatherIcons.File
-        "star" -> FeatherIcons.Star
-        else -> FeatherIcons.Grid
+        // General
+        "category" -> Icons.Outlined.Category
+
+        // Food & Dining
+        "restaurant" -> Icons.Outlined.Restaurant
+        "fastfood" -> Icons.Outlined.Fastfood
+        "localcafe" -> Icons.Outlined.LocalCafe
+        "localpizza" -> Icons.Outlined.LocalPizza
+        "shoppingcart" -> Icons.Outlined.ShoppingCart
+        "icecream" -> Icons.Outlined.Icecream
+
+        // Shopping & Retail
+        "shoppingbag" -> Icons.Outlined.ShoppingBag
+        "store" -> Icons.Outlined.Store
+        "localmall" -> Icons.Outlined.LocalMall
+        "checkroom" -> Icons.Outlined.Checkroom
+
+        // Transportation
+        "directionscar" -> Icons.Outlined.DirectionsCar
+        "directionstransit" -> Icons.Outlined.DirectionsTransit
+        "localgasstation" -> Icons.Outlined.LocalGasStation
+        "localparking" -> Icons.Outlined.LocalParking
+        "twowheeler" -> Icons.Outlined.TwoWheeler
+        "localshipping" -> Icons.Outlined.LocalShipping
+
+        // Entertainment & Lifestyle
+        "movie" -> Icons.Outlined.Movie
+        "theaters" -> Icons.Outlined.Theaters
+        "sportsesports" -> Icons.Outlined.SportsEsports
+        "headphones" -> Icons.Outlined.Headphones
+        "celebration" -> Icons.Outlined.Celebration
+        "cameraalt" -> Icons.Outlined.CameraAlt
+
+        // Bills & Utilities
+        "bolt" -> Icons.Outlined.Bolt
+        "waterdrop" -> Icons.Outlined.WaterDrop
+        "wifi" -> Icons.Outlined.Wifi
+        "phone" -> Icons.Outlined.Phone
+        "tv" -> Icons.Outlined.Tv
+
+        // Health & Fitness
+        "localhospital" -> Icons.Outlined.LocalHospital
+        "medication" -> Icons.Outlined.Medication
+        "fitnesscenter" -> Icons.Outlined.FitnessCenter
+        "spa" -> Icons.Outlined.Spa
+        "selfimprovement" -> Icons.Outlined.SelfImprovement
+
+        // Education & Work
+        "school" -> Icons.Outlined.School
+        "menubook" -> Icons.Outlined.MenuBook
+        "work" -> Icons.Outlined.Work
+        "businesscenter" -> Icons.Outlined.BusinessCenter
+
+        // Travel
+        "flight" -> Icons.Outlined.Flight
+        "luggage" -> Icons.Outlined.Luggage
+        "hotel" -> Icons.Outlined.Hotel
+        "beachaccess" -> Icons.Outlined.BeachAccess
+
+        // Home & Family
+        "home" -> Icons.Outlined.Home
+        "homerepairservice" -> Icons.Outlined.HomeRepairService
+        "chair" -> Icons.Outlined.Chair
+        "pets" -> Icons.Outlined.Pets
+        "childcare" -> Icons.Outlined.ChildFriendly
+
+        // Financial & Income
+        "payments" -> Icons.Outlined.Payments
+        "trendingup" -> Icons.Outlined.TrendingUp
+        "showchart" -> Icons.Outlined.ShowChart
+        "accountbalance" -> Icons.Outlined.AccountBalance
+        "creditcard" -> Icons.Outlined.CreditCard
+
+        // Gifts & Personal
+        "cardgiftcard" -> Icons.Outlined.CardGiftcard
+        "redeem" -> Icons.Outlined.Redeem
+        "favorite" -> Icons.Outlined.Favorite
+        "volunteeractivism" -> Icons.Outlined.VolunteerActivism
+
+        // Insurance & Security
+        "shield" -> Icons.Outlined.Shield
+        "healthandsafety" -> Icons.Outlined.HealthAndSafety
+        "lock" -> Icons.Outlined.Lock
+
+        // Miscellaneous
+        "subscriptions" -> Icons.Outlined.Subscriptions
+        "build" -> Icons.Outlined.Build
+        "star" -> Icons.Outlined.Star
+        "morehorizontal" -> Icons.Outlined.MoreHoriz
+
+        // Legacy Feather icon names (backward compatibility)
+        "briefcase" -> Icons.Outlined.Work
+        "gift" -> Icons.Outlined.CardGiftcard
+        "rotateccw" -> Icons.Outlined.Refresh
+        "dollarSign", "dollarsign" -> Icons.Outlined.Payments
+        "coffee" -> Icons.Outlined.LocalCafe
+        "film" -> Icons.Outlined.Movie
+        "heart" -> Icons.Outlined.Favorite
+        "book" -> Icons.Outlined.MenuBook
+        "mappin" -> Icons.Outlined.LocationOn
+        "smartphone" -> Icons.Outlined.PhoneAndroid
+        "bell" -> Icons.Outlined.Notifications
+        "droplet" -> Icons.Outlined.WaterDrop
+        "tag" -> Icons.Outlined.Label
+        "package" -> Icons.Outlined.Inventory
+        "music" -> Icons.Outlined.Headphones
+        "camera" -> Icons.Outlined.CameraAlt
+        "car", "truck" -> Icons.Outlined.DirectionsCar
+        "activity" -> Icons.Outlined.FitnessCenter
+        "tool" -> Icons.Outlined.Build
+        "file" -> Icons.Outlined.Description
+        "grid" -> Icons.Outlined.Category
+
+        else -> Icons.Outlined.Category
     }
 }

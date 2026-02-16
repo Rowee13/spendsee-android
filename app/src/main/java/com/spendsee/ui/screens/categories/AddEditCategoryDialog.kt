@@ -21,8 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import compose.icons.FeatherIcons
-import compose.icons.feathericons.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.*
 import com.spendsee.data.local.entities.Category
 import com.spendsee.managers.ThemeManager
 import com.spendsee.ui.theme.ThemeColors
@@ -41,7 +41,7 @@ fun AddEditCategoryDialog(
     val isDarkMode by themeManager.isDarkMode.collectAsState()
 
     var name by remember { mutableStateOf(category?.name ?: "") }
-    var selectedIcon by remember { mutableStateOf(category?.icon ?: "grid") }
+    var selectedIcon by remember { mutableStateOf(category?.icon ?: "category") }
     var selectedColor by remember { mutableStateOf(category?.colorHex ?: "#007AFF") }
     var nameError by remember { mutableStateOf<String?>(null) }
 
@@ -75,7 +75,7 @@ fun AddEditCategoryDialog(
                     },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
-                            Icon(FeatherIcons.X, contentDescription = "Close", tint = currentTheme.getText(isDarkMode))
+                            Icon(Icons.Outlined.Close, contentDescription = "Close", tint = currentTheme.getText(isDarkMode))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -274,30 +274,95 @@ fun IconPicker(
     onIconSelected: (String) -> Unit
 ) {
     val icons = listOf(
-        "grid" to FeatherIcons.Grid,
-        "briefcase" to FeatherIcons.Briefcase,
-        "coffee" to FeatherIcons.Coffee,
-        "shoppingcart" to FeatherIcons.ShoppingCart,
-        "film" to FeatherIcons.Film,
-        "creditcard" to FeatherIcons.CreditCard,
-        "heart" to FeatherIcons.Heart,
-        "book" to FeatherIcons.Book,
-        "mappin" to FeatherIcons.MapPin,
-        "home" to FeatherIcons.Home,
-        "smartphone" to FeatherIcons.Smartphone,
-        "shield" to FeatherIcons.Shield,
-        "bell" to FeatherIcons.Bell,
-        "droplet" to FeatherIcons.Droplet,
-        "gift" to FeatherIcons.Gift,
-        "star" to FeatherIcons.Star,
-        "truck" to FeatherIcons.Truck,
-        "camera" to FeatherIcons.Camera,
-        "music" to FeatherIcons.Music,
-        "tool" to FeatherIcons.Tool,
-        "activity" to FeatherIcons.Activity,
-        "dollarsign" to FeatherIcons.DollarSign,
-        "trendingup" to FeatherIcons.TrendingUp,
-        "package" to FeatherIcons.Package
+        // General
+        "category" to Icons.Outlined.Category,                    // Default/General category
+
+        // Food & Dining
+        "restaurant" to Icons.Outlined.Restaurant,                // Dining/Food
+        "fastfood" to Icons.Outlined.Fastfood,                    // Fast Food
+        "localcafe" to Icons.Outlined.LocalCafe,                  // Coffee/Cafe
+        "localpizza" to Icons.Outlined.LocalPizza,                // Pizza
+        "shoppingcart" to Icons.Outlined.ShoppingCart,            // Groceries
+        "icecream" to Icons.Outlined.Icecream,                    // Dessert
+
+        // Shopping & Retail
+        "shoppingbag" to Icons.Outlined.ShoppingBag,              // Shopping
+        "store" to Icons.Outlined.Store,                          // Store/Retail
+        "localmall" to Icons.Outlined.LocalMall,                  // Mall/Shopping Center
+        "checkroom" to Icons.Outlined.Checkroom,                  // Clothing
+
+        // Transportation
+        "directionscar" to Icons.Outlined.DirectionsCar,          // Car
+        "directionstransit" to Icons.Outlined.DirectionsTransit,  // Public Transit
+        "localgasstation" to Icons.Outlined.LocalGasStation,      // Gas/Fuel
+        "localparking" to Icons.Outlined.LocalParking,            // Parking
+        "twowheeler" to Icons.Outlined.TwoWheeler,                // Motorcycle/Bike
+        "localshipping" to Icons.Outlined.LocalShipping,          // Delivery/Shipping
+
+        // Entertainment & Lifestyle
+        "movie" to Icons.Outlined.Movie,                          // Movies
+        "theaters" to Icons.Outlined.Theaters,                    // Theater/Cinema
+        "sportsesports" to Icons.Outlined.SportsEsports,          // Gaming
+        "headphones" to Icons.Outlined.Headphones,                // Music/Audio
+        "celebration" to Icons.Outlined.Celebration,              // Party/Events
+        "cameraalt" to Icons.Outlined.CameraAlt,                  // Photography
+
+        // Bills & Utilities
+        "bolt" to Icons.Outlined.Bolt,                            // Electricity
+        "waterdrop" to Icons.Outlined.WaterDrop,                  // Water
+        "wifi" to Icons.Outlined.Wifi,                            // Internet
+        "phone" to Icons.Outlined.Phone,                          // Phone Bill
+        "tv" to Icons.Outlined.Tv,                                // TV/Cable/Streaming
+
+        // Health & Fitness
+        "localhospital" to Icons.Outlined.LocalHospital,          // Medical/Health
+        "medication" to Icons.Outlined.Medication,                // Medicine
+        "fitnesscenter" to Icons.Outlined.FitnessCenter,          // Gym/Fitness
+        "spa" to Icons.Outlined.Spa,                              // Wellness/Spa
+        "selfimprovement" to Icons.Outlined.SelfImprovement,      // Yoga/Meditation
+
+        // Education & Work
+        "school" to Icons.Outlined.School,                        // Education
+        "menubook" to Icons.Outlined.MenuBook,                    // Books/Learning
+        "work" to Icons.Outlined.Work,                            // Work/Business
+        "businesscenter" to Icons.Outlined.BusinessCenter,        // Business
+
+        // Travel
+        "flight" to Icons.Outlined.Flight,                        // Flight/Air Travel
+        "luggage" to Icons.Outlined.Luggage,                      // Travel/Luggage
+        "hotel" to Icons.Outlined.Hotel,                          // Hotel/Accommodation
+        "beachaccess" to Icons.Outlined.BeachAccess,              // Beach/Vacation
+
+        // Home & Family
+        "home" to Icons.Outlined.Home,                            // Home
+        "homerepairservice" to Icons.Outlined.HomeRepairService,  // Home Repair
+        "chair" to Icons.Outlined.Chair,                          // Furniture
+        "pets" to Icons.Outlined.Pets,                            // Pets
+        "childcare" to Icons.Outlined.ChildFriendly,                  // Kids/Childcare
+
+        // Financial & Income
+        "payments" to Icons.Outlined.Payments,                    // Income/Salary
+        "trendingup" to Icons.Outlined.TrendingUp,                // Investment
+        "showchart" to Icons.Outlined.ShowChart,                  // Stocks/Trading
+        "accountbalance" to Icons.Outlined.AccountBalance,        // Bank/Finance
+        "creditcard" to Icons.Outlined.CreditCard,                // Credit/Payment
+
+        // Gifts & Personal
+        "cardgiftcard" to Icons.Outlined.CardGiftcard,            // Gifts
+        "redeem" to Icons.Outlined.Redeem,                        // Rewards/Cashback
+        "favorite" to Icons.Outlined.Favorite,                    // Favorite/Love
+        "volunteeractivism" to Icons.Outlined.VolunteerActivism,  // Charity/Donation
+
+        // Insurance & Security
+        "shield" to Icons.Outlined.Shield,                        // Insurance/Protection
+        "healthandsafety" to Icons.Outlined.HealthAndSafety,      // Health Insurance
+        "lock" to Icons.Outlined.Lock,                            // Security
+
+        // Miscellaneous
+        "subscriptions" to Icons.Outlined.Subscriptions,          // Subscriptions
+        "build" to Icons.Outlined.Build,                          // Tools/Maintenance
+        "star" to Icons.Outlined.Star,                            // Favorite/Special
+        "morehorizontal" to Icons.Outlined.MoreHoriz              // Other/Misc
     )
 
     // Use FlowRow for better wrapping and distribution
@@ -390,7 +455,7 @@ fun ColorPicker(
             ) {
                 if (selectedColor == colorHex) {
                     Icon(
-                        imageVector = FeatherIcons.Check,
+                        imageVector = Icons.Outlined.Check,
                         contentDescription = "Selected",
                         tint = Color.White,
                         modifier = Modifier.size(26.dp)

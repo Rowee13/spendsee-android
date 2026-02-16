@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,8 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import compose.icons.FeatherIcons
-import compose.icons.feathericons.*
 import com.spendsee.data.local.entities.Transaction
 import com.spendsee.data.local.entities.Account
 import com.spendsee.data.local.entities.Category
@@ -401,7 +400,7 @@ fun AddEditTransactionDialog(
                                 modifier = Modifier.size(32.dp)
                             ) {
                                 Icon(
-                                    imageVector = FeatherIcons.X,
+                                    imageVector = Icons.Outlined.Close,
                                     contentDescription = "Delete",
                                     modifier = Modifier.size(20.dp),
                                     tint = currentTheme.getText(isDarkMode)
@@ -848,30 +847,116 @@ fun evaluateExpression(expression: String): Double {
 
 private fun getCategoryIcon(iconName: String): androidx.compose.ui.graphics.vector.ImageVector {
     return when (iconName.lowercase()) {
-        "grid" -> FeatherIcons.Grid
-        "briefcase" -> FeatherIcons.Briefcase
-        "coffee" -> FeatherIcons.Coffee
-        "shoppingcart" -> FeatherIcons.ShoppingCart
-        "film" -> FeatherIcons.Film
-        "creditcard" -> FeatherIcons.CreditCard
-        "heart" -> FeatherIcons.Heart
-        "book" -> FeatherIcons.Book
-        "mappin" -> FeatherIcons.MapPin
-        "home" -> FeatherIcons.Home
-        "smartphone" -> FeatherIcons.Smartphone
-        "shield" -> FeatherIcons.Shield
-        "bell" -> FeatherIcons.Bell
-        "droplet" -> FeatherIcons.Droplet
-        "gift" -> FeatherIcons.Gift
-        "star" -> FeatherIcons.Star
-        "truck" -> FeatherIcons.Truck
-        "camera" -> FeatherIcons.Camera
-        "music" -> FeatherIcons.Music
-        "tool" -> FeatherIcons.Tool
-        "activity" -> FeatherIcons.Activity
-        "dollarsign" -> FeatherIcons.DollarSign
-        "trendingup" -> FeatherIcons.TrendingUp
-        "package" -> FeatherIcons.Package
-        else -> FeatherIcons.Grid
+        // General
+        "category" -> Icons.Outlined.Category
+
+        // Food & Dining
+        "restaurant" -> Icons.Outlined.Restaurant
+        "fastfood" -> Icons.Outlined.Fastfood
+        "localcafe" -> Icons.Outlined.LocalCafe
+        "localpizza" -> Icons.Outlined.LocalPizza
+        "shoppingcart" -> Icons.Outlined.ShoppingCart
+        "icecream" -> Icons.Outlined.Icecream
+
+        // Shopping & Retail
+        "shoppingbag" -> Icons.Outlined.ShoppingBag
+        "store" -> Icons.Outlined.Store
+        "localmall" -> Icons.Outlined.LocalMall
+        "checkroom" -> Icons.Outlined.Checkroom
+
+        // Transportation
+        "directionscar" -> Icons.Outlined.DirectionsCar
+        "directionstransit" -> Icons.Outlined.DirectionsTransit
+        "localgasstation" -> Icons.Outlined.LocalGasStation
+        "localparking" -> Icons.Outlined.LocalParking
+        "twowheeler" -> Icons.Outlined.TwoWheeler
+        "localshipping" -> Icons.Outlined.LocalShipping
+
+        // Entertainment & Lifestyle
+        "movie" -> Icons.Outlined.Movie
+        "theaters" -> Icons.Outlined.Theaters
+        "sportsesports" -> Icons.Outlined.SportsEsports
+        "headphones" -> Icons.Outlined.Headphones
+        "celebration" -> Icons.Outlined.Celebration
+        "cameraalt" -> Icons.Outlined.CameraAlt
+
+        // Bills & Utilities
+        "bolt" -> Icons.Outlined.Bolt
+        "waterdrop" -> Icons.Outlined.WaterDrop
+        "wifi" -> Icons.Outlined.Wifi
+        "phone" -> Icons.Outlined.Phone
+        "tv" -> Icons.Outlined.Tv
+
+        // Health & Fitness
+        "localhospital" -> Icons.Outlined.LocalHospital
+        "medication" -> Icons.Outlined.Medication
+        "fitnesscenter" -> Icons.Outlined.FitnessCenter
+        "spa" -> Icons.Outlined.Spa
+        "selfimprovement" -> Icons.Outlined.SelfImprovement
+
+        // Education & Work
+        "school" -> Icons.Outlined.School
+        "menubook" -> Icons.Outlined.MenuBook
+        "work" -> Icons.Outlined.Work
+        "businesscenter" -> Icons.Outlined.BusinessCenter
+
+        // Travel
+        "flight" -> Icons.Outlined.Flight
+        "luggage" -> Icons.Outlined.Luggage
+        "hotel" -> Icons.Outlined.Hotel
+        "beachaccess" -> Icons.Outlined.BeachAccess
+
+        // Home & Family
+        "home" -> Icons.Outlined.Home
+        "homerepairservice" -> Icons.Outlined.HomeRepairService
+        "chair" -> Icons.Outlined.Chair
+        "pets" -> Icons.Outlined.Pets
+        "childcare" -> Icons.Outlined.ChildFriendly
+
+        // Financial & Income
+        "payments" -> Icons.Outlined.Payments
+        "trendingup" -> Icons.Outlined.TrendingUp
+        "showchart" -> Icons.Outlined.ShowChart
+        "accountbalance" -> Icons.Outlined.AccountBalance
+        "creditcard" -> Icons.Outlined.CreditCard
+
+        // Gifts & Personal
+        "cardgiftcard" -> Icons.Outlined.CardGiftcard
+        "redeem" -> Icons.Outlined.Redeem
+        "favorite" -> Icons.Outlined.Favorite
+        "volunteeractivism" -> Icons.Outlined.VolunteerActivism
+
+        // Insurance & Security
+        "shield" -> Icons.Outlined.Shield
+        "healthandsafety" -> Icons.Outlined.HealthAndSafety
+        "lock" -> Icons.Outlined.Lock
+
+        // Miscellaneous
+        "subscriptions" -> Icons.Outlined.Subscriptions
+        "build" -> Icons.Outlined.Build
+        "star" -> Icons.Outlined.Star
+        "morehorizontal" -> Icons.Outlined.MoreHoriz
+
+        // Legacy Feather icon names (backward compatibility)
+        "grid" -> Icons.Outlined.Category
+        "briefcase" -> Icons.Outlined.Work
+        "coffee" -> Icons.Outlined.LocalCafe
+        "film" -> Icons.Outlined.Movie
+        "heart" -> Icons.Outlined.Favorite
+        "book" -> Icons.Outlined.MenuBook
+        "mappin" -> Icons.Outlined.LocationOn
+        "smartphone" -> Icons.Outlined.PhoneAndroid
+        "bell" -> Icons.Outlined.Notifications
+        "droplet" -> Icons.Outlined.WaterDrop
+        "gift" -> Icons.Outlined.CardGiftcard
+        "truck" -> Icons.Outlined.DirectionsCar
+        "camera" -> Icons.Outlined.CameraAlt
+        "music" -> Icons.Outlined.Headphones
+        "tool" -> Icons.Outlined.Build
+        "activity" -> Icons.Outlined.FitnessCenter
+        "dollarsign" -> Icons.Outlined.Payments
+        "package" -> Icons.Outlined.Inventory
+
+        else -> Icons.Outlined.Category
     }
 }
