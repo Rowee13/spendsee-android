@@ -13,10 +13,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.foundation.layout.WindowInsets
-import compose.icons.FeatherIcons
-import compose.icons.feathericons.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,7 +77,7 @@ fun AccountsScreen(
                         containerColor = currentTheme.getAccent(isDarkMode),
                         contentColor = Color.White
                     ) {
-                        Icon(FeatherIcons.Plus, contentDescription = "Add Account")
+                        Icon(Icons.Outlined.Add, contentDescription = "Add Account")
                     }
                 }
             }
@@ -477,7 +476,7 @@ fun AccountCard(
                 onClick = { showMenu = true }
             ) {
                 Icon(
-                    imageVector = FeatherIcons.MoreVertical,
+                    imageVector = Icons.Outlined.MoreVert,
                     contentDescription = "More options",
                     tint = currentTheme.getInactive(isDarkMode)
                 )
@@ -496,7 +495,7 @@ fun AccountCard(
                     onEdit()
                 },
                 leadingIcon = {
-                    Icon(FeatherIcons.Edit2, contentDescription = "Edit")
+                    Icon(Icons.Outlined.Edit, contentDescription = "Edit")
                 }
             )
             DropdownMenuItem(
@@ -506,7 +505,7 @@ fun AccountCard(
                     onDelete()
                 },
                 leadingIcon = {
-                    Icon(FeatherIcons.Trash2, contentDescription = "Delete", tint = Color.Red)
+                    Icon(Icons.Outlined.Delete, contentDescription = "Delete", tint = Color.Red)
                 }
             )
         }
@@ -529,7 +528,7 @@ fun EmptyState(
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
-                imageVector = FeatherIcons.CreditCard,
+                imageVector = Icons.Outlined.CreditCard,
                 contentDescription = null,
                 modifier = Modifier.size(64.dp),
                 tint = currentTheme.getInactive(isDarkMode)
@@ -652,7 +651,7 @@ fun AccountDetailSheet(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(
-                            imageVector = FeatherIcons.FileText,
+                            imageVector = Icons.Outlined.Description,
                             contentDescription = null,
                             modifier = Modifier.size(48.dp),
                             tint = currentTheme.getInactive(isDarkMode)
@@ -769,11 +768,48 @@ private fun formatCurrency(amount: Double, currencySymbol: String): String {
 
 private fun getAccountIcon(iconName: String): androidx.compose.ui.graphics.vector.ImageVector {
     return when (iconName.lowercase()) {
-        "account_balance" -> FeatherIcons.Briefcase
-        "credit_card" -> FeatherIcons.CreditCard
-        "wallet" -> FeatherIcons.Package
-        "savings" -> FeatherIcons.TrendingUp
-        "payments" -> FeatherIcons.DollarSign
-        else -> FeatherIcons.Briefcase
+        // Financial Icons
+        "accountbalance" -> Icons.Outlined.AccountBalance
+        "creditcard" -> Icons.Outlined.CreditCard
+        "payments" -> Icons.Outlined.Payments
+        "accountbalancewallet" -> Icons.Outlined.AccountBalanceWallet
+        "savings" -> Icons.Outlined.Savings
+        "trendingup" -> Icons.Outlined.TrendingUp
+        "showchart" -> Icons.Outlined.ShowChart
+        "paid" -> Icons.Outlined.Paid
+        "localatm" -> Icons.Outlined.LocalAtm
+        "currencyexchange" -> Icons.Outlined.CurrencyExchange
+        "account" -> Icons.Outlined.AccountCircle
+        "monetizationon" -> Icons.Outlined.MonetizationOn
+
+        // Lifestyle & General
+        "home" -> Icons.Outlined.Home
+        "work" -> Icons.Outlined.Work
+        "shoppingbag" -> Icons.Outlined.ShoppingBag
+        "cardgiftcard" -> Icons.Outlined.CardGiftcard
+        "star" -> Icons.Outlined.Star
+        "favorite" -> Icons.Outlined.Favorite
+        "school" -> Icons.Outlined.School
+        "localhospital" -> Icons.Outlined.LocalHospital
+        "flight" -> Icons.Outlined.Flight
+        "directionscar" -> Icons.Outlined.DirectionsCar
+        "restaurant" -> Icons.Outlined.Restaurant
+        "lock" -> Icons.Outlined.Lock
+
+        // Legacy Feather icon names (backward compatibility)
+        "dollarsign" -> Icons.Outlined.Payments
+        "briefcase" -> Icons.Outlined.Work
+        "smartphone" -> Icons.Outlined.AccountBalanceWallet
+        "shield" -> Icons.Outlined.Lock
+        "package" -> Icons.Outlined.Inventory
+        "gift" -> Icons.Outlined.CardGiftcard
+        "heart" -> Icons.Outlined.Favorite
+        "droplet" -> Icons.Outlined.WaterDrop
+        "truck" -> Icons.Outlined.LocalShipping
+        "shoppingcart" -> Icons.Outlined.ShoppingCart
+        "coffee" -> Icons.Outlined.LocalCafe
+        "camera" -> Icons.Outlined.CameraAlt
+
+        else -> Icons.Outlined.AccountBalance
     }
 }
