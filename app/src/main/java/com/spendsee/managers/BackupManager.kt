@@ -44,7 +44,7 @@ class BackupManager(
             accounts = accounts,
             budgets = budgets,
             budgetItems = budgetItems,
-            categories = categories.filter { !it.isDefault }, // Don't backup default categories
+            categories = categories, // Include all categories so customizations are preserved on restore
             settings = BackupSettings(selectedCurrency = selectedCurrency)
         )
 
@@ -69,10 +69,24 @@ class BackupManager(
             // Deserialize from JSON
             val backup = json.decodeFromString<BackupData>(jsonContent)
 
-            // Import categories (skip defaults)
+            // Import categories — update in-place if same name exists (avoids duplicates
+            // when restoring to a fresh install that already seeded default categories)
             backup.categories.forEach { category ->
                 try {
-                    database.categoryDao().insert(category)
+                    val existing = database.categoryDao().getByName(category.name)
+                    if (existing != null) {
+                        // A category with this name already exists — update its customizable
+                        // fields while preserving the local UUID and isDefault status
+                        database.categoryDao().update(
+                            existing.copy(
+                                icon = category.icon,
+                                colorHex = category.colorHex,
+                                sortOrder = category.sortOrder
+                            )
+                        )
+                    } else {
+                        database.categoryDao().insert(category)
+                    }
                     result.categoriesImported++
                 } catch (e: Exception) {
                     result.categoriesSkipped++
