@@ -12,11 +12,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,9 +30,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import compose.icons.FeatherIcons
-import compose.icons.feathericons.X
 import com.spendsee.ui.theme.ThemeColors
+import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -36,6 +41,9 @@ fun BudgetCalendarView(
     budgets: List<BudgetWithDetails>,
     selectedCalendarDate: Long?,
     onDateSelected: (Long?) -> Unit,
+    onEditBudget: (BudgetWithDetails) -> Unit,
+    onDeleteBudget: (BudgetWithDetails) -> Unit,
+    currencySymbol: String,
     currentTheme: ThemeColors,
     isDarkMode: Boolean
 ) {
@@ -43,9 +51,16 @@ fun BudgetCalendarView(
         generateCalendarDays(selectedDate.first, selectedDate.second, budgets)
     }
 
+    val selectedDayBudgets = remember(selectedCalendarDate, calendarDays) {
+        selectedCalendarDate?.let { date ->
+            calendarDays.find { it.timestamp == date }?.budgets ?: emptyList()
+        } ?: emptyList()
+    }
+
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
             .background(currentTheme.getBackground(isDarkMode))
     ) {
         // Selected Date Banner (if date is selected)
@@ -57,9 +72,7 @@ fun BudgetCalendarView(
             selectedCalendarDate?.let { date ->
                 SelectedDateBanner(
                     date = date,
-                    budgetCount = calendarDays
-                        .find { it.timestamp == date }
-                        ?.budgets?.size ?: 0,
+                    budgetCount = selectedDayBudgets.size,
                     onClear = { onDateSelected(null) },
                     currentTheme = currentTheme,
                     isDarkMode = isDarkMode
@@ -132,10 +145,10 @@ fun BudgetCalendarView(
             LegendItem("Overdue unpaid", Color.Red, currentTheme, isDarkMode)
         }
 
-        // Helper text
+        // Helper text or Budget List
         if (selectedCalendarDate == null) {
             Text(
-                text = "Tap a date to filter budgets by due date",
+                text = "Tap a date to see budgets due on that day",
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
@@ -143,6 +156,218 @@ fun BudgetCalendarView(
                 color = currentTheme.getText(isDarkMode).copy(alpha = 0.6f),
                 textAlign = TextAlign.Center
             )
+        } else {
+            // Budget list for selected date
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text(
+                    text = "Budgets Due",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = currentTheme.getText(isDarkMode),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                if (selectedDayBudgets.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No budgets due on this date",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = currentTheme.getInactive(isDarkMode),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    selectedDayBudgets.forEach { budget ->
+                        CalendarBudgetCard(
+                            budgetWithDetails = budget,
+                            onEdit = { onEditBudget(budget) },
+                            onDelete = { onDeleteBudget(budget) },
+                            currencySymbol = currencySymbol,
+                            currentTheme = currentTheme,
+                            isDarkMode = isDarkMode
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+
+                // Bottom padding for FAB
+                Spacer(modifier = Modifier.height(80.dp))
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CalendarBudgetCard(
+    budgetWithDetails: BudgetWithDetails,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    currencySymbol: String,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
+) {
+    var showMenu by remember { mutableStateOf(false) }
+    val isOverBudget = budgetWithDetails.spent > budgetWithDetails.planned
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp)),
+        colors = CardDefaults.cardColors(
+            containerColor = currentTheme.getSurface(isDarkMode)
+        ),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = budgetWithDetails.budget.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = currentTheme.getText(isDarkMode)
+                    )
+                    Text(
+                        text = budgetWithDetails.budget.category,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = currentTheme.getInactive(isDarkMode)
+                    )
+                }
+
+                Box {
+                    IconButton(onClick = { showMenu = true }) {
+                        Icon(
+                            imageVector = Icons.Outlined.MoreVert,
+                            contentDescription = "More Options",
+                            tint = currentTheme.getInactive(isDarkMode)
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Edit") },
+                            onClick = {
+                                showMenu = false
+                                onEdit()
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Outlined.Edit, contentDescription = "Edit")
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Delete", color = Color.Red) },
+                            onClick = {
+                                showMenu = false
+                                onDelete()
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Outlined.Delete, contentDescription = "Delete", tint = Color.Red)
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Progress Bar
+            LinearProgressIndicator(
+                progress = (budgetWithDetails.percentage / 100f).coerceIn(0f, 1f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = if (isOverBudget) Color(0xFFEF5350) else MaterialTheme.colorScheme.primary,
+                trackColor = if (isOverBudget) Color(0xFFEF5350).copy(alpha = 0.2f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Planned / Spent / Remaining
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = "Planned",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = currentTheme.getInactive(isDarkMode)
+                    )
+                    Text(
+                        text = formatCalendarCurrency(budgetWithDetails.planned, currencySymbol),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = currentTheme.getText(isDarkMode)
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "Spent",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = currentTheme.getInactive(isDarkMode)
+                    )
+                    Text(
+                        text = formatCalendarCurrency(budgetWithDetails.spent, currencySymbol),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = if (isOverBudget) Color(0xFFEF5350) else currentTheme.getText(isDarkMode)
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "Remaining",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = currentTheme.getInactive(isDarkMode)
+                    )
+                    Text(
+                        text = formatCalendarCurrency(budgetWithDetails.remaining, currencySymbol),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = if (budgetWithDetails.remaining < 0) Color(0xFFEF5350) else Color(0xFF66BB6A)
+                    )
+                }
+            }
+
+            // Paid status badge
+            if (budgetWithDetails.budget.isPaid) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = Color(0xFF4CAF50).copy(alpha = 0.1f)
+                ) {
+                    Text(
+                        text = "Paid",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF4CAF50),
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -300,7 +525,7 @@ fun SelectedDateBanner(
                 modifier = Modifier.height(36.dp)
             ) {
                 Icon(
-                    imageVector = FeatherIcons.X,
+                    imageVector = Icons.Outlined.Close,
                     contentDescription = "Clear",
                     modifier = Modifier.size(16.dp)
                 )
@@ -467,4 +692,9 @@ fun generateCalendarDays(
     }
 
     return days
+}
+
+private fun formatCalendarCurrency(amount: Double, currencySymbol: String): String {
+    val formatter = DecimalFormat("#,##0.00")
+    return "$currencySymbol${formatter.format(amount)}"
 }

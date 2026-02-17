@@ -290,6 +290,12 @@ fun BudgetsScreen(
                         budgets = uiState.budgetsWithDetails,
                         selectedCalendarDate = uiState.selectedCalendarDate,
                         onDateSelected = { viewModel.selectCalendarDate(it) },
+                        onEditBudget = {
+                            budgetToEdit = it
+                            showEditBudget = true
+                        },
+                        onDeleteBudget = { viewModel.deleteBudget(it.budget) },
+                        currencySymbol = selectedCurrency.symbol,
                         currentTheme = currentTheme,
                         isDarkMode = isDarkMode
                     )
