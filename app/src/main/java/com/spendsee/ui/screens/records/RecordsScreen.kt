@@ -678,28 +678,28 @@ fun UnifiedHeaderSection(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val netFormatted = if (net < 0) {
+                        "-$currencySymbol${String.format("%.2f", kotlin.math.abs(net))}"
+                    } else {
+                        "$currencySymbol${String.format("%.2f", net)}"
+                    }
+                    val earningsColor = when {
+                        isMonochromeDark -> if (net >= 0) Color(0xFF2E7D32) else Color(0xFFFF5252)
+                        isMonochrome -> if (net >= 0) Color(0xFFB2FF59) else Color(0xFFFF5252)
+                        else -> if (net >= 0) Color(0xFF1E7E34) else Color(0xFFD32F2F)
+                    }
                     Text(
-                        text = "$currencySymbol${String.format("%.2f", net)}",
+                        text = netFormatted,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = when {
-                            isMonochromeDark -> if (net >= 0) Color(0xFF2E7D32) else Color(0xFFC62828)  // Darker colors for dark mode
-                            isMonochrome -> if (net >= 0) Color(0xFFB2FF59) else Color(0xFFFF6B6B)  // Bright colors for light mode
-                            else -> if (net >= 0) Color(0xFF1E7E34) else Color(0xFFFF3B30)  // Default
-                        }
+                        color = earningsColor
                     )
-                    if (net >= 0) {
-                        Icon(
-                            FeatherIcons.TrendingUp,
-                            contentDescription = "Positive earnings",
-                            tint = when {
-                                isMonochromeDark -> Color(0xFF2E7D32)
-                                isMonochrome -> Color(0xFFB2FF59)
-                                else -> Color(0xFF1E7E34)
-                            },
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = if (net >= 0) FeatherIcons.TrendingUp else FeatherIcons.TrendingDown,
+                        contentDescription = if (net >= 0) "Positive earnings" else "Negative earnings",
+                        tint = earningsColor,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
         }
