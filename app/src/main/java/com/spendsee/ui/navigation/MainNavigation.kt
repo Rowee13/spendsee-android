@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -38,13 +39,30 @@ import com.spendsee.ui.screens.settings.SettingsScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainNavigation() {
+fun MainNavigation(
+    navigateTo: String? = null,
+    onNavigationHandled: () -> Unit = {}
+) {
     val context = LocalContext.current
     val themeManager = remember { ThemeManager.getInstance(context) }
     val currentTheme by themeManager.currentTheme.collectAsState()
     val isDarkMode by themeManager.isDarkMode.collectAsState()
 
     val navController = rememberNavController()
+
+    // Navigate to the target tab when opened from a notification tap, then consume the event.
+    LaunchedEffect(navigateTo) {
+        if (navigateTo != null) {
+            navController.navigate(navigateTo) {
+                popUpTo(navController.graph.findStartDestination().id) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+            onNavigationHandled()
+        }
+    }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 

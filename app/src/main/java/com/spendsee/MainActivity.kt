@@ -1,5 +1,6 @@
 package com.spendsee
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,9 +21,15 @@ import com.spendsee.ui.theme.AppColorSchemes
 import com.spendsee.ui.theme.SpendSeeTheme
 
 class MainActivity : ComponentActivity() {
+
+    // Holds the tab route to navigate to when the app is opened via a notification tap.
+    // Backed by Compose state so MainNavigation reacts when onNewIntent updates it.
+    private var notificationNavigateTo by mutableStateOf<String?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        handleNotificationIntent(intent)
 
         setContent {
             val themeManager = remember { ThemeManager.getInstance(this) }
@@ -60,10 +67,24 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     } else {
-                        MainNavigation()
+                        MainNavigation(
+                            navigateTo = notificationNavigateTo,
+                            onNavigationHandled = { notificationNavigateTo = null }
+                        )
                     }
                 }
             }
         }
+    }
+
+    // Called when the activity is already running and a notification is tapped
+    // (e.g. app is in the foreground or backstack).
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleNotificationIntent(intent)
+    }
+
+    private fun handleNotificationIntent(intent: Intent?) {
+        notificationNavigateTo = intent?.getStringExtra("navigate_to")
     }
 }
