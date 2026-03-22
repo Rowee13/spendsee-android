@@ -1,6 +1,7 @@
 package com.spendsee.ui.screens.accounts
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.spendsee.R
 import com.spendsee.data.local.entities.Account
+import com.spendsee.data.local.entities.Transaction
 import com.spendsee.data.repository.AccountRepository
 import com.spendsee.data.repository.TransactionRepository
 import com.spendsee.managers.CurrencyManager
@@ -60,6 +62,29 @@ fun AccountsScreen(
     var showAccountDetail by remember { mutableStateOf(false) }
     var accountToShowDetail by remember { mutableStateOf<Account?>(null) }
     var fabVisible by remember { mutableStateOf(true) }
+    val listState = rememberLazyListState()
+    var previousScrollIndex by remember { mutableStateOf(0) }
+    var previousScrollOffset by remember { mutableStateOf(0) }
+
+    // FAB scroll detection
+    LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
+        val currentIndex = listState.firstVisibleItemIndex
+        val currentOffset = listState.firstVisibleItemScrollOffset
+        if (currentIndex > previousScrollIndex || (currentIndex == previousScrollIndex && currentOffset > previousScrollOffset)) {
+            fabVisible = false
+        } else if (currentIndex < previousScrollIndex || currentOffset < previousScrollOffset) {
+            fabVisible = true
+        }
+        previousScrollIndex = currentIndex
+        previousScrollOffset = currentOffset
+    }
+
+    // Recent transactions (5 most recent across all accounts)
+    val transactionRepository = remember { TransactionRepository.getInstance(context) }
+    val allTransactions by transactionRepository.getAllTransactions().collectAsState(initial = emptyList())
+    val recentTransactions = remember(allTransactions) {
+        allTransactions.sortedByDescending { it.date }.take(5)
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -69,9 +94,7 @@ fun AccountsScreen(
                 enter = fadeIn() + scaleIn(),
                 exit = fadeOut() + scaleOut()
             ) {
-                Box(
-                    modifier = Modifier.padding(bottom = 16.dp)
-                ) {
+                Box(modifier = Modifier.padding(bottom = 16.dp)) {
                     FloatingActionButton(
                         onClick = { showAddAccount = true },
                         containerColor = currentTheme.getAccent(isDarkMode),
@@ -88,62 +111,122 @@ fun AccountsScreen(
                 .fillMaxSize()
                 .background(currentTheme.getBackground(isDarkMode))
         ) {
-                // Unified Header Section (iOS style)
-                UnifiedAccountsHeaderSection(
-                totalBalance = uiState.totalBalance,
-                totalExpenses = uiState.totalExpenses,
-                totalIncome = uiState.totalIncome,
-                currencySymbol = selectedCurrency.symbol,
-                currentTheme = currentTheme,
-                isDarkMode = isDarkMode
-            )
+            // FIXED: Logo + "Accounts" title
+            AccountsFixedHeader(currentTheme = currentTheme, isDarkMode = isDarkMode)
 
-            // Accounts List
+            // SCROLLABLE: balance + account cards + recent movements
             if (uiState.isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
-            } else if (uiState.accounts.isEmpty()) {
-                EmptyState(
-                    currentTheme = currentTheme,
-                    isDarkMode = isDarkMode
-                )
             } else {
-                AccountsList(
-                    accounts = uiState.accounts,
-                    onAccountClick = {
-                        accountToShowDetail = it
-                        showAccountDetail = true
-                    },
-                    onEditAccount = {
-                        accountToEdit = it
-                        showEditAccount = true
-                    },
-                    onDeleteAccount = { viewModel.deleteAccount(it) },
-                    currencySymbol = selectedCurrency.symbol,
-                    currentTheme = currentTheme,
-                    isDarkMode = isDarkMode,
-                    onScrollChanged = { isScrollingDown ->
-                        fabVisible = !isScrollingDown
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 16.dp)
+                ) {
+                    // "All accounts" label + total balance
+                    item {
+                        Text(
+                            text = "All accounts",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = currentTheme.getAccent(isDarkMode)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = formatCurrency(uiState.totalBalance, selectedCurrency.symbol),
+                            style = MaterialTheme.typography.displaySmall.copy(fontSize = 34.sp),
+                            fontWeight = FontWeight.Bold,
+                            color = if (uiState.totalBalance >= 0) currentTheme.getText(isDarkMode) else Color(0xFFFF3B30)
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
                     }
-                )
+
+                    // Account cards or empty state
+                    if (uiState.accounts.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.CreditCard,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(64.dp),
+                                        tint = currentTheme.getInactive(isDarkMode)
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text("No Accounts", style = MaterialTheme.typography.titleMedium, color = currentTheme.getText(isDarkMode), fontWeight = FontWeight.SemiBold)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("Tap the + button to create your first account", style = MaterialTheme.typography.bodyMedium, color = currentTheme.getInactive(isDarkMode), textAlign = TextAlign.Center)
+                                }
+                            }
+                        }
+                    } else {
+                        items(uiState.accounts) { account ->
+                            AccountCard(
+                                account = account,
+                                onClick = { accountToShowDetail = account; showAccountDetail = true },
+                                onEdit = { accountToEdit = account; showEditAccount = true },
+                                onDelete = { viewModel.deleteAccount(account) },
+                                currencySymbol = selectedCurrency.symbol,
+                                currentTheme = currentTheme,
+                                isDarkMode = isDarkMode
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+
+                        // Recent Movements section
+                        if (recentTransactions.isNotEmpty()) {
+                            item {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Recent Movements",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = currentTheme.getAccent(isDarkMode)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Surface(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = currentTheme.getSurface(isDarkMode),
+                                    border = BorderStroke(1.dp, currentTheme.getBorder(isDarkMode))
+                                ) {
+                                    Column {
+                                        recentTransactions.forEachIndexed { index, transaction ->
+                                            TransactionRow(
+                                                transaction = transaction,
+                                                currencySymbol = selectedCurrency.symbol,
+                                                currentTheme = currentTheme,
+                                                isDarkMode = isDarkMode,
+                                                modifier = Modifier.padding(horizontal = 16.dp)
+                                            )
+                                            if (index < recentTransactions.size - 1) {
+                                                Divider(
+                                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                                    thickness = 1.dp,
+                                                    color = currentTheme.getBorder(isDarkMode)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    item { Spacer(modifier = Modifier.height(100.dp)) }
+                }
             }
 
             // Error Message
             uiState.error?.let { error ->
                 Snackbar(
                     modifier = Modifier.padding(16.dp),
-                    action = {
-                        TextButton(onClick = { viewModel.loadAccounts() }) {
-                            Text("Retry")
-                        }
-                    }
-                ) {
-                    Text(error)
-                }
+                    action = { TextButton(onClick = { viewModel.loadAccounts() }) { Text("Retry") } }
+                ) { Text(error) }
             }
         }
     }
@@ -194,6 +277,59 @@ fun AccountsScreen(
                 showAccountDetail = false
                 accountToShowDetail = null
             }
+        )
+    }
+}
+
+@Composable
+fun AccountsFixedHeader(
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(currentTheme.getBackground(isDarkMode))
+            .padding(horizontal = 16.dp)
+    ) {
+        // Logo + notification bell
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.app_logo),
+                contentDescription = "SpendSee Logo",
+                modifier = Modifier.size(28.dp),
+                colorFilter = ColorFilter.tint(if (isDarkMode) Color.White else Color(0xFF1A1A1A))
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "SpendSee",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = if (isDarkMode) Color.White else Color(0xFF1A1A1A)
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Icon(
+                imageVector = Icons.Outlined.Notifications,
+                contentDescription = "Notifications",
+                tint = currentTheme.getInactive(isDarkMode),
+                modifier = Modifier.size(22.dp)
+            )
+        }
+
+        // "Accounts" large title
+        Text(
+            text = "Accounts",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = currentTheme.getText(isDarkMode),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
         )
     }
 }
@@ -414,99 +550,113 @@ fun AccountCard(
     isDarkMode: Boolean
 ) {
     var showMenu by remember { mutableStateOf(false) }
+    val accountColor = Color(android.graphics.Color.parseColor(account.colorHex))
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp))
+            .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(16.dp))
             .clickable { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = currentTheme.getSurface(isDarkMode)
         ),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .padding(16.dp)
         ) {
-            // Left side: Icon and account info
+            // Top row: colored square icon (left) + "⋯" menu (right)
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Account Icon
                 Box(
                     modifier = Modifier
                         .size(48.dp)
-                        .clip(CircleShape)
-                        .background(Color(android.graphics.Color.parseColor(account.colorHex)).copy(alpha = 0.2f)),
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(accountColor.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = getAccountIcon(account.icon),
                         contentDescription = null,
-                        tint = Color(android.graphics.Color.parseColor(account.colorHex)),
-                        modifier = Modifier.size(24.dp)
+                        tint = accountColor,
+                        modifier = Modifier.size(26.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Column {
-                    Text(
-                        text = account.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = currentTheme.getText(isDarkMode)
-                    )
-                    Text(
-                        text = formatCurrency(account.balance, currencySymbol),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (account.balance >= 0) currentTheme.getText(isDarkMode) else Color(0xFFEF5350)
-                    )
+                Box {
+                    IconButton(
+                        onClick = { showMenu = true },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.MoreVert,
+                            contentDescription = "More options",
+                            tint = currentTheme.getInactive(isDarkMode),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Edit") },
+                            onClick = { showMenu = false; onEdit() },
+                            leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = "Edit") }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Delete", color = Color.Red) },
+                            onClick = { showMenu = false; onDelete() },
+                            leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = "Delete", tint = Color.Red) }
+                        )
+                    }
                 }
             }
 
-            // Right side: Kebab menu icon
-            IconButton(
-                onClick = { showMenu = true }
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.MoreVert,
-                    contentDescription = "More options",
-                    tint = currentTheme.getInactive(isDarkMode)
-                )
-            }
-        }
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // Dropdown Menu
-        DropdownMenu(
-            expanded = showMenu,
-            onDismissRequest = { showMenu = false }
-        ) {
-            DropdownMenuItem(
-                text = { Text("Edit") },
-                onClick = {
-                    showMenu = false
-                    onEdit()
-                },
-                leadingIcon = {
-                    Icon(Icons.Outlined.Edit, contentDescription = "Edit")
-                }
+            // Account name
+            Text(
+                text = account.name,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = currentTheme.getText(isDarkMode),
+                maxLines = 1
             )
-            DropdownMenuItem(
-                text = { Text("Delete", color = Color.Red) },
-                onClick = {
-                    showMenu = false
-                    onDelete()
-                },
-                leadingIcon = {
-                    Icon(Icons.Outlined.Delete, contentDescription = "Delete", tint = Color.Red)
-                }
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            // Account type
+            Text(
+                text = account.type,
+                style = MaterialTheme.typography.bodySmall,
+                color = currentTheme.getInactive(isDarkMode)
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // "CURRENT BALANCE" caption
+            Text(
+                text = "CURRENT BALANCE",
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                color = currentTheme.getInactive(isDarkMode),
+                letterSpacing = 0.8.sp
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Balance amount
+            Text(
+                text = formatCurrency(account.balance, currencySymbol),
+                style = MaterialTheme.typography.headlineSmall.copy(fontSize = 24.sp),
+                fontWeight = FontWeight.Bold,
+                color = if (account.balance >= 0) currentTheme.getText(isDarkMode) else Color(0xFFFF3B30)
             )
         }
     }
@@ -709,10 +859,11 @@ fun TransactionRow(
     transaction: com.spendsee.data.local.entities.Transaction,
     currencySymbol: String,
     currentTheme: ThemeColors,
-    isDarkMode: Boolean
+    isDarkMode: Boolean,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,

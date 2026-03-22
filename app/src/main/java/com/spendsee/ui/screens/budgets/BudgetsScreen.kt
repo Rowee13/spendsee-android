@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -81,6 +83,41 @@ fun BudgetsScreen(
     var showPaymentConfirmation by remember { mutableStateOf(false) }
     var budgetToPayFor by remember { mutableStateOf<BudgetWithDetails?>(null) }
     var fabVisible by remember { mutableStateOf(true) }
+    val listState = rememberLazyListState()
+    var previousScrollIndex by remember { mutableStateOf(0) }
+    var previousScrollOffset by remember { mutableStateOf(0) }
+
+    // FAB scroll detection (list mode only)
+    LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
+        val currentIndex = listState.firstVisibleItemIndex
+        val currentOffset = listState.firstVisibleItemScrollOffset
+        if (currentIndex > previousScrollIndex || (currentIndex == previousScrollIndex && currentOffset > previousScrollOffset)) {
+            fabVisible = false
+        } else if (currentIndex < previousScrollIndex || currentOffset < previousScrollOffset) {
+            fabVisible = true
+        }
+        previousScrollIndex = currentIndex
+        previousScrollOffset = currentOffset
+    }
+
+    // Compute info card data
+    val now = System.currentTimeMillis()
+    val nextBudgetDue = uiState.budgetsWithDetails
+        .filter { (it.budget.dueDate ?: Long.MIN_VALUE) >= now }
+        .minByOrNull { it.budget.dueDate ?: Long.MAX_VALUE }
+    val thisWeekBudgets = run {
+        val cal = Calendar.getInstance()
+        cal.firstDayOfWeek = Calendar.MONDAY
+        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+        cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0); cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
+        val weekStart = cal.timeInMillis
+        cal.add(Calendar.DAY_OF_WEEK, 7)
+        val weekEnd = cal.timeInMillis
+        uiState.budgetsWithDetails.filter { bwd ->
+            val due = bwd.budget.dueDate ?: return@filter false
+            due in weekStart until weekEnd
+        }
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -109,76 +146,23 @@ fun BudgetsScreen(
                 .fillMaxSize()
                 .background(currentTheme.getBackground(isDarkMode))
         ) {
-            // Unified Header Section (iOS style)
-            UnifiedBudgetHeaderSection(
+            // FIXED: Logo + month navigation header
+            BudgetsFixedHeader(
                 selectedMonth = uiState.selectedMonth,
                 selectedYear = uiState.selectedYear,
                 onPreviousMonth = { viewModel.previousMonth() },
                 onNextMonth = { viewModel.nextMonth() },
-                allocated = uiState.totalAllocated,
-                spent = uiState.totalSpent,
-                remaining = uiState.totalRemaining,
-                currencySymbol = selectedCurrency.symbol,
                 currentTheme = currentTheme,
                 isDarkMode = isDarkMode
             )
 
-            // View Mode TabRow - Aligned with other elements
-            TabRow(
-                selectedTabIndex = if (uiState.displayMode == BudgetDisplayMode.LIST) 0 else 1,
-                containerColor = currentTheme.getSurface(isDarkMode),
-                contentColor = currentTheme.getAccent(isDarkMode),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .border(
-                        width = 1.dp,
-                        color = currentTheme.getBorder(isDarkMode),
-                        shape = RoundedCornerShape(12.dp)
-                    ),
-                indicator = { tabPositions ->
-                    TabRowDefaults.Indicator(
-                        modifier = Modifier.tabIndicatorOffset(tabPositions[if (uiState.displayMode == BudgetDisplayMode.LIST) 0 else 1]),
-                        height = 3.dp,
-                        color = currentTheme.getAccent(isDarkMode)
-                    )
-                },
-                divider = {}
-            ) {
-                Tab(
-                    selected = uiState.displayMode == BudgetDisplayMode.LIST,
-                    onClick = { viewModel.setDisplayMode(BudgetDisplayMode.LIST) },
-                    text = {
-                        Text(
-                            text = "List",
-                            fontWeight = if (uiState.displayMode == BudgetDisplayMode.LIST) FontWeight.Bold else FontWeight.Normal
-                        )
-                    }
-                )
-                Tab(
-                    selected = uiState.displayMode == BudgetDisplayMode.CALENDAR,
-                    onClick = { viewModel.setDisplayMode(BudgetDisplayMode.CALENDAR) },
-                    text = {
-                        Text(
-                            text = "Calendar",
-                            fontWeight = if (uiState.displayMode == BudgetDisplayMode.CALENDAR) FontWeight.Bold else FontWeight.Normal
-                        )
-                    }
-                )
-            }
-
-            // Content - Switch between List and Calendar
+            // SCROLLABLE: Cards + pill toggle + content
             when (uiState.displayMode) {
                 BudgetDisplayMode.LIST -> {
-                    // Budgets List
                     if (uiState.isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
                     } else {
                         val filteredBudgets = if (uiState.selectedCalendarDate != null) {
                             viewModel.getFilteredBudgets()
@@ -186,119 +170,218 @@ fun BudgetsScreen(
                             uiState.budgetsWithDetails
                         }
 
-                        if (filteredBudgets.isEmpty() && uiState.selectedCalendarDate != null) {
-                            // Filtered empty state
-                            EmptyFilteredState(
-                                onClearFilter = { viewModel.selectCalendarDate(null) },
-                                currentTheme = currentTheme,
-                                isDarkMode = isDarkMode
-                            )
-                        } else if (uiState.budgetsWithDetails.isEmpty()) {
-                            EmptyState(
-                                onCopyFromPrevious = { viewModel.copyFromPreviousMonth() },
-                                currentTheme = currentTheme,
-                                isDarkMode = isDarkMode
-                            )
-                        } else {
-                            Column(modifier = Modifier.fillMaxSize()) {
-                    // Show "Copy Missing Budgets" button if there are missing budgets
-                    if (uiState.missingBudgetsCount > 0) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer
-                            )
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(horizontal = 16.dp)
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "${uiState.missingBudgetsCount} budget${if (uiState.missingBudgetsCount > 1) "s" else ""} not copied",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                    Text(
-                                        text = "From previous month",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                                    )
-                                }
-                                Button(
-                                    onClick = { viewModel.copyMissingBudgets() },
-                                    modifier = Modifier.padding(start = 8.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = FeatherIcons.Copy,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Copy")
-                                }
+                            // Hero card
+                            item {
+                                BudgetHeroCard(
+                                    allocated = uiState.totalAllocated,
+                                    spent = uiState.totalSpent,
+                                    remaining = uiState.totalRemaining,
+                                    currencySymbol = selectedCurrency.symbol,
+                                    currentTheme = currentTheme,
+                                    isDarkMode = isDarkMode
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
                             }
-                        }
-                    }
 
-                                BudgetsList(
-                        budgets = filteredBudgets,
-                        onEditBudget = {
-                            budgetToEdit = it
-                            showEditBudget = true
-                        },
-                        onDeleteBudget = { viewModel.deleteBudget(it.budget) },
-                        onAddBudgetItem = { budgetId ->
-                            selectedBudgetId = budgetId
-                            showAddBudgetItem = true
-                        },
-                        onEditBudgetItem = { item ->
-                            budgetItemToEdit = item
-                            showEditBudgetItem = true
-                        },
-                        onDeleteBudgetItem = { viewModel.deleteBudgetItem(it) },
-                        onMarkAsPaid = { budgetWithDetails ->
-                            if (isPremium) {
-                                budgetToPayFor = budgetWithDetails
-                                showPaymentConfirmation = true
+                            // Two-column info cards
+                            item {
+                                BudgetInfoCards(
+                                    nextBudgetDue = nextBudgetDue,
+                                    thisWeekBudgets = thisWeekBudgets,
+                                    currencySymbol = selectedCurrency.symbol,
+                                    currentTheme = currentTheme,
+                                    isDarkMode = isDarkMode
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+
+                            // Pill toggle
+                            item {
+                                BudgetPillToggle(
+                                    displayMode = uiState.displayMode,
+                                    onModeChange = { viewModel.setDisplayMode(it) },
+                                    currentTheme = currentTheme,
+                                    isDarkMode = isDarkMode
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+
+                            // Missing budgets banner
+                            if (uiState.missingBudgetsCount > 0) {
+                                item {
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp)),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = currentTheme.getSurface(isDarkMode)
+                                        ),
+                                        shape = RoundedCornerShape(12.dp),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = "${uiState.missingBudgetsCount} budget${if (uiState.missingBudgetsCount > 1) "s" else ""} not copied",
+                                                    style = MaterialTheme.typography.titleSmall,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = currentTheme.getText(isDarkMode)
+                                                )
+                                                Text(
+                                                    text = "From previous month",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = currentTheme.getInactive(isDarkMode)
+                                                )
+                                            }
+                                            Button(
+                                                onClick = { viewModel.copyMissingBudgets() },
+                                                modifier = Modifier.padding(start = 8.dp),
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = currentTheme.getAccent(isDarkMode),
+                                                    contentColor = Color.White
+                                                )
+                                            ) {
+                                                Icon(imageVector = FeatherIcons.Copy, contentDescription = null, modifier = Modifier.size(18.dp))
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text("Copy")
+                                            }
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                            }
+
+                            // Budget rows or empty state
+                            if (filteredBudgets.isEmpty() && uiState.selectedCalendarDate != null) {
+                                item {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Icon(imageVector = FeatherIcons.Calendar, contentDescription = null, modifier = Modifier.size(48.dp), tint = currentTheme.getInactive(isDarkMode))
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                            Text("No Budgets Due", style = MaterialTheme.typography.titleMedium, color = currentTheme.getText(isDarkMode), fontWeight = FontWeight.SemiBold)
+                                            Text("No budgets are due on this date", style = MaterialTheme.typography.bodyMedium, color = currentTheme.getInactive(isDarkMode), textAlign = TextAlign.Center)
+                                            Spacer(modifier = Modifier.height(16.dp))
+                                            Button(onClick = { viewModel.selectCalendarDate(null) }, colors = ButtonDefaults.buttonColors(containerColor = currentTheme.getAccent(isDarkMode))) {
+                                                Text("Clear Filter")
+                                            }
+                                        }
+                                    }
+                                }
+                            } else if (uiState.budgetsWithDetails.isEmpty()) {
+                                item {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Icon(imageVector = FeatherIcons.DollarSign, contentDescription = null, modifier = Modifier.size(64.dp), tint = currentTheme.getInactive(isDarkMode))
+                                            Spacer(modifier = Modifier.height(16.dp))
+                                            Text("No Budgets", style = MaterialTheme.typography.titleMedium, color = currentTheme.getText(isDarkMode), fontWeight = FontWeight.SemiBold)
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text("Tap the + button to create your first budget", style = MaterialTheme.typography.bodyMedium, color = currentTheme.getInactive(isDarkMode), textAlign = TextAlign.Center)
+                                            Spacer(modifier = Modifier.height(24.dp))
+                                            OutlinedButton(
+                                                onClick = { viewModel.copyFromPreviousMonth() },
+                                                colors = ButtonDefaults.outlinedButtonColors(contentColor = currentTheme.getAccent(isDarkMode)),
+                                                border = androidx.compose.foundation.BorderStroke(1.dp, currentTheme.getAccent(isDarkMode))
+                                            ) {
+                                                Icon(imageVector = FeatherIcons.Copy, contentDescription = null, modifier = Modifier.size(18.dp))
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text("Copy from Previous Month")
+                                            }
+                                        }
+                                    }
+                                }
                             } else {
-                                showPremiumPaywall = true
+                                items(filteredBudgets) { budgetWithDetails ->
+                                    BudgetCard(
+                                        budgetWithDetails = budgetWithDetails,
+                                        onEdit = { budgetToEdit = budgetWithDetails; showEditBudget = true },
+                                        onDelete = { viewModel.deleteBudget(budgetWithDetails.budget) },
+                                        onAddItem = { selectedBudgetId = budgetWithDetails.budget.id; showAddBudgetItem = true },
+                                        onEditItem = { item -> budgetItemToEdit = item; showEditBudgetItem = true },
+                                        onDeleteItem = { viewModel.deleteBudgetItem(it) },
+                                        onMarkAsPaid = {
+                                            if (isPremium) { budgetToPayFor = budgetWithDetails; showPaymentConfirmation = true }
+                                            else { showPremiumPaywall = true }
+                                        },
+                                        currencySymbol = selectedCurrency.symbol,
+                                        isPremium = isPremium,
+                                        onShowPremiumPaywall = { showPremiumPaywall = true },
+                                        currentTheme = currentTheme,
+                                        isDarkMode = isDarkMode
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
                             }
-                        },
-                        currencySymbol = selectedCurrency.symbol,
-                        isPremium = isPremium,
-                        onShowPremiumPaywall = { showPremiumPaywall = true },
-                        currentTheme = currentTheme,
-                        isDarkMode = isDarkMode,
-                        onScrollChanged = { isScrollingDown ->
-                            fabVisible = !isScrollingDown
-                        }
-                    )
-                            }
+
+                            item { Spacer(modifier = Modifier.height(100.dp)) }
                         }
                     }
                 }
 
                 BudgetDisplayMode.CALENDAR -> {
-                    BudgetCalendarView(
-                        selectedDate = Pair(uiState.selectedMonth, uiState.selectedYear),
-                        budgets = uiState.budgetsWithDetails,
-                        selectedCalendarDate = uiState.selectedCalendarDate,
-                        onDateSelected = { viewModel.selectCalendarDate(it) },
-                        onEditBudget = {
-                            budgetToEdit = it
-                            showEditBudget = true
-                        },
-                        onDeleteBudget = { viewModel.deleteBudget(it.budget) },
-                        currencySymbol = selectedCurrency.symbol,
-                        currentTheme = currentTheme,
-                        isDarkMode = isDarkMode
-                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        // Hero card
+                        BudgetHeroCard(
+                            allocated = uiState.totalAllocated,
+                            spent = uiState.totalSpent,
+                            remaining = uiState.totalRemaining,
+                            currencySymbol = selectedCurrency.symbol,
+                            currentTheme = currentTheme,
+                            isDarkMode = isDarkMode
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Two-column info cards
+                        BudgetInfoCards(
+                            nextBudgetDue = nextBudgetDue,
+                            thisWeekBudgets = thisWeekBudgets,
+                            currencySymbol = selectedCurrency.symbol,
+                            currentTheme = currentTheme,
+                            isDarkMode = isDarkMode
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Pill toggle
+                        BudgetPillToggle(
+                            displayMode = uiState.displayMode,
+                            onModeChange = { viewModel.setDisplayMode(it) },
+                            currentTheme = currentTheme,
+                            isDarkMode = isDarkMode
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        BudgetCalendarView(
+                            selectedDate = Pair(uiState.selectedMonth, uiState.selectedYear),
+                            budgets = uiState.budgetsWithDetails,
+                            selectedCalendarDate = uiState.selectedCalendarDate,
+                            onDateSelected = { viewModel.selectCalendarDate(it) },
+                            onEditBudget = { budgetToEdit = it; showEditBudget = true },
+                            onDeleteBudget = { viewModel.deleteBudget(it.budget) },
+                            currencySymbol = selectedCurrency.symbol,
+                            currentTheme = currentTheme,
+                            isDarkMode = isDarkMode
+                        )
+                        Spacer(modifier = Modifier.height(100.dp))
+                    }
                 }
             }
 
@@ -658,6 +741,319 @@ fun UnifiedBudgetHeaderSection(
 }
 
 @Composable
+fun BudgetsFixedHeader(
+    selectedMonth: Int,
+    selectedYear: Int,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
+) {
+    val calendar = Calendar.getInstance().apply {
+        set(Calendar.MONTH, selectedMonth - 1)
+        set(Calendar.YEAR, selectedYear)
+    }
+    val monthYearText = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(calendar.time)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(currentTheme.getBackground(isDarkMode))
+            .padding(horizontal = 16.dp)
+    ) {
+        // Logo + notification bell
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.app_logo),
+                contentDescription = "SpendSee Logo",
+                modifier = Modifier.size(28.dp),
+                colorFilter = ColorFilter.tint(if (isDarkMode) Color.White else Color(0xFF1A1A1A))
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "SpendSee",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = if (isDarkMode) Color.White else Color(0xFF1A1A1A)
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Icon(
+                imageVector = FeatherIcons.Bell,
+                contentDescription = "Notifications",
+                tint = currentTheme.getInactive(isDarkMode),
+                modifier = Modifier.size(22.dp)
+            )
+        }
+
+        // Month navigation: large title left, chevrons right
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = monthYearText,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (isDarkMode) Color.White else Color(0xFF1A1A1A),
+                modifier = Modifier.weight(1f)
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(currentTheme.getBorder(isDarkMode).copy(alpha = 0.5f))
+                        .clickable { onPreviousMonth() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        FeatherIcons.ChevronLeft,
+                        contentDescription = "Previous Month",
+                        tint = currentTheme.getAccent(isDarkMode),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(currentTheme.getBorder(isDarkMode).copy(alpha = 0.5f))
+                        .clickable { onNextMonth() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        FeatherIcons.ChevronRight,
+                        contentDescription = "Next Month",
+                        tint = currentTheme.getAccent(isDarkMode),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun BudgetHeroCard(
+    allocated: Double,
+    spent: Double,
+    remaining: Double,
+    currencySymbol: String,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
+) {
+    val spentProgress = if (allocated > 0) (spent / allocated).coerceIn(0.0, 1.0).toFloat() else 0f
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(currentTheme.getAccent(isDarkMode))
+            .padding(20.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+            Text(
+                text = "Total Monthly Budget",
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Medium,
+                color = Color.White.copy(alpha = 0.85f)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "$currencySymbol${String.format("%,.2f", allocated)}",
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(
+                    text = "Spent $currencySymbol${String.format("%,.2f", spent)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.9f)
+                )
+                Text(
+                    text = "${(spentProgress * 100).toInt()}%",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            // Progress bar
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Color.White.copy(alpha = 0.3f))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(spentProgress)
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(Color.White)
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(
+                    text = "Remaining",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.9f)
+                )
+                Text(
+                    text = "$currencySymbol${String.format("%,.2f", remaining)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun BudgetInfoCards(
+    nextBudgetDue: BudgetWithDetails?,
+    thisWeekBudgets: List<BudgetWithDetails>,
+    currencySymbol: String,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
+) {
+    val cardBg = if (isDarkMode) currentTheme.getSurface(isDarkMode) else Color(0xFFFAFAFA)
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Next budget due card
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(16.dp))
+                .background(cardBg)
+                .padding(16.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = "Next budget due",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = currentTheme.getAccent(isDarkMode)
+                )
+                if (nextBudgetDue != null) {
+                    Text(
+                        text = nextBudgetDue.budget.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = currentTheme.getAccent(isDarkMode),
+                        maxLines = 1
+                    )
+                    Text(
+                        text = "$currencySymbol${String.format("%,.2f", nextBudgetDue.planned)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF2E7D32)
+                    )
+                    nextBudgetDue.budget.dueDate?.let { dueMs ->
+                        val dueCal = Calendar.getInstance().apply { timeInMillis = dueMs }
+                        val dueDateText = SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(dueCal.time)
+                        Text(
+                            text = dueDateText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFFD32F2F)
+                        )
+                    }
+                } else {
+                    Text(
+                        text = "No upcoming\nbudgets",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = currentTheme.getInactive(isDarkMode)
+                    )
+                }
+            }
+        }
+
+        // Budget this week card
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(16.dp))
+                .background(cardBg)
+                .padding(16.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = "Budget this week",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = currentTheme.getAccent(isDarkMode)
+                )
+                Text(
+                    text = "${thisWeekBudgets.size}",
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = currentTheme.getAccent(isDarkMode)
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    thisWeekBudgets.take(3).forEach { bwd ->
+                        Text(
+                            text = bwd.budget.name,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = currentTheme.getInactive(isDarkMode),
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun BudgetPillToggle(
+    displayMode: BudgetDisplayMode,
+    onModeChange: (BudgetDisplayMode) -> Unit,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(currentTheme.getSurface(isDarkMode))
+            .padding(4.dp)
+    ) {
+        listOf(BudgetDisplayMode.LIST to "List", BudgetDisplayMode.CALENDAR to "Calendar").forEach { (mode, label) ->
+            val isSelected = displayMode == mode
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(if (isSelected) currentTheme.getAccent(isDarkMode) else Color.Transparent)
+                    .clickable { onModeChange(mode) }
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                    color = if (isSelected) Color.White else currentTheme.getInactive(isDarkMode)
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun StatColumn(label: String, amount: Double, color: Color, currencySymbol: String) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -819,8 +1215,8 @@ fun BudgetCard(
                     .fillMaxWidth()
                     .height(8.dp)
                     .clip(RoundedCornerShape(4.dp)),
-                color = if (isOverBudget) Color(0xFFEF5350) else MaterialTheme.colorScheme.primary,
-                trackColor = if (isOverBudget) Color(0xFFEF5350).copy(alpha = 0.2f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                color = if (isOverBudget) Color(0xFFEF5350) else currentTheme.getAccent(isDarkMode),
+                trackColor = if (isOverBudget) Color(0xFFEF5350).copy(alpha = 0.2f) else currentTheme.getAccent(isDarkMode).copy(alpha = 0.2f)
             )
 
             Spacer(modifier = Modifier.height(8.dp))

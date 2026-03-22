@@ -7,8 +7,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -60,76 +62,286 @@ fun AnalysisScreen(
             .fillMaxSize()
             .background(currentTheme.getBackground(isDarkMode))
     ) {
-        // Unified Header Section (iOS style)
-        UnifiedHeaderSection(
+        // FIXED: Logo + month navigation header
+        AnalysisFixedHeader(
             selectedMonth = uiState.selectedMonth,
             selectedYear = uiState.selectedYear,
             onPreviousMonth = { viewModel.previousMonth() },
             onNextMonth = { viewModel.nextMonth() },
-            expenses = uiState.totalExpenses,
-            income = uiState.totalIncome,
-            net = uiState.netTotal,
-            currencySymbol = selectedCurrency.symbol,
             currentTheme = currentTheme,
             isDarkMode = isDarkMode
         )
 
-        // View Type Selector
-        ViewTypeSelector(
-            selectedViewType = uiState.selectedViewType,
-            onViewTypeSelected = { viewModel.setViewType(it) },
-            currentTheme = currentTheme,
-            isDarkMode = isDarkMode
-        )
+        // SCROLLABLE: AI card + selector + analytics content
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+        ) {
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // Content based on selected view type
-        if (uiState.isLoading) {
+            // AI Assessment placeholder card
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(if (isDarkMode) currentTheme.getSurface(isDarkMode) else Color(0xFFFFF5F0))
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                Text(
+                    text = "AI assessment on spending and saving patterns",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = currentTheme.getAccent(isDarkMode),
+                    textAlign = TextAlign.Center
+                )
             }
-        } else if (uiState.totalExpenses == 0.0 && uiState.totalIncome == 0.0) {
-            EmptyState(
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Analytics type selector (left-aligned dropdown)
+            AnalyticsTypeDropdown(
+                selectedViewType = uiState.selectedViewType,
+                onViewTypeSelected = { viewModel.setViewType(it) },
                 currentTheme = currentTheme,
                 isDarkMode = isDarkMode
             )
-        } else {
-            when (uiState.selectedViewType) {
-                AnalysisViewType.SPENDING_ANALYTICS -> {
-                    SpendingAnalytics(
-                        categoryBreakdowns = uiState.categoryBreakdowns,
-                        currencySymbol = selectedCurrency.symbol
-                    )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Analytics content
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
                 }
-                AnalysisViewType.BUDGET_PERFORMANCE -> {
-                    BudgetPerformance(
-                        budgetPerformances = uiState.budgetPerformances,
-                        currencySymbol = selectedCurrency.symbol
-                    )
+            } else if (uiState.totalExpenses == 0.0 && uiState.totalIncome == 0.0) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(imageVector = FeatherIcons.BarChart, contentDescription = null, modifier = Modifier.size(64.dp), tint = currentTheme.getInactive(isDarkMode))
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("No data available", style = MaterialTheme.typography.titleMedium, color = currentTheme.getText(isDarkMode), fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
+                    }
                 }
-                AnalysisViewType.CASH_FLOW -> {
-                    CashFlow(
-                        dailyCashFlows = uiState.dailyCashFlows,
-                        currencySymbol = selectedCurrency.symbol
-                    )
+            } else {
+                when (uiState.selectedViewType) {
+                    AnalysisViewType.SPENDING_ANALYTICS -> SpendingAnalyticsContent(uiState.categoryBreakdowns, selectedCurrency.symbol, currentTheme, isDarkMode)
+                    AnalysisViewType.BUDGET_PERFORMANCE -> BudgetPerformanceContent(uiState.budgetPerformances, selectedCurrency.symbol, currentTheme, isDarkMode)
+                    AnalysisViewType.CASH_FLOW -> CashFlowContent(uiState.dailyCashFlows, selectedCurrency.symbol, currentTheme, isDarkMode)
                 }
             }
+
+            Spacer(modifier = Modifier.height(100.dp))
         }
 
         // Error Message
         uiState.error?.let { error ->
             Snackbar(
                 modifier = Modifier.padding(16.dp),
-                action = {
-                    TextButton(onClick = { viewModel.loadData() }) {
-                        Text("Retry")
-                    }
+                action = { TextButton(onClick = { viewModel.loadData() }) { Text("Retry") } }
+            ) { Text(error) }
+        }
+    }
+}
+
+@Composable
+fun AnalysisFixedHeader(
+    selectedMonth: Int,
+    selectedYear: Int,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
+) {
+    val calendar = Calendar.getInstance().apply {
+        set(Calendar.MONTH, selectedMonth - 1)
+        set(Calendar.YEAR, selectedYear)
+    }
+    val monthYearText = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(calendar.time)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(currentTheme.getBackground(isDarkMode))
+            .padding(horizontal = 16.dp)
+    ) {
+        // Logo + notification bell
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.app_logo),
+                contentDescription = "SpendSee Logo",
+                modifier = Modifier.size(28.dp),
+                colorFilter = ColorFilter.tint(if (isDarkMode) Color.White else Color(0xFF1A1A1A))
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "SpendSee",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = if (isDarkMode) Color.White else Color(0xFF1A1A1A)
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Icon(
+                imageVector = FeatherIcons.Bell,
+                contentDescription = "Notifications",
+                tint = currentTheme.getInactive(isDarkMode),
+                modifier = Modifier.size(22.dp)
+            )
+        }
+
+        // Month navigation: large title left, chevrons right
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = monthYearText,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (isDarkMode) Color.White else Color(0xFF1A1A1A),
+                modifier = Modifier.weight(1f)
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(currentTheme.getBorder(isDarkMode).copy(alpha = 0.5f))
+                        .clickable { onPreviousMonth() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(FeatherIcons.ChevronLeft, contentDescription = "Previous Month", tint = currentTheme.getAccent(isDarkMode), modifier = Modifier.size(16.dp))
                 }
-            ) {
-                Text(error)
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(currentTheme.getBorder(isDarkMode).copy(alpha = 0.5f))
+                        .clickable { onNextMonth() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(FeatherIcons.ChevronRight, contentDescription = "Next Month", tint = currentTheme.getAccent(isDarkMode), modifier = Modifier.size(16.dp))
+                }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AnalyticsTypeDropdown(
+    selectedViewType: AnalysisViewType,
+    onViewTypeSelected: (AnalysisViewType) -> Unit,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded }
+    ) {
+        Row(
+            modifier = Modifier
+                .menuAnchor()
+                .clickable { expanded = !expanded },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = selectedViewType.displayName(),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = currentTheme.getText(isDarkMode)
+            )
+            Icon(
+                imageVector = if (expanded) FeatherIcons.ChevronUp else FeatherIcons.ChevronDown,
+                contentDescription = null,
+                tint = currentTheme.getText(isDarkMode),
+                modifier = Modifier.size(20.dp).padding(start = 4.dp)
+            )
+        }
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(currentTheme.getSurface(isDarkMode))
+        ) {
+            AnalysisViewType.values().forEach { viewType ->
+                DropdownMenuItem(
+                    text = { Text(viewType.displayName(), color = currentTheme.getText(isDarkMode)) },
+                    onClick = { onViewTypeSelected(viewType); expanded = false }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SpendingAnalyticsContent(categoryBreakdowns: List<CategoryBreakdown>, currencySymbol: String, currentTheme: ThemeColors, isDarkMode: Boolean) {
+    Column {
+        Text(
+            text = "Expense by Category",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = currentTheme.getText(isDarkMode),
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+        categoryBreakdowns.forEach { breakdown ->
+            CategoryBreakdownCard(breakdown, currencySymbol, currentTheme, isDarkMode)
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+fun BudgetPerformanceContent(budgetPerformances: List<BudgetPerformance>, currencySymbol: String, currentTheme: ThemeColors, isDarkMode: Boolean) {
+    if (budgetPerformances.isEmpty()) {
+        Box(modifier = Modifier.fillMaxWidth().padding(top = 40.dp), contentAlignment = Alignment.Center) {
+            Text(text = "No budgets for this month", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = currentTheme.getText(isDarkMode), textAlign = TextAlign.Center)
+        }
+    } else {
+        Column {
+            Text(
+                text = "Budget vs Actual",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = currentTheme.getText(isDarkMode),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            budgetPerformances.forEach { performance ->
+                BudgetPerformanceCard(performance, currencySymbol, currentTheme, isDarkMode)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun CashFlowContent(dailyCashFlows: List<DailyCashFlow>, currencySymbol: String, currentTheme: ThemeColors, isDarkMode: Boolean) {
+    Column {
+        Text(
+            text = "Daily Cash Flow",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = currentTheme.getText(isDarkMode),
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+        dailyCashFlows.forEach { cashFlow ->
+            DailyCashFlowCard(cashFlow, currencySymbol, currentTheme, isDarkMode)
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
@@ -438,185 +650,75 @@ fun ViewTypeSelector(
     }
 }
 
-@Composable
-fun SpendingAnalytics(categoryBreakdowns: List<CategoryBreakdown>, currencySymbol: String) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp)
-    ) {
-        item {
-            Text(
-                text = "Expense by Category",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-        }
-
-        items(categoryBreakdowns) { breakdown ->
-            CategoryBreakdownCard(breakdown, currencySymbol)
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-    }
-}
 
 @Composable
-fun CategoryBreakdownCard(breakdown: CategoryBreakdown, currencySymbol: String) {
+fun CategoryBreakdownCard(breakdown: CategoryBreakdown, currencySymbol: String, currentTheme: ThemeColors, isDarkMode: Boolean) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp)),
+        colors = CardDefaults.cardColors(containerColor = currentTheme.getSurface(isDarkMode)),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(12.dp)
-                            .clip(CircleShape)
-                            .background(Color(breakdown.color))
-                    )
+                    Box(modifier = Modifier.size(12.dp).clip(CircleShape).background(Color(breakdown.color)))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = breakdown.category,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium
-                    )
+                    Text(text = breakdown.category, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, color = currentTheme.getText(isDarkMode))
                 }
-
-                Text(
-                    text = "${breakdown.percentage.toInt()}%",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Text(text = "${breakdown.percentage.toInt()}%", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = currentTheme.getAccent(isDarkMode))
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             LinearProgressIndicator(
                 progress = breakdown.percentage / 100f,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
+                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
                 color = Color(breakdown.color),
                 trackColor = Color(breakdown.color).copy(alpha = 0.2f)
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            Text(
-                text = formatCurrency(breakdown.amount, currencySymbol),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Text(text = formatCurrency(breakdown.amount, currencySymbol), style = MaterialTheme.typography.bodyMedium, color = currentTheme.getInactive(isDarkMode))
         }
     }
 }
 
-@Composable
-fun BudgetPerformance(budgetPerformances: List<BudgetPerformance>, currencySymbol: String) {
-    // Note: EmptyState requires theme parameters, but this composable doesn't have access to them
-    // This is acceptable as this check should rarely trigger - the parent already checks for empty data
-    if (budgetPerformances.isEmpty()) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "No budgets for this month",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center
-            )
-        }
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp)
-        ) {
-            item {
-                Text(
-                    text = "Budget vs Actual",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-            }
-
-            items(budgetPerformances) { performance ->
-                BudgetPerformanceCard(performance, currencySymbol)
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        }
-    }
-}
 
 @Composable
-fun BudgetPerformanceCard(performance: BudgetPerformance, currencySymbol: String) {
+fun BudgetPerformanceCard(performance: BudgetPerformance, currencySymbol: String, currentTheme: ThemeColors, isDarkMode: Boolean) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp)),
+        colors = CardDefaults.cardColors(containerColor = currentTheme.getSurface(isDarkMode)),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Text(
-                text = performance.budgetName,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold
-            )
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Text(text = performance.budgetName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = currentTheme.getText(isDarkMode))
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
-                    Text(
-                        text = "Planned",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = formatCurrency(performance.planned, currencySymbol),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
+                    Text(text = "Planned", style = MaterialTheme.typography.bodySmall, color = currentTheme.getInactive(isDarkMode))
+                    Text(text = formatCurrency(performance.planned, currencySymbol), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = currentTheme.getText(isDarkMode))
                 }
-
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "Spent",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text(text = "Spent", style = MaterialTheme.typography.bodySmall, color = currentTheme.getInactive(isDarkMode))
                     Text(
                         text = formatCurrency(performance.spent, currencySymbol),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
-                        color = if (performance.spent > performance.planned) Color(0xFFEF5350) else MaterialTheme.colorScheme.onSurface
+                        color = if (performance.spent > performance.planned) Color(0xFFEF5350) else currentTheme.getText(isDarkMode)
                     )
                 }
             }
@@ -625,49 +727,26 @@ fun BudgetPerformanceCard(performance: BudgetPerformance, currencySymbol: String
 
             LinearProgressIndicator(
                 progress = (performance.percentage / 100f).coerceIn(0f, 1f),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = if (performance.spent > performance.planned) Color(0xFFEF5350) else MaterialTheme.colorScheme.primary
+                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
+                color = if (performance.spent > performance.planned) Color(0xFFEF5350) else currentTheme.getAccent(isDarkMode),
+                trackColor = if (performance.spent > performance.planned) Color(0xFFEF5350).copy(alpha = 0.2f) else currentTheme.getAccent(isDarkMode).copy(alpha = 0.2f)
             )
         }
     }
 }
 
-@Composable
-fun CashFlow(dailyCashFlows: List<DailyCashFlow>, currencySymbol: String) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp)
-    ) {
-        item {
-            Text(
-                text = "Daily Cash Flow",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-        }
-
-        items(dailyCashFlows) { cashFlow ->
-            DailyCashFlowCard(cashFlow, currencySymbol)
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-    }
-}
 
 @Composable
-fun DailyCashFlowCard(cashFlow: DailyCashFlow, currencySymbol: String) {
+fun DailyCashFlowCard(cashFlow: DailyCashFlow, currencySymbol: String, currentTheme: ThemeColors, isDarkMode: Boolean) {
     val dateFormat = SimpleDateFormat("EEE, MMM d", Locale.getDefault())
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, currentTheme.getBorder(isDarkMode), RoundedCornerShape(12.dp)),
+        colors = CardDefaults.cardColors(containerColor = currentTheme.getSurface(isDarkMode)),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -679,7 +758,8 @@ fun DailyCashFlowCard(cashFlow: DailyCashFlow, currencySymbol: String) {
             Text(
                 text = dateFormat.format(Date(cashFlow.date)),
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                color = currentTheme.getText(isDarkMode)
             )
 
             Row(verticalAlignment = Alignment.CenterVertically) {

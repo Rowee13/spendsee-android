@@ -60,7 +60,6 @@ fun BudgetCalendarView(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
             .background(currentTheme.getBackground(isDarkMode))
     ) {
         // Selected Date Banner (if date is selected)
@@ -298,8 +297,8 @@ private fun CalendarBudgetCard(
                     .fillMaxWidth()
                     .height(8.dp)
                     .clip(RoundedCornerShape(4.dp)),
-                color = if (isOverBudget) Color(0xFFEF5350) else MaterialTheme.colorScheme.primary,
-                trackColor = if (isOverBudget) Color(0xFFEF5350).copy(alpha = 0.2f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                color = if (isOverBudget) Color(0xFFEF5350) else currentTheme.getAccent(isDarkMode),
+                trackColor = if (isOverBudget) Color(0xFFEF5350).copy(alpha = 0.2f) else currentTheme.getAccent(isDarkMode).copy(alpha = 0.2f)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
