@@ -4,15 +4,15 @@ import androidx.compose.ui.graphics.Color
 
 // Default Theme (Blue) - Free
 val DefaultPrimaryLight = Color(0xFF007AFF)
-val DefaultPrimaryDark = Color(0xFF0A84FF)
-val DefaultAccentLight = Color(0xFF5AC8FA)
-val DefaultAccentDark = Color(0xFF64D2FF)
+val DefaultPrimaryDark = Color(0xFF5BA8F0)
+val DefaultAccentLight = Color(0xFF007AFF)
+val DefaultAccentDark = Color(0xFF85C0F5)
 
-// Dark Mode Custom Colors (matching iOS)
-val DarkHeaderBackground = Color(0xFF333333)
-val DarkStatsCard = Color(0xFF222222)
-val DarkContentBackground = Color(0xFF222222)
-val DarkExpandedSection = Color(0xFF1A1A1A)
+// Dark Mode Custom Colors (aligned with iOS system dark colors)
+val DarkHeaderBackground = Color(0xFF2C2C2E)
+val DarkStatsCard = Color(0xFF2C2C2E)
+val DarkContentBackground = Color(0xFF1C1C1E)
+val DarkExpandedSection = Color(0xFF1C1C1E)
 
 // Transaction Type Colors
 val IncomeGreen = Color(0xFF34C759)
