@@ -112,6 +112,23 @@ fun RecordsScreen(
         }
     }.collectAsState(initial = 0)
 
+    // Scroll state for FAB visibility — moved up so the single LazyColumn owns it
+    val listState = rememberLazyListState()
+    var previousScrollIndex by remember { mutableStateOf(0) }
+    var previousScrollOffset by remember { mutableStateOf(0) }
+
+    LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
+        val currentIndex = listState.firstVisibleItemIndex
+        val currentOffset = listState.firstVisibleItemScrollOffset
+        if (currentIndex != previousScrollIndex || currentOffset != previousScrollOffset) {
+            val scrollingDown = currentIndex > previousScrollIndex ||
+                (currentIndex == previousScrollIndex && currentOffset > previousScrollOffset)
+            fabVisible = !scrollingDown
+            previousScrollIndex = currentIndex
+            previousScrollOffset = currentOffset
+        }
+    }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
@@ -222,23 +239,19 @@ fun RecordsScreen(
                 .fillMaxSize()
                 .background(currentTheme.getBackground(isDarkMode))
         ) {
-            // Unified Header Section (iOS style)
-            UnifiedHeaderSection(
+            // Fixed: SpendSee logo + notification bell + month navigation only
+            RecordsFixedHeader(
                 selectedMonth = uiState.selectedMonth,
                 selectedYear = uiState.selectedYear,
                 onPreviousMonth = { viewModel.previousMonth() },
                 onNextMonth = { viewModel.nextMonth() },
-                expenses = uiState.totalExpenses,
-                income = uiState.totalIncome,
-                net = uiState.netTotal,
-                currencySymbol = selectedCurrency.symbol,
-                currentTheme = currentTheme,
-                isDarkMode = isDarkMode,
                 unreadNotificationCount = unreadCount,
-                onNotificationClick = { showNotificationCenter = true }
+                onNotificationClick = { showNotificationCenter = true },
+                currentTheme = currentTheme,
+                isDarkMode = isDarkMode
             )
 
-            // Transaction List
+            // Single scrollable area: stats cards + transaction list
             if (uiState.isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -246,30 +259,106 @@ fun RecordsScreen(
                 ) {
                     CircularProgressIndicator()
                 }
-            } else if (uiState.transactions.isEmpty()) {
-                EmptyState(
-                    currentTheme = currentTheme,
-                    isDarkMode = isDarkMode
-                )
             } else {
-                TransactionList(
-                    groupedTransactions = uiState.groupedTransactions,
-                    onTransactionClick = { transaction ->
-                        selectedTransaction = transaction
-                        showTransactionDetail = true
-                    },
-                    onEditTransaction = { transaction ->
-                        transactionToEdit = transaction
-                        showAddTransaction = true
-                    },
-                    onDeleteTransaction = { viewModel.deleteTransaction(it) },
-                    currencySymbol = selectedCurrency.symbol,
-                    currentTheme = currentTheme,
-                    isDarkMode = isDarkMode,
-                    onScrollChanged = { isScrollingDown ->
-                        fabVisible = !isScrollingDown
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 16.dp)
+                ) {
+                    // Stats cards scroll with content
+                    item {
+                        RecordsStatsCards(
+                            income = uiState.totalIncome,
+                            expenses = uiState.totalExpenses,
+                            net = uiState.netTotal,
+                            selectedMonth = uiState.selectedMonth,
+                            selectedYear = uiState.selectedYear,
+                            currencySymbol = selectedCurrency.symbol,
+                            currentTheme = currentTheme,
+                            isDarkMode = isDarkMode
+                        )
                     }
-                )
+
+                    // Records section label
+                    if (uiState.transactions.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "Records",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = currentTheme.getAccent(isDarkMode),
+                                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                            )
+                        }
+                    }
+
+                    // Transaction list or empty state
+                    if (uiState.transactions.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 48.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = FeatherIcons.FileText,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(64.dp),
+                                        tint = currentTheme.getInactive(isDarkMode)
+                                    )
+                                    Text(
+                                        text = "No Transactions",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = currentTheme.getText(isDarkMode),
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = "Tap the + button to add your first transaction",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = currentTheme.getInactive(isDarkMode),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        uiState.groupedTransactions.forEach { (date, transactions) ->
+                            item {
+                                DateHeader(
+                                    date = date,
+                                    currentTheme = currentTheme,
+                                    isDarkMode = isDarkMode
+                                )
+                            }
+                            items(transactions) { transaction ->
+                                TransactionRow(
+                                    transaction = transaction,
+                                    onClick = {
+                                        selectedTransaction = transaction
+                                        showTransactionDetail = true
+                                    },
+                                    onEdit = {
+                                        transactionToEdit = transaction
+                                        showAddTransaction = true
+                                    },
+                                    onDelete = { viewModel.deleteTransaction(transaction) },
+                                    currencySymbol = selectedCurrency.symbol,
+                                    currentTheme = currentTheme,
+                                    isDarkMode = isDarkMode
+                                )
+                            }
+                            item { Spacer(modifier = Modifier.height(16.dp)) }
+                        }
+                    }
+
+                    // Bottom padding for FAB
+                    item { Spacer(modifier = Modifier.height(100.dp)) }
+                }
             }
 
             // Error Message
@@ -449,6 +538,281 @@ fun RecordsScreen(
                     selectedTransaction = null
                     viewModel.deleteTransaction(transaction)
                 }
+            )
+        }
+    }
+}
+
+// ── Fixed header: logo + notification bell + month navigation ─────────────────
+@Composable
+fun RecordsFixedHeader(
+    selectedMonth: Int,
+    selectedYear: Int,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit,
+    unreadNotificationCount: Int = 0,
+    onNotificationClick: () -> Unit = {},
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
+) {
+    val calendar = Calendar.getInstance().apply {
+        set(Calendar.MONTH, selectedMonth - 1)
+        set(Calendar.YEAR, selectedYear)
+    }
+    val monthYearText = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(calendar.time)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(currentTheme.getBackground(isDarkMode))
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // App Logo + Notification Bell
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(id = R.drawable.app_logo),
+                    contentDescription = "SpendSee Logo",
+                    modifier = Modifier.size(28.dp),
+                    colorFilter = ColorFilter.tint(if (isDarkMode) Color.White else Color(0xFF1A1A1A))
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "SpendSee",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isDarkMode) Color.White else Color(0xFF1A1A1A)
+                )
+            }
+            NotificationBellButton(
+                unreadCount = unreadNotificationCount,
+                onClick = onNotificationClick,
+                currentTheme = currentTheme,
+                isDarkMode = isDarkMode
+            )
+        }
+
+        // Month Navigation — large title left, circle buttons right
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = monthYearText,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (isDarkMode) Color.White else Color(0xFF1A1A1A)
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(currentTheme.getBorder(isDarkMode).copy(alpha = 0.5f))
+                        .clickable { onPreviousMonth() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        FeatherIcons.ChevronLeft,
+                        contentDescription = "Previous Month",
+                        tint = currentTheme.getAccent(isDarkMode),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(currentTheme.getBorder(isDarkMode).copy(alpha = 0.5f))
+                        .clickable { onNextMonth() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        FeatherIcons.ChevronRight,
+                        contentDescription = "Next Month",
+                        tint = currentTheme.getAccent(isDarkMode),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ── Scrollable stats cards: income + expenses + net earnings ──────────────────
+@Composable
+fun RecordsStatsCards(
+    income: Double,
+    expenses: Double,
+    net: Double,
+    selectedMonth: Int,
+    selectedYear: Int,
+    currencySymbol: String,
+    currentTheme: ThemeColors,
+    isDarkMode: Boolean
+) {
+    val calendar = Calendar.getInstance().apply {
+        set(Calendar.MONTH, selectedMonth - 1)
+        set(Calendar.YEAR, selectedYear)
+    }
+    val monthText = SimpleDateFormat("MMMM", Locale.getDefault()).format(calendar.time)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Income + Expenses side-by-side cards
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Income Card — primary colour fill, white text
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(130.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(currentTheme.accent)
+                    .padding(14.dp)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.White.copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            FeatherIcons.ArrowUpRight,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = "Income",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+                        Text(
+                            text = "$currencySymbol${String.format("%,.2f", income)}",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
+
+            // Expenses Card — surface fill
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(130.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(currentTheme.getSurface(isDarkMode))
+                    .padding(14.dp)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(currentTheme.getBorder(isDarkMode).copy(alpha = 0.4f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            FeatherIcons.ArrowDownLeft,
+                            contentDescription = null,
+                            tint = currentTheme.getAccent(isDarkMode),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = "Expenses",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = currentTheme.getInactive(isDarkMode)
+                        )
+                        Text(
+                            text = "$currencySymbol${String.format("%,.2f", expenses)}",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isDarkMode) Color(0xFFFF5252) else Color(0xFFD32F2F),
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
+        }
+
+        // Net Earnings Card
+        val netFormatted = if (net < 0) {
+            "-$currencySymbol${String.format("%,.2f", kotlin.math.abs(net))}"
+        } else {
+            "$currencySymbol${String.format("%,.2f", net)}"
+        }
+        val netColor = if (net >= 0) Color(0xFF1E7E34) else Color(0xFFD32F2F)
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(104.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(currentTheme.getSurface(isDarkMode))
+                .padding(14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = "$monthText Earnings",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = currentTheme.getInactive(isDarkMode)
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = netFormatted,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = netColor
+                    )
+                    Icon(
+                        imageVector = if (net >= 0) FeatherIcons.TrendingUp else FeatherIcons.TrendingDown,
+                        contentDescription = null,
+                        tint = netColor,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+            Text(
+                text = "Net Cash Flow",
+                style = MaterialTheme.typography.bodySmall,
+                color = currentTheme.getInactive(isDarkMode)
             )
         }
     }
